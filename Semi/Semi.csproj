@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{B8AAE2E1-9941-42C8-95F3-846BA0EDC7F9}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Semi</RootNamespace>
+    <AssemblyName>Assembly-CSharp.SemiLoader.mm</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="Mono.Cecil">
+      <HintPath>..\packages\Mono.Cecil.0.10.3\lib\net35\Mono.Cecil.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Mdb">
+      <HintPath>..\packages\Mono.Cecil.0.10.3\lib\net35\Mono.Cecil.Mdb.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Pdb">
+      <HintPath>..\packages\Mono.Cecil.0.10.3\lib\net35\Mono.Cecil.Pdb.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Rocks">
+      <HintPath>..\packages\Mono.Cecil.0.10.3\lib\net35\Mono.Cecil.Rocks.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoMod.Utils">
+      <HintPath>..\packages\MonoMod.Utils.19.2.7.8\lib\net35\MonoMod.Utils.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoMod">
+      <HintPath>..\packages\MonoMod.19.2.7.8\lib\net35\MonoMod.exe</HintPath>
+    </Reference>
+    <Reference Include="MonoMod.RuntimeDetour">
+      <HintPath>..\packages\MonoMod.RuntimeDetour.19.2.7.8\lib\net35\MonoMod.RuntimeDetour.dll</HintPath>
+    </Reference>
+    <Reference Include="YamlDotNet">
+      <HintPath>..\packages\YamlDotNet.6.0.0\lib\net35\YamlDotNet.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>..\libs\gungeon\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>..\libs\gungeon\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>..\libs\gungeon\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="src\Semi\SemiLoader.cs" />
+    <Compile Include="src\Patches\GameManager.cs" />
+    <Compile Include="src\YAML\ModConfig.cs" />
+    <Compile Include="src\YAML\SerializationHelper.cs" />
+    <Compile Include="src\Semi\FileHierarchy.cs" />
+    <Compile Include="src\Parsers\SimpleListFileParser.cs" />
+    <Compile Include="src\Extensions\String.cs" />
+    <Compile Include="src\Extensions\Array.cs" />
+    <Compile Include="src\Semi\Mod.cs" />
+    <Compile Include="src\Semi\AssemblyRelinker.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="src\" />
+    <Folder Include="src\Semi\" />
+    <Folder Include="src\Patches\" />
+    <Folder Include="src\YAML\" />
+    <Folder Include="src\Parsers\" />
+    <Folder Include="src\Extensions\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\libs\Logger\Logger.csproj">
+      <Project>{1C734127-AC83-4ECB-ABCA-32B98DFE49C7}</Project>
+      <Name>Logger</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+</Project>
