@@ -26,6 +26,8 @@ namespace Semi {
             ModsStorageObject = new UnityEngine.GameObject("Semi Mod Loader");
             Mods = new Dictionary<string, Mod>();
 
+            LoadIDMaps();
+
             FileHierarchy.Verify();
             LoadMods();
         }
@@ -108,7 +110,7 @@ namespace Semi {
             if (!File.Exists(config_path)) throw new InvalidConfigException($"Tried loading mod '{dir_name}' but it doesn't have the specified DLL file {dll_name}.");
 
             AppDomain.CurrentDomain.AssemblyResolve += GenerateModAssemblyResolver(dir_path);
-
+                
             Assembly asm;
             using (FileStream f = File.OpenRead(dll_path)) {
                 asm = AssemblyRelinker.GetRelinkedAssembly(dll_name, dll_path, f);
@@ -129,6 +131,29 @@ namespace Semi {
                 Mods[mod_config.ID] = mod_instance;
 
                 mod_instance.Loaded();
+            }
+        }
+
+        internal static void LoadIDMaps() {
+            var asm = Assembly.GetExecutingAssembly();
+            Logger.Debug("Loading IDMaps");
+
+            using (StreamReader stream = new StreamReader(asm.GetManifestResourceStream("idmaps:items.txt"))) {
+                Logger.Debug($"IDMap items.txt: stream = {stream}");
+                Gungeon.Items = IDMapParser<PickupObject, Gungeon.ItemTag>.Parse(
+                    stream,
+                    "gungeon",
+                    (id) => PickupObjectDatabase.GetById(int.Parse(id))
+                );
+            }
+
+            using (StreamReader stream = new StreamReader(asm.GetManifestResourceStream("idmaps:enemies.txt"))) {
+                Logger.Debug($"IDMap enemies.txt: stream = {stream}");
+                Gungeon.Enemies = IDMapParser<AIActor, Gungeon.EnemyTag>.Parse(
+                    stream,
+                    "gungeon",
+                    (id) => EnemyDatabase.AssetBundle.LoadAsset<UnityEngine.GameObject>(id).GetComponent<AIActor>()
+                );
             }
         }
     }

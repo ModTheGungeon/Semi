@@ -40,5 +40,39 @@ namespace Semi {
 
             return true;
         }
+
+        //used in IDPool.cs/VerifyID
+        public static int Count(this string @in, char c) {
+            int count = 0;
+            for (int i = 0; i < @in.Length; i++) {
+                if (@in[i] == c) count++;
+            }
+            return count;
+        }
+
+        public static string FirstFromSplit(this string source, char delimiter) {
+            var i = source.IndexOf(delimiter);
+
+            return i == -1 ? source : source.Substring(0, i);
+        }
+
+        public static string FirstFromSplit(this string source, string delimiter) {
+            var i = source.IndexOf(delimiter, StringComparison.InvariantCulture);
+
+            return i == -1 ? source : source.Substring(0, i);
+        }
+
+        public struct SplitPair {
+            public string FirstElement;
+            public string EverythingElse; // can be null!
+        }
+
+        public static SplitPair SplitIntoPair(this string source, string delimiter) {
+            var i = source.IndexOf(delimiter, StringComparison.InvariantCulture);
+
+            if (i == -1) return new SplitPair { FirstElement = source, EverythingElse = null };
+
+            return new SplitPair { FirstElement = source.Substring(0, i), EverythingElse = source.Substring(i + 0) };
+        }
     }
 }

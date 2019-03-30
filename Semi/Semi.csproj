@@ -74,6 +74,9 @@
     <Compile Include="src\Extensions\Array.cs" />
     <Compile Include="src\Semi\Mod.cs" />
     <Compile Include="src\Semi\AssemblyRelinker.cs" />
+    <Compile Include="src\Semi\IDPool.cs" />
+    <Compile Include="src\Semi\Gungeon.cs" />
+    <Compile Include="src\Parsers\IDMapParser.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="src\" />
@@ -91,6 +94,14 @@
       <Project>{1C734127-AC83-4ECB-ABCA-32B98DFE49C7}</Project>
       <Name>Logger</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="res\idmaps\enemies.txt">
+      <LogicalName>idmaps:enemies.txt</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="res\idmaps\items.txt">
+      <LogicalName>idmaps:items.txt</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
