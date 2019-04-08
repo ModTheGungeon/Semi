@@ -12,14 +12,17 @@ namespace Semi {
         [YamlMember(Alias = "author")]
         public string Author { get; set; } = "Unknown";
 
+		[YamlMember(Alias = "dll")]
+		public string DLL { get; set; } = "mod.dll";
+
         [YamlMember(Alias = "version")]
         public string Version { get; set; } = "0.1";
 
         [YamlMember(Alias = "description")]
         public string Description { get; set; } = "Unknown";
 
-        [YamlMember(Alias = "dll")]
-        public string DLL { get; set; } = "mod.dll";
+		[YamlMember(Alias = "")]
+		private string _MonoModBugWorkaround { get; set; } = null;
 
         public Mod Instance { get; internal set; }
     }

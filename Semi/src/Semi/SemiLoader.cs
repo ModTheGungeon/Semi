@@ -5,26 +5,51 @@ using System.Collections.Generic;
 using System.Reflection;
 
 namespace Semi {
-    public class InvalidConfigException : Exception {
-        public InvalidConfigException(string message) : base($"Invalid config: {message}") { }
-    }
+	public class InvalidConfigException : Exception {
+		public InvalidConfigException(string message) : base($"Invalid config: {message}") { }
+	}
 
-    public class ModLoadException : Exception {
-        public ModLoadException(string mod_id, string message) : base($"Failed loading mod '{mod_id}': {message}") { }
-    }
+	public class ModLoadException : Exception {
+		public ModLoadException(string mod_id, string message) : base($"Failed loading mod '{mod_id}': {message}") { }
+	}
 
-    public static class SemiLoader {
-        public const string VERSION = "cont-dev";
+	public static class SemiLoader {
+#if DEBUG
+		public const bool DEBUG_MODE = true;
+#else
+		public const bool DEBUG_MODE = false;
+#endif
+
+		public const string VERSION = "cont-dev";
         public static Dictionary<string, Mod> Mods;
 
         internal static UnityEngine.GameObject ModsStorageObject;
         internal static Logger Logger = new Logger("Semi");
 
+		internal static DebugConsole.Console Console;
+		internal static DebugConsole.ConsoleController ConsoleController;
+
+		internal static SGUI.SGUIRoot GUIRoot;
+
         internal static void OnGameManagerAlive() {
             Logger.Debug("GameManager alive");
 
             ModsStorageObject = new UnityEngine.GameObject("Semi Mod Loader");
+			UnityEngine.Object.DontDestroyOnLoad(ModsStorageObject);
             Mods = new Dictionary<string, Mod>();
+
+			if (DEBUG_MODE) {
+				GUIRoot = SGUI.SGUIRoot.Setup();
+
+				SGUI.SGUIIMBackend.GetFont = (SGUI.SGUIIMBackend backend) => {
+					if (Patches.MainMenuFoyerController.Instance?.VersionLabel == null) return null;
+					return DebugConsole.FontCache.GungeonFont ?? (DebugConsole.FontCache.GungeonFont = DebugConsole.FontConverter.DFFontToUnityFont((dfFont)Patches.MainMenuFoyerController.Instance.VersionLabel.Font, 2));
+				};
+
+				Console = new DebugConsole.Console();
+				ConsoleController = ModsStorageObject.AddComponent<DebugConsole.ConsoleController>();
+				UnityEngine.Object.DontDestroyOnLoad(ConsoleController);
+			}
 
             LoadIDMaps();
 
@@ -143,7 +168,10 @@ namespace Semi {
                 Gungeon.Items = IDMapParser<PickupObject, Gungeon.ItemTag>.Parse(
                     stream,
                     "gungeon",
-                    (id) => PickupObjectDatabase.GetById(int.Parse(id))
+                    (id) => PickupObjectDatabase.GetById(int.Parse(id)),
+					do_after: (id, item) => {
+						((Semi.Patches.PickupObject)item).UniqueItemID = id;
+					}
                 );
             }
 

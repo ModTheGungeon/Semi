@@ -61,6 +61,21 @@
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\libs\gungeon\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule">
+      <HintPath>..\libs\gungeon\UnityEngine.ImageConversionModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>..\libs\gungeon\UnityEngine.IMGUIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.InputModule">
+      <HintPath>..\libs\gungeon\UnityEngine.InputModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>..\libs\gungeon\UnityEngine.TextRenderingModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>..\libs\gungeon\UnityEngine.UIModule.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -77,6 +92,53 @@
     <Compile Include="src\Semi\IDPool.cs" />
     <Compile Include="src\Semi\Gungeon.cs" />
     <Compile Include="src\Parsers\IDMapParser.cs" />
+    <Compile Include="src\Patches\SaveManager.cs" />
+    <Compile Include="src\Patches\MidGameSaveData.cs" />
+    <Compile Include="src\Patches\PickupObject.cs" />
+    <Compile Include="src\Debug\Console\AutoCompletor.cs" />
+    <Compile Include="src\Debug\Console\Console.cs" />
+    <Compile Include="src\Debug\Console\Command.cs" />
+    <Compile Include="src\Debug\Console\DefaultCommands.cs" />
+    <Compile Include="src\Debug\Console\DualWieldForcer.cs" />
+    <Compile Include="src\Debug\Console\History.cs" />
+    <Compile Include="src\Debug\Console\Parser\AST.cs" />
+    <Compile Include="src\Debug\Console\Parser\Executor.cs" />
+    <Compile Include="src\Debug\Console\Parser\Lexer.cs" />
+    <Compile Include="src\Debug\Console\Parser\Parser.cs" />
+    <Compile Include="src\Debug\Console\Parser\Token.cs" />
+    <Compile Include="src\Debug\GUI\Font.cs" />
+    <Compile Include="src\Debug\SGUI\src\EMouseStatus.cs" />
+    <Compile Include="src\Debug\SGUI\src\ISGUIBackend.cs" />
+    <Compile Include="src\Debug\SGUI\src\SAnimation.cs" />
+    <Compile Include="src\Debug\SGUI\src\SElement.cs" />
+    <Compile Include="src\Debug\SGUI\src\SGUIExtensions.cs" />
+    <Compile Include="src\Debug\SGUI\src\SGUIRoot.cs" />
+    <Compile Include="src\Debug\SGUI\src\SModifier.cs" />
+    <Compile Include="src\Debug\SGUI\src\Animations\SAnimationSequence.cs" />
+    <Compile Include="src\Debug\SGUI\src\Animations\SEasings.cs" />
+    <Compile Include="src\Debug\SGUI\src\Animations\SFadeAnimation.cs" />
+    <Compile Include="src\Debug\SGUI\src\Animations\SFadeInAnimation.cs" />
+    <Compile Include="src\Debug\SGUI\src\Animations\SFadeOutAnimation.cs" />
+    <Compile Include="src\Debug\SGUI\src\Animations\SFadeOutShrinkSequence.cs" />
+    <Compile Include="src\Debug\SGUI\src\Animations\SShrinkAnimation.cs" />
+    <Compile Include="src\Debug\SGUI\src\Backends\SGUIIMBackend.cs" />
+    <Compile Include="src\Debug\SGUI\src\DFEXT\SGUIDFInput.cs" />
+    <Compile Include="src\Debug\SGUI\src\DotNetEXT\AddingNewEventArgs.cs" />
+    <Compile Include="src\Debug\SGUI\src\DotNetEXT\AddingNewEventHandler.cs" />
+    <Compile Include="src\Debug\SGUI\src\DotNetEXT\ICancelAddNew.cs" />
+    <Compile Include="src\Debug\SGUI\src\DotNetEXT\IRaiseItemChangedEvents.cs" />
+    <Compile Include="src\Debug\SGUI\src\Elements\SButton.cs" />
+    <Compile Include="src\Debug\SGUI\src\Elements\SGroup.cs" />
+    <Compile Include="src\Debug\SGUI\src\Elements\SImage.cs" />
+    <Compile Include="src\Debug\SGUI\src\Elements\SLabel.cs" />
+    <Compile Include="src\Debug\SGUI\src\Elements\SPreloader.cs" />
+    <Compile Include="src\Debug\SGUI\src\Elements\SRect.cs" />
+    <Compile Include="src\Debug\SGUI\src\Elements\STextField.cs" />
+    <Compile Include="src\Debug\SGUI\src\Elements\SWindowTitleBar.cs" />
+    <Compile Include="src\Debug\SGUI\src\Modifiers\SInGameModifier.cs" />
+    <Compile Include="src\Debug\SGUI\src\Modifiers\SRandomLabelModifier.cs" />
+    <Compile Include="src\Debug\Console\ConsoleController.cs" />
+    <Compile Include="src\Patches\MainMenuFoyerController.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="src\" />
@@ -85,9 +147,12 @@
     <Folder Include="src\YAML\" />
     <Folder Include="src\Parsers\" />
     <Folder Include="src\Extensions\" />
+    <Folder Include="src\Debug\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="src\Debug\SGUI\.gitignore" />
+    <None Include="src\Debug\SGUI\README.md" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\libs\Logger\Logger.csproj">

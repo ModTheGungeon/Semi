@@ -8,8 +8,9 @@ namespace Semi {
         }
 
         public delegate T AcquireItem(string id);
+		public delegate void DoAfterAcquiredItem(string strid, T item);
 
-        public static IDPool<T, TTag> Parse(StreamReader file, string nspace, AcquireItem callback, bool percent_space_escape = true) {
+		public static IDPool<T, TTag> Parse(StreamReader file, string nspace, AcquireItem callback, bool percent_space_escape = true, DoAfterAcquiredItem do_after = null) {
             var pool = new IDPool<T, TTag>();
 
             while (!file.EndOfStream) {
@@ -28,16 +29,21 @@ namespace Semi {
                 if (percent_space_escape) strnid = strnid.Replace("%%%", " ");
 
                 var item = callback.Invoke(strnid);
+				var full_strid = $"{nspace}:{strid}";
 
                 if (strtags.Length > 0) {
                     var tag = (TTag)(object)0;
                     for (int i = 0; i < strtags.Length; i++) {
                         tag = (TTag)(object)((int)(object)tag | (int)Enum.Parse(typeof(TTag), strtags[i], true));
                     }
-                    pool.Add($"{nspace}:{strid}", item, tag);
+					pool.Add(full_strid, item, tag);
                 } else {
-                    pool.Add($"{nspace}:{strid}", item);
+                    pool.Add(full_strid, item);
                 }
+
+				if (do_after != null) {
+					do_after.Invoke(full_strid, item);
+				}
             }
 
             return pool;
