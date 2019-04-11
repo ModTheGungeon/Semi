@@ -9,14 +9,17 @@ using MonoMod;
 
 namespace Semi.Patches {
     [MonoModPatch("global::GameManager")]
-    public class GameManager {
+    public class GameManager : BraveBehaviour {
         private extern void orig_Awake();
 
         private void Awake() {
             orig_Awake();
-            SemiLoader.Logger.Info($"Semi Loader {SemiLoader.VERSION} starting");
+			if (!SemiLoader.Loaded) {
+				SemiLoader.Loaded = true;
+				SemiLoader.Logger.Info($"Semi Loader {SemiLoader.VERSION} starting");
 
-            SemiLoader.OnGameManagerAlive();
+				StartCoroutine(SemiLoader.OnGameManagerAlive());
+			}
         }
     }
 }

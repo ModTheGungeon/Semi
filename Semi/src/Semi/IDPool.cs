@@ -4,7 +4,11 @@ using System.Linq;
 using UnityEngine;
 
 namespace Semi {
+	public class IDPool<T> : IDPool<T, IDPool<T, bool>.NoTags> { }
+
     public class IDPool<T, TTag> {
+		public struct NoTags { }
+
         private Dictionary<string, T> _Storage = new Dictionary<string, T>();
         private HashSet<string> _LockedNamespaces = new HashSet<string>();
         private HashSet<string> _Namespaces = new HashSet<string>();
@@ -24,6 +28,10 @@ namespace Semi {
                 return _Storage.Count;
             }
         }
+
+		public IDPool(string default_namespace = "gungeon") {
+			
+		}
 
         //Exceptions
         public class IDPoolException : Exception {
@@ -176,6 +184,21 @@ namespace Semi {
         public static void VerifyID(string id) {
             if (id.Count(':') > 1) throw new BadlyFormattedIDException(id);
         }
+
+		public string ValidateNewEntry(string id) {
+			VerifyID(id);
+			id = Resolve(id);
+			var id_split = Split(id);
+			if (_LockedNamespaces.Contains(id_split.Namespace)) throw new LockedNamespaceException(id_split.Namespace);
+			return id;
+		}
+
+		public string ValidateEntry(string id) {
+			VerifyID(id);
+			id = Resolve(id);
+			if (!_Storage.ContainsKey(id)) throw new NonExistantIDException(id);
+			return id;
+		}
 
         public static string Resolve(string id) {
             id = id.Trim();

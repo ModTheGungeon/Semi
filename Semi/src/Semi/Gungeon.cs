@@ -24,5 +24,11 @@ namespace Semi {
 
         public static IDPool<PickupObject, ItemTag> Items { get; internal set; }
         public static IDPool<AIActor, EnemyTag> Enemies { get; internal set; }
+
+		public static IDPool<SpriteCollection> SpriteCollections { get; internal set; }
+		public static IDPool<Sprite> SpriteTemplates { get; internal set; }
+
+		public static IDPool<I18N.LocalizationSource> Localizations { get; internal set; }
+		public static IDPool<I18N.Language> Languages { get; internal set; }
     }
 }

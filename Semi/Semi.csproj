@@ -76,6 +76,12 @@
     <Reference Include="UnityEngine.UIModule">
       <HintPath>..\libs\gungeon\UnityEngine.UIModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.Physics2DModule">
+      <HintPath>..\libs\gungeon\UnityEngine.Physics2DModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>..\libs\gungeon\UnityEngine.PhysicsModule.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -139,6 +145,20 @@
     <Compile Include="src\Debug\SGUI\src\Modifiers\SRandomLabelModifier.cs" />
     <Compile Include="src\Debug\Console\ConsoleController.cs" />
     <Compile Include="src\Patches\MainMenuFoyerController.cs" />
+    <Compile Include="src\Loaders\SpriteDefinitionLoader.cs" />
+    <Compile Include="src\Extensions\Texture2D.cs" />
+    <Compile Include="src\Extensions\BinaryReader.cs" />
+    <Compile Include="src\TK0D\MeshColliderSettings.cs" />
+    <Compile Include="src\Semi\ModContentManager.cs" />
+    <Compile Include="src\Loaders\Texture2DLoader.cs" />
+    <Compile Include="src\Patches\AmmonomiconPageRenderer.cs" />
+    <Compile Include="src\Semi\ProxyList.cs" />
+    <Compile Include="src\Patches\tk2dSpriteCollectionData.cs" />
+    <Compile Include="src\Extensions\Tk2d.cs" />
+    <Compile Include="src\TK0D\Sprite.cs" />
+    <Compile Include="src\Semi\I18N.cs" />
+    <Compile Include="src\Patches\GungeonSupportedLanguages.cs" />
+    <Compile Include="src\Patches\StringTableManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="src\" />
@@ -148,6 +168,9 @@
     <Folder Include="src\Parsers\" />
     <Folder Include="src\Extensions\" />
     <Folder Include="src\Debug\" />
+    <Folder Include="src\Loaders\" />
+    <Folder Include="src\TK0D\" />
+    <Folder Include="src\Items\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

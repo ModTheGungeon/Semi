@@ -3,6 +3,7 @@ using ModTheGungeon;
 using System.IO;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Collections;
 
 namespace Semi {
 	public class InvalidConfigException : Exception {
@@ -14,6 +15,18 @@ namespace Semi {
 	}
 
 	public static class SemiLoader {
+		public class ModInfo {
+			public Mod Instance { get; internal set; }
+			public ModConfig Config { get; internal set; }
+			public string Path { get; internal set; }
+
+			public ModInfo(Mod instance, ModConfig config, string path) {
+				Instance = instance;
+				Config = config;
+				Path = path;
+			}
+		}
+
 #if DEBUG
 		public const bool DEBUG_MODE = true;
 #else
@@ -21,9 +34,13 @@ namespace Semi {
 #endif
 
 		public const string VERSION = "cont-dev";
-        public static Dictionary<string, Mod> Mods;
+		internal static bool Loaded = false;
+
+        internal static Dictionary<string, ModInfo> Mods;
 
         internal static UnityEngine.GameObject ModsStorageObject;
+		internal static UnityEngine.GameObject SpriteCollectionStorageObject;
+		internal static UnityEngine.GameObject SpriteTemplateStorageObject;
         internal static Logger Logger = new Logger("Semi");
 
 		internal static DebugConsole.Console Console;
@@ -31,12 +48,25 @@ namespace Semi {
 
 		internal static SGUI.SGUIRoot GUIRoot;
 
-        internal static void OnGameManagerAlive() {
+		internal static SpriteCollection EncounterIconCollection;
+
+		//internal static GlobalSpriteCollectionManager AmmonomiconCollectionManager;
+		//internal static GlobalSpriteCollectionManager ItemCollectionManager;
+
+
+        internal static IEnumerator OnGameManagerAlive() {
             Logger.Debug("GameManager alive");
 
             ModsStorageObject = new UnityEngine.GameObject("Semi Mod Loader");
+			SpriteCollectionStorageObject = new UnityEngine.GameObject("Semi Mod Sprite Collections");
+			SpriteTemplateStorageObject = new UnityEngine.GameObject("Semi Mod Sprite Templates");
+			SpriteTemplateStorageObject.SetActive(false);
+
 			UnityEngine.Object.DontDestroyOnLoad(ModsStorageObject);
-            Mods = new Dictionary<string, Mod>();
+			UnityEngine.Object.DontDestroyOnLoad(SpriteCollectionStorageObject);
+			UnityEngine.Object.DontDestroyOnLoad(SpriteTemplateStorageObject);
+
+            Mods = new Dictionary<string, ModInfo>();
 
 			if (DEBUG_MODE) {
 				GUIRoot = SGUI.SGUIRoot.Setup();
@@ -51,11 +81,63 @@ namespace Semi {
 				UnityEngine.Object.DontDestroyOnLoad(ConsoleController);
 			}
 
+			var magic_lamp = PickupObjectDatabase.GetById(0);
+			magic_lamp.gameObject.SetActive(false);
+			var new_go = UnityEngine.Object.Instantiate(magic_lamp);
+			magic_lamp.gameObject.SetActive(true);
+			UnityEngine.Object.Destroy(new_go.GetComponent<PickupObject>());
+			UnityEngine.Object.Destroy(new_go.GetComponent<tk2dSprite>());
+			UnityEngine.Object.Destroy(new_go.GetComponent<EncounterTrackable>());
+			var animator = new_go.GetComponent<tk2dSpriteAnimator>();
+			if (animator != null) UnityEngine.Object.DestroyImmediate(animator);
+			Mod.CleanPickupObjectBase = new_go.gameObject;
+			Logger.Debug($"FRAME END - SCHEDULED FOR DESTRUCTION");
+			yield return null;
+			Logger.Debug($"CONTINUED");
+
+			Gungeon.Languages = new IDPool<I18N.Language>();
+			Gungeon.Localizations = new IDPool<I18N.LocalizationSource>();
+			LoadBuiltinLanguages();
+			LoadBuiltinLocalizations();
+			I18N.ChangeLanguage(GameManager.Options.CurrentLanguage);
+			// call this once at the start to initialize the dictionaries
+			// TODO @serialization Save language as ID in save file
+
+			Gungeon.SpriteCollections = new IDPool<SpriteCollection>();
+			Gungeon.SpriteTemplates = new IDPool<Sprite>();
             LoadIDMaps();
+
+			EncounterIconCollection = AmmonomiconController.ForceInstance.EncounterIconCollection.Wrap();
+			//SimpleSpriteLoader.BaseSprite = Gungeon.Items["gungeon:singularity"].GetComponent<tk2dSprite>();
+			//ItemCollectionManager = new GlobalSpriteCollectionManager(SimpleSpriteLoader.BaseSprite.Collection);
 
             FileHierarchy.Verify();
             LoadMods();
+
+			BeginRegisteringContent();
+			RunContentMods();
+			CommitContent();
         }
+
+		public static void BeginRegisteringContent() {
+			EncounterIconCollection.BeginModifyingDefinitionList();
+		}
+
+		public static void CommitContent() {
+			EncounterIconCollection.CommitDefinitionList();
+			I18N.ReloadLocalizations();
+		}
+
+		internal static void RunContentMods() {
+			Logger.Info("Running content mods");
+
+			foreach (var mod in Mods) {
+				Logger.Debug($"Registering content in '{mod.Key}'");
+				mod.Value.Instance.RegisteringMode = true;
+				mod.Value.Instance.RegisterContent();
+				mod.Value.Instance.RegisteringMode = false;
+			}
+		}
 
         internal static void LoadMods() {
             Logger.Info("Loading mods");
@@ -151,9 +233,15 @@ namespace Semi {
                 if (!typeof(Mod).IsAssignableFrom(type) || type.IsAbstract) continue;
 
                 Mod mod_instance = (Mod)ModsStorageObject.AddComponent(type);
-                mod_instance.Config = mod_config;
                 mod_config.Instance = mod_instance;
-                Mods[mod_config.ID] = mod_instance;
+
+				var mod_info = Mods[mod_config.ID] = new ModInfo(
+								mod_instance,
+								mod_config,
+								dir_path
+				);
+
+				mod_instance.Info = mod_info;
 
                 mod_instance.Loaded();
             }
@@ -184,5 +272,33 @@ namespace Semi {
                 );
             }
         }
+
+		internal static void LoadBuiltinLanguages() {
+			Gungeon.Languages["gungeon:english"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.ENGLISH);
+			Gungeon.Languages["gungeon:rubel_test"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.RUBEL_TEST);
+			Gungeon.Languages["gungeon:french"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.FRENCH);
+			Gungeon.Languages["gungeon:spanish"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.SPANISH);
+			Gungeon.Languages["gungeon:italian"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.ITALIAN);
+			Gungeon.Languages["gungeon:german"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.GERMAN);
+			Gungeon.Languages["gungeon:portuguese"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.BRAZILIANPORTUGUESE);
+			Gungeon.Languages["gungeon:japanese"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.JAPANESE);
+			Gungeon.Languages["gungeon:korean"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.KOREAN);
+			Gungeon.Languages["gungeon:russian"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.RUSSIAN);
+			Gungeon.Languages["gungeon:polish"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.POLISH);
+			Gungeon.Languages["gungeon:chinese"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.CHINESE);
+		}
+
+		internal static void LoadBuiltinLocalizations() {
+			for (int i = 0; i <= (int)StringTableManager.GungeonSupportedLanguages.CHINESE; i++) {
+				var lang = (StringTableManager.GungeonSupportedLanguages)i;
+
+				Gungeon.Localizations[$"{I18N.GungeonLanguage.LanguageToID(lang)}_core"] = new I18N.PrefabLocalization(lang, I18N.StringTable.Core);
+				Gungeon.Localizations[$"{I18N.GungeonLanguage.LanguageToID(lang)}_enemies"] = new I18N.PrefabLocalization(lang, I18N.StringTable.Enemies);
+				Gungeon.Localizations[$"{I18N.GungeonLanguage.LanguageToID(lang)}_intro"] = new I18N.PrefabLocalization(lang, I18N.StringTable.Intro);
+				Gungeon.Localizations[$"{I18N.GungeonLanguage.LanguageToID(lang)}_items"] = new I18N.PrefabLocalization(lang, I18N.StringTable.Items);
+				Gungeon.Localizations[$"{I18N.GungeonLanguage.LanguageToID(lang)}_synergies"] = new I18N.PrefabLocalization(lang, I18N.StringTable.Synergies);
+				Gungeon.Localizations[$"{I18N.GungeonLanguage.LanguageToID(lang)}_ui"] = new I18N.PrefabLocalization(lang, I18N.StringTable.UI);
+			}
+		}
     }
 }
