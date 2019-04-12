@@ -139,11 +139,14 @@ namespace Semi.Patches {
 		public string ItemID = null;
 		public List<object> SerializedData;
 
+		public extern void orig_ctor(PassiveItem p);
+
 		[MonoModLinkTo("System.Object", ".ctor")]
 		[MonoModForceCall]
 		[MonoModRemove]
 		public extern void object_ctor();
 
+		[MonoModReplace]
 		[MonoModConstructor]
 		public void ctor(PassiveItem p) {
 			object_ctor();
@@ -164,11 +167,14 @@ namespace Semi.Patches {
 		public int NumberOfUses;
 		public List<object> SerializedData;
 
+		public extern void orig_ctor(PlayerItem p);
+
 		[MonoModLinkTo("System.Object", ".ctor")]
 		[MonoModForceCall]
 		[MonoModRemove]
 		public extern void object_ctor();
 
+		[MonoModReplace]
 		[MonoModConstructor]
 		public void ctor(PlayerItem p) {
 			object_ctor();
@@ -192,11 +198,14 @@ namespace Semi.Patches {
 		public List<int> DuctTapedGunIDs;
 		// TODO @save this still uses numeric IDs
 
+		public extern void orig_ctor(Gun g);
+
 		[MonoModLinkTo("System.Object", ".ctor")]
 		[MonoModForceCall]
 		[MonoModRemove]
 		public extern void object_ctor();
 
+		[MonoModReplace]
 		[MonoModConstructor]
 		public void ctor(Gun g) {
 			object_ctor();

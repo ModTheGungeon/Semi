@@ -37,8 +37,8 @@ namespace Semi {
 		internal static bool Loaded = false;
 
         internal static Dictionary<string, ModInfo> Mods;
-
         internal static UnityEngine.GameObject ModsStorageObject;
+
 		internal static UnityEngine.GameObject SpriteCollectionStorageObject;
 		internal static UnityEngine.GameObject SpriteTemplateStorageObject;
         internal static Logger Logger = new Logger("Semi");
@@ -54,13 +54,35 @@ namespace Semi {
 		//internal static GlobalSpriteCollectionManager ItemCollectionManager;
 
 
-        internal static IEnumerator OnGameManagerAlive() {
-            Logger.Debug("GameManager alive");
+		internal static IEnumerator OnGameManagerAlive(GameManager mgr) {
+			// INVESTIGATING:
+			// native exception a couple seconds after entering a room
+			// (varies in time, mostly consistent but not 100%, didn't happen once (at least
+			//  not for a very long time) with same conditions where it happened)
+			//
+			//doesnt happen if paused in entered room
+			// NOT fakeprefab related
+			// no sprites added
+			//no items
+			//(no mod content)
+			//only semi +the mod itself was loaded
+			// investigate recent stuff:
+			//   - the mgr argument on this method
+			//   - the PickupObjectTreeBuilder base object thing
+			//     (null exception is in a destructor :thinking:)
+			//   - don't bother testing fakeprefab (tried commenting out the patch)
+			// unsure if this was happening before but highly doubt it
+			// doesn't happen in classic etgmod so...
+			// try uncommenting one-by-one feature until it goes away?
+			// also try not loading any mods at all
 
+            Logger.Debug("GameManager alive");
+			
             ModsStorageObject = new UnityEngine.GameObject("Semi Mod Loader");
 			SpriteCollectionStorageObject = new UnityEngine.GameObject("Semi Mod Sprite Collections");
 			SpriteTemplateStorageObject = new UnityEngine.GameObject("Semi Mod Sprite Templates");
 			SpriteTemplateStorageObject.SetActive(false);
+			SpriteCollectionStorageObject.SetActive(false);
 
 			UnityEngine.Object.DontDestroyOnLoad(ModsStorageObject);
 			UnityEngine.Object.DontDestroyOnLoad(SpriteCollectionStorageObject);
@@ -69,6 +91,7 @@ namespace Semi {
             Mods = new Dictionary<string, ModInfo>();
 
 			if (DEBUG_MODE) {
+				Logger.Debug($"Debug mode active");
 				GUIRoot = SGUI.SGUIRoot.Setup();
 
 				SGUI.SGUIIMBackend.GetFont = (SGUI.SGUIIMBackend backend) => {
@@ -81,31 +104,26 @@ namespace Semi {
 				UnityEngine.Object.DontDestroyOnLoad(ConsoleController);
 			}
 
-			var magic_lamp = PickupObjectDatabase.GetById(0);
-			magic_lamp.gameObject.SetActive(false);
-			var new_go = UnityEngine.Object.Instantiate(magic_lamp);
-			magic_lamp.gameObject.SetActive(true);
-			UnityEngine.Object.Destroy(new_go.GetComponent<PickupObject>());
-			UnityEngine.Object.Destroy(new_go.GetComponent<tk2dSprite>());
-			UnityEngine.Object.Destroy(new_go.GetComponent<EncounterTrackable>());
-			var animator = new_go.GetComponent<tk2dSpriteAnimator>();
-			if (animator != null) UnityEngine.Object.DestroyImmediate(animator);
-			Mod.CleanPickupObjectBase = new_go.gameObject;
-			Logger.Debug($"FRAME END - SCHEDULED FOR DESTRUCTION");
+			InitializeTreeBuilders();
+			Logger.Debug($"Waiting frame to delete tree builder base objects");
 			yield return null;
-			Logger.Debug($"CONTINUED");
 
 			Gungeon.Languages = new IDPool<I18N.Language>();
 			Gungeon.Localizations = new IDPool<I18N.LocalizationSource>();
+
 			LoadBuiltinLanguages();
+			yield return null;
+
 			LoadBuiltinLocalizations();
+			yield return null;
+
 			I18N.ChangeLanguage(GameManager.Options.CurrentLanguage);
 			// call this once at the start to initialize the dictionaries
 			// TODO @serialization Save language as ID in save file
 
 			Gungeon.SpriteCollections = new IDPool<SpriteCollection>();
 			Gungeon.SpriteTemplates = new IDPool<Sprite>();
-            LoadIDMaps();
+			yield return mgr.StartCoroutine(LoadIDMaps());
 
 			EncounterIconCollection = AmmonomiconController.ForceInstance.EncounterIconCollection.Wrap();
 			//SimpleSpriteLoader.BaseSprite = Gungeon.Items["gungeon:singularity"].GetComponent<tk2dSprite>();
@@ -247,7 +265,7 @@ namespace Semi {
             }
         }
 
-        internal static void LoadIDMaps() {
+        internal static IEnumerator LoadIDMaps() {
             var asm = Assembly.GetExecutingAssembly();
             Logger.Debug("Loading IDMaps");
 
@@ -262,6 +280,8 @@ namespace Semi {
 					}
                 );
             }
+
+			yield return null;
 
             using (StreamReader stream = new StreamReader(asm.GetManifestResourceStream("idmaps:enemies.txt"))) {
                 Logger.Debug($"IDMap enemies.txt: stream = {stream}");
@@ -299,6 +319,28 @@ namespace Semi {
 				Gungeon.Localizations[$"{I18N.GungeonLanguage.LanguageToID(lang)}_synergies"] = new I18N.PrefabLocalization(lang, I18N.StringTable.Synergies);
 				Gungeon.Localizations[$"{I18N.GungeonLanguage.LanguageToID(lang)}_ui"] = new I18N.PrefabLocalization(lang, I18N.StringTable.UI);
 			}
+		}
+
+		internal static void InitializePickupObjectTreeBuilder() {
+			var magic_lamp = PickupObjectDatabase.GetById(0);
+
+			magic_lamp.gameObject.SetActive(false);
+			var new_go = UnityEngine.Object.Instantiate(magic_lamp);
+			magic_lamp.gameObject.SetActive(true);
+
+			UnityEngine.Object.Destroy(new_go.GetComponent<PickupObject>());
+			UnityEngine.Object.Destroy(new_go.GetComponent<tk2dSprite>());
+			UnityEngine.Object.Destroy(new_go.GetComponent<EncounterTrackable>());
+			var animator = new_go.GetComponent<tk2dSpriteAnimator>();
+			if (animator != null) UnityEngine.Object.Destroy(animator);
+
+			UnityEngine.Object.DontDestroyOnLoad(new_go);
+
+			PickupObjectTreeBuilder.CleanBaseObject = new_go.gameObject;
+		}
+
+		internal static void InitializeTreeBuilders() {
+			InitializePickupObjectTreeBuilder();
 		}
     }
 }

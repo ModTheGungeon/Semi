@@ -18,7 +18,7 @@ namespace Semi.Patches {
 				SemiLoader.Loaded = true;
 				SemiLoader.Logger.Info($"Semi Loader {SemiLoader.VERSION} starting");
 
-				StartCoroutine(SemiLoader.OnGameManagerAlive());
+				StartCoroutine(SemiLoader.OnGameManagerAlive((global::GameManager)(object)this));
 			}
         }
     }

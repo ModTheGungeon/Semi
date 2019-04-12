@@ -1,4 +1,6 @@
 Semi/bin/{TARGET}/Assembly-CSharp.SemiLoader.mm.dll
+Semi.Unity/bin/{TARGET}/UnityEngine.CoreModule.SemiLoader.mm.dll
+Semi/bin/{TARGET}/Semi.Bridge.dll
 Semi/bin/{TARGET}/Logger.dll
 Semi/bin/{TARGET}/Mono.Cecil.dll
 Semi/bin/{TARGET}/Mono.Cecil.Pdb.dll

@@ -108,7 +108,11 @@ namespace Semi {
 		}
 
 		public void CopyTo(Sprite target) {
-			// generated through regex for all public properties
+			target.Wrap.attachParent = Wrap.attachParent;
+			target.Wrap.autodetectFootprint = Wrap.autodetectFootprint;
+			target.Wrap.automaticallyManagesDepth = Wrap.automaticallyManagesDepth;
+			target.Wrap.depthUsesTrimmedBounds = Wrap.depthUsesTrimmedBounds;
+			target.Wrap.SortingOrder = Wrap.SortingOrder;
 			target.Wrap.Collection = Wrap.Collection;
 			target.Wrap.spriteId = Wrap.spriteId;
 			target.Wrap.LockUV2OnFrameOne = Wrap.LockUV2OnFrameOne;
@@ -412,7 +416,7 @@ namespace Semi {
 		}
 
 		public static SpriteDefinition Construct(Texture2D texture, string override_name = null) {
-			if (!Texture2DLoader.IsEqualPowerOfTwo(texture)) throw new Exception("Texture size must be equal powers of two!");
+			//if (!Texture2DLoader.IsEqualPowerOfTwo(texture)) throw new Exception("Texture size must be equal powers of two!");
 
 			Material material = new Material(Shader.Find(DEFAULT_SHADER));
 			material.mainTexture = texture;

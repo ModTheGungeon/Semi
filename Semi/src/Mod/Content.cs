@@ -145,72 +145,31 @@ namespace Semi {
 			return mod_loc;
 		}
 
-		public PassiveItem RegisterPassiveItem<T>(string id, string enc_icon_id, string sprite_template_id, string name_key = "", string short_desc_key = "", string long_desc_key = "") where T : PassiveItem {
+		public T RegisterItem<T>(string id, string enc_icon_id, string sprite_template_id, string name_key = "", string short_desc_key = "", string long_desc_key = "") where T : PassiveItem {
 			id = GetFullID(id);
-			Console.WriteLine($"STAGE: id");
 			var sprite_def = SemiLoader.EncounterIconCollection.GetDefinition(enc_icon_id);
-			Console.WriteLine($"STAGE: sprite_def");
 			var sprite_template = Gungeon.SpriteTemplates[sprite_template_id];
-			Console.WriteLine($"STAGE: sprite_template");
 
-			var new_inst = UnityEngine.Object.Instantiate(CleanPickupObjectBase);
-			Console.WriteLine($"STAGE: new_inst");
-			new_inst.name = id;
-			Console.WriteLine($"STAGE: new_inst.name");
+			var new_inst = PickupObjectTreeBuilder.GetNewInactiveObject(id);
+			var pickup_object = PickupObjectTreeBuilder.AddPickupObject<T>(new_inst);
+			var journal_entry = PickupObjectTreeBuilder.CreateJournalEntry(name_key, long_desc_key, short_desc_key, sprite_def.Name);
+			var enc_track = PickupObjectTreeBuilder.AddEncounterTrackable(new_inst, journal_entry, $"SEMI/Items/{typeof(T).Name}/{id}");
+			var enc_db_entry = PickupObjectTreeBuilder.CreateEncounterDatabaseEntry(enc_track, $"SEMI/Items/{id}");
+			PickupObjectTreeBuilder.AddSprite(new_inst, sprite_template);
 
-			var pickup = new_inst.AddComponent<T>() as PickupObject;
-			Console.WriteLine($"STAGE: pickup");
-			var enc_trackable = new_inst.AddComponent<EncounterTrackable>();
-			Console.WriteLine($"STAGE: enc_trackable");
-			var journal_entry = new JournalEntry();
-			Console.WriteLine($"STAGE: journal_entry");
-			enc_trackable.journalData = journal_entry;
-			Console.WriteLine($"STAGE: enc_trackable.journalData");
+			PickupObjectDatabase.Instance.Objects.Add(pickup_object);
+			Gungeon.Items.Add(id, pickup_object);
+			var id_tag = Gungeon.ItemTag.Unknown;
+			var t_type = typeof(T);
+			if (t_type.IsAssignableFrom(typeof(Gun)) || t_type.IsAssignableFrom(typeof(PassiveItem)) || t_type.IsAssignableFrom(typeof(PlayerItem))) {
+				id_tag = Gungeon.ItemTag.Item;
+			} else {
+				id_tag = Gungeon.ItemTag.Consumable;
+			}
+			Gungeon.Items.SetTag(id, id_tag);
+			EncounterDatabase.Instance.Entries.Add(enc_db_entry);
 
-			journal_entry.PrimaryDisplayName = name_key;
-			Console.WriteLine($"STAGE: journ.PrimaryDisplayName");
-			journal_entry.AmmonomiconFullEntry = long_desc_key;
-			Console.WriteLine($"STAGE: journ.AmmonomiconFullEntry");
-			journal_entry.NotificationPanelDescription = short_desc_key;
-			Console.WriteLine($"STAGE: journ.NotificationPanelDescription");
-			journal_entry.AmmonomiconSprite = sprite_def.Name;
-			Console.WriteLine($"STAGE: journ.AmmonomiconSprite");
-			journal_entry.SuppressInAmmonomicon = false;
-			Console.WriteLine($"STAGE: journ.SuppressInAmmonomicon");
-
-			enc_trackable.EncounterGuid = $"SEMI+{id}";
-			Console.WriteLine($"STAGE: EncounterGuid");
-			enc_trackable.TrueEncounterGuid = enc_trackable.EncounterGuid;
-			Console.WriteLine($"STAGE: TrueEncounterGuid");
-
-			var num_id = PickupObjectDatabase.Instance.Objects.Count;
-			Console.WriteLine($"STAGE: num_id");
-			pickup.PickupObjectId = num_id;
-			Console.WriteLine($"STAGE: pickup.PickupObjectId");
-
-			var sprite = new_inst.AddComponent<tk2dSprite>().Wrap();
-			Console.WriteLine($"STAGE: sprite");
-			sprite_template.CopyTo(sprite);
-			Console.WriteLine($"STAGE: sprite CopyTo");
-
-			PickupObjectDatabase.Instance.Objects.Add(pickup);
-			Console.WriteLine($"STAGE: pickup object database add");
-			Gungeon.Items.Add(id, pickup);
-			Console.WriteLine($"STAGE: gungeon items add");
-
-
-
-			var enc_entry = new EncounterDatabaseEntry(enc_trackable);
-			Console.WriteLine($"STAGE: enc_entry");
-			//enc_entry.journalData = journal_entry;
-			//Console.WriteLine($"STAGE: enc_entry.journalData");
-
-			EncounterDatabase.Instance.Entries.Add(enc_entry);
-			enc_entry.path = $"SEMI/Items/{id}";
-			enc_entry.unityGuid = enc_entry.myGuid = enc_trackable.EncounterGuid;
-			Console.WriteLine($"STAGE: add enc entry to db");
-
-			return pickup as PassiveItem;
+			return pickup_object;
 		}
 	}
 }

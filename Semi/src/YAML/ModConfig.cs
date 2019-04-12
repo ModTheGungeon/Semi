@@ -21,7 +21,7 @@ namespace Semi {
         [YamlMember(Alias = "description")]
         public string Description { get; set; } = "Unknown";
 
-		[YamlMember(Alias = "")]
+		[YamlMember(Alias = "if you see this, the bug is fixed")]
 		private string _MonoModBugWorkaround { get; set; } = null;
 
         public Mod Instance { get; internal set; }
