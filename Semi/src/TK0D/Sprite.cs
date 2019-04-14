@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
+using Logger = ModTheGungeon.Logger;
 
 namespace Semi {
 	public struct Sprite {
@@ -147,6 +149,7 @@ namespace Semi {
 	}
 
 	public struct SpriteCollection {
+		internal static Logger Logger = new Logger("SpriteCollection");
 		internal static Dictionary<string, IDPool<int>> SpritePoolMap = new Dictionary<string, IDPool<int>>();
 
 		public tk2dSpriteCollectionData Wrap;
@@ -224,7 +227,8 @@ namespace Semi {
 			return def_idx;
 		}
 
-		internal SpriteDefinition GetDefinitionByID(int id) {
+		internal SpriteDefinition? GetDefinitionByIndex(int id) {
+			if (id < 0) return null;
 			if (WorkingDefinitionList == null) {
 				return SpriteDefinitions[id];
 			} else {
@@ -240,7 +244,7 @@ namespace Semi {
 			}
 		}
 
-		internal int GetIndex(string id) {
+		public int GetIndex(string id) {
 			// we can't do ValidateEntry here because that'd check
 			// for gungeon: IDs too, and those aren't actually there
 			// and are just faked a'la old ETGMod Resources.Load
@@ -264,9 +268,10 @@ namespace Semi {
 			}
 		}
 
-		public SpriteDefinition GetDefinition(string id) {
+		public SpriteDefinition? GetDefinition(string id) {
 			var idx = GetIndex(id);
-			return new SpriteDefinition(GetDefinitionByID(idx));
+			if (idx < 0) return null;
+			return new SpriteDefinition(GetDefinitionByIndex(idx));
 		}
 
 		public ProxyList<SpriteDefinition, tk2dSpriteDefinition> SpriteDefinitions {
@@ -307,7 +312,7 @@ namespace Semi {
 			set { Wrap.materialInsts = value; }
 		}
 
-		public static SpriteCollection Construct(GameObject parent, string name, string unique_id, params SpriteDefinition[] defs) {
+		public static SpriteCollection Construct(GameObject parent, string name, string unique_id, Material material, params SpriteDefinition[] defs) {
 			var coll = parent.AddComponent<tk2dSpriteCollectionData>().Wrap();
 
 			coll.Wrap.assetName = name;
@@ -316,6 +321,14 @@ namespace Semi {
 			coll.Wrap.spriteCollectionGUID = unique_id;
 			coll.Wrap.spriteCollectionName = name;
 			coll.Wrap.spriteDefinitions = new tk2dSpriteDefinition[0];
+
+			coll.Wrap.material = material;
+			coll.Wrap.materials = new Material[] { material };
+			coll.Wrap.materialInsts = new Material[] { material };
+
+			coll.Wrap.textures = new Texture[] { material?.mainTexture };
+			coll.Wrap.textureInsts = new Texture2D[] { (Texture2D)material?.mainTexture };
+
 			if (defs != null && defs.Length > 0) {
 				// this call won't break in Mod.RegisterContent
 				// because this class handles stacked
@@ -324,6 +337,75 @@ namespace Semi {
 			}
 
 			return new SpriteCollection(coll);
+		}
+
+		public static SpriteCollection Load(Tk0dConfigParser.ParsedCollection parsed, string base_dir, string coll_namespace) {
+			if (parsed.SpritesheetPath == null || parsed.SpritesheetPath.Trim() == "") throw new Exception("Missing spritesheet path!");
+			var tex = Texture2DLoader.LoadTexture2D(Path.Combine(base_dir, parsed.SpritesheetPath));
+			var mat = new Material(ShaderCache.Acquire(SpriteDefinition.DEFAULT_SHADER));
+			mat.mainTexture = tex;
+
+			var unit_w = parsed.UnitW < 1 ? 1 : parsed.UnitW;
+			var unit_h = parsed.UnitH < 1 ? 1 : parsed.UnitH;
+
+			var id = $"{coll_namespace}:{parsed.ID}";
+
+			Logger.Debug($"Loading {id}");
+			var coll = Construct(SemiLoader.SpriteCollectionStorageObject, parsed.Name, id, mat);
+			Logger.Debug($"Collection object: {coll}");
+			coll.BeginModifyingDefinitionList();
+			try {
+				foreach (var def in parsed.Definitions) {
+					var w = def.Value.W < 1 ? parsed.SizeW : def.Value.W;
+					var h = def.Value.H < 1 ? parsed.SizeH : def.Value.H;
+					var def_id = $"{coll_namespace}:{def.Value.ID}";
+
+					var tk0d_def = SpriteDefinition.Construct(
+						mat,
+						def_id,
+						def.Value.X * unit_w,
+						def.Value.Y * unit_h,
+						w * unit_w,
+						h * unit_h
+					);
+
+					var def_index = coll.Register(tk0d_def);
+
+					Logger.Debug($"Registered definition {def_id} as {def_index}");
+
+					if (parsed.AttachPoints.ContainsKey(def.Value.ID)) {
+						var attach_data_list = parsed.AttachPoints[def.Value.ID];
+						Logger.Debug($"Definition contains {attach_data_list.Count} attach point(s)");
+						var tk2d_attach_list = new tk2dSpriteDefinition.AttachPoint[attach_data_list.Count];
+
+						for (int i = 0; i < attach_data_list.Count; i++) {
+							var attach_data = attach_data_list[i];
+
+							Logger.Debug($"- {attach_data.AttachPoint} @ ({attach_data.X}, {attach_data.Y}, {attach_data.Z}) angle {attach_data.Angle}");
+
+							var tk2d_attach_data = new tk2dSpriteDefinition.AttachPoint {
+								name = attach_data.AttachPoint,
+								position = new Vector3(attach_data.X, attach_data.Y, attach_data.Z),
+								angle = attach_data.Angle
+							};
+
+							tk2d_attach_list[i] = tk2d_attach_data;
+						}
+
+						coll.Wrap.SpriteDefinedAttachPoints.Add(new AttachPointData(tk2d_attach_list));
+						coll.Wrap.SpriteIDsWithAttachPoints.Add(def_index);
+					} else if (parsed.AttachPoints != null && parsed.AttachPoints.Count > 0) {
+						Logger.Debug($"Definition doesn't contain attach points, but other definitions in this collection do - inserting null attach point data entry");
+						coll.Wrap.SpriteDefinedAttachPoints.Add(null);
+					}
+				}
+			} finally {
+				coll.CommitDefinitionList();
+			}
+
+			Gungeon.SpriteCollections.Add(id, coll);
+
+			return coll;
 		}
 	}
 
@@ -343,15 +425,15 @@ namespace Semi {
 					new Vector4(1.0f, 0.0f, 0.0f, 1.0f),
 		};
 
-		public static readonly Vector2[] UV_MAP_FULL = {
-					new Vector2(0, 0),
-					new Vector2(1, 0),
+		public static readonly Vector2[] UV_MAP_FULL_TOPLEFT = {
 					new Vector2(0, 1),
-					new Vector2(1, 1)
+					new Vector2(1, 1),
+					new Vector2(0, 0),
+					new Vector2(1, 0)
 		};
 
 		public static readonly Vector2 DEFAULT_TEXEL_SIZE = new Vector2(1 / 16f, 1 / 16f);
-		public static readonly string DEFAULT_SHADER = "tk2d/BlendVertexColor";
+		public static readonly string DEFAULT_SHADER = "Sprites/Default";
 
 		internal SpriteDefinition(tk2dSpriteDefinition def) {
 			Wrap = def;
@@ -415,25 +497,64 @@ namespace Semi {
 			set { Wrap.untrimmedBoundsDataExtents = value; }
 		}
 
-		public static SpriteDefinition Construct(Texture2D texture, string override_name = null) {
+		public static void GenerateGeometry(IntVector2 xy, IntVector2 wh, IntVector2 tex_size, Vector2 scale, out Vector2[] uvs, out Vector3 position0, out Vector3 position1, out Vector3 position2, out Vector3 position3) {
+			var xo = (float)xy.x / tex_size.x;
+			var yo = (float)xy.y / tex_size.y;
+			var xl = (float)wh.x / tex_size.x;
+			var yl = (float)wh.y / tex_size.y;
+			var xe = xl + xo;
+			var ye = yl + yo;
+
+			uvs = new Vector2[] {
+				new Vector2(xo, yo),
+				new Vector2(xe, yo),
+				new Vector2(xo, ye),
+				new Vector2(xe, ye)
+			};
+
+			var w = xl * scale.x;
+			var h = yl * scale.y;
+
+			position0 = new Vector3(0, 0);
+			position1 = new Vector3(w, 0);
+			position2 = new Vector3(0, h);
+			position3 = new Vector3(w, h);
+		}
+
+		public static SpriteDefinition Construct(Material mat, string override_name = null, int? region_x = null, int? region_y = null, int? region_w = null, int? region_h = null) {
 			//if (!Texture2DLoader.IsEqualPowerOfTwo(texture)) throw new Exception("Texture size must be equal powers of two!");
 
-			Material material = new Material(Shader.Find(DEFAULT_SHADER));
-			material.mainTexture = texture;
+			var texture = mat.mainTexture;
 
-			var width = texture.width;
-			var height = texture.height;
+			var tex_width = texture.width;
+			var tex_height = texture.height;
 
-			var x = 0f;
-			var y = 0f;
+			if (region_x == null) region_x = 0;
+			if (region_y == null) region_y = 0;
+			if (region_w == null) region_w = tex_width;
+			if (region_h == null) region_h = tex_height;
 
-			var w = width / 16f;
-			var h = height / 16f;
+			Vector2[] uvs;
+			Vector3 pos0;
+			Vector3 pos1;
+			Vector3 pos2;
+			Vector3 pos3;
+
+			GenerateGeometry(
+				new IntVector2(region_x.Value, tex_height - region_y.Value - region_h.Value), // convert topleft to bottomleft
+				new IntVector2(region_w.Value, region_h.Value),
+				new IntVector2(tex_width, tex_height),
+				new Vector2(tex_width / 16f, tex_height / 16f),
+				out uvs, out pos0, out pos1, out pos2, out pos3
+			);
 
 			var def = new tk2dSpriteDefinition {
 				normals = DEFAULT_NORMALS,
 				tangents = DEFAULT_TANGENTS,
-				texelSize = DEFAULT_TEXEL_SIZE,
+				texelSize = new Vector2(
+					1.0f / tex_width,
+					1.0f / tex_height
+				),
 				extractRegion = false,
 				regionX = 0,
 				regionY = 0,
@@ -444,24 +565,256 @@ namespace Semi {
 				physicsEngine = tk2dSpriteDefinition.PhysicsEngine.Physics3D,
 				colliderType = tk2dSpriteDefinition.ColliderType.None,
 				collisionLayer = CollisionLayer.HighObstacle,
-				position0 = new Vector3(x, y, 0f),
-				position1 = new Vector3(x + w, y, 0f),
-				position2 = new Vector3(x, y + h, 0f),
-				position3 = new Vector3(x + w, y + h, 0f),
-				material = material,
-				materialInst = material,
+				position0 = pos0,
+				position1 = pos1,
+				position2 = pos2,
+				position3 = pos3,
+				material = mat,
+				materialInst = mat,
 				materialId = 0,
-				uvs = UV_MAP_FULL,
-				boundsDataCenter = new Vector3(w / 2f, h / 2f, 0f),
-				boundsDataExtents = new Vector3(w, h, 0f),
-				untrimmedBoundsDataCenter = new Vector3(w / 2f, h / 2f, 0f),
-				untrimmedBoundsDataExtents = new Vector3(w, h, 0f),
+				uvs = uvs,
+				boundsDataCenter = pos3 / 2f,
+				boundsDataExtents = pos3,
+				untrimmedBoundsDataCenter = pos3 / 2f,
+				untrimmedBoundsDataExtents = pos3,
 			};
 
 			if (override_name != null) def.name = override_name;
 			else def.name = texture.name;
 
 			return new SpriteDefinition(def);
+		}
+	}
+
+	public struct SpriteAnimationFrame {
+		public tk2dSpriteAnimationFrame Wrap;
+
+		internal SpriteAnimationFrame(tk2dSpriteAnimationFrame frame) {
+			Wrap = frame;
+		}
+
+		public static implicit operator tk2dSpriteAnimationFrame(SpriteAnimationFrame s) => s.Wrap;
+
+		internal static SpriteAnimationFrame Construct(SpriteCollection coll, int definition) {
+			var new_frame = new SpriteAnimationFrame(new tk2dSpriteAnimationFrame());
+			new_frame.Wrap.spriteId = definition;
+			new_frame.Wrap.spriteCollection = coll;
+			return new_frame;
+		}
+
+		public static SpriteAnimationFrame Construct(SpriteCollection coll, string definition) {
+			var id = coll.GetIndex(definition);
+			if (id < 0) throw new Exception($"Sprite definition {definition} doesn't exist - did you forget a namespace?");
+			return Construct(coll, id);
+		}
+	}
+
+	public struct SpriteAnimationClip {
+		public tk2dSpriteAnimationClip Wrap;
+
+		internal List<SpriteAnimationFrame> WorkingFrameList;
+		internal int WorkingDepth;
+
+		internal SpriteAnimationClip(tk2dSpriteAnimationClip clip) {
+			Wrap = clip;
+			WorkingFrameList = null;
+			WorkingDepth = 0;
+		}
+
+		public static implicit operator tk2dSpriteAnimationClip(SpriteAnimationClip s) => s.Wrap;
+
+		internal void BeginModifyingFrames() {
+			if (WorkingDepth <= 0) {
+				WorkingFrameList = new List<SpriteAnimationFrame>();
+				for (int i = 0; i < Frames.Count; i++) {
+					WorkingFrameList.Add(Frames[i]);
+				}
+			}
+			WorkingDepth += 1;
+		}
+
+		internal void CommitFrames() {
+			WorkingDepth -= 1;
+			if (WorkingDepth <= 0) {
+				Frames = Frames.ConvertCompatibleList(WorkingFrameList);
+				WorkingFrameList = null;
+			}
+		}
+
+		internal int Add(SpriteAnimationFrame frame) {
+			if (WorkingFrameList == null) throw new Exception("Cannot add new frames while not working on frame list");
+
+			var frames_idx = WorkingFrameList.Count;
+			WorkingFrameList.Add(frame);
+
+			return frames_idx;
+		}
+
+		public ProxyList<SpriteAnimationFrame, tk2dSpriteAnimationFrame> Frames {
+			get {
+				return new ProxyList<SpriteAnimationFrame, tk2dSpriteAnimationFrame>(
+					Wrap.frames,
+					(from) => new SpriteAnimationFrame(from),
+					(to) => to.Wrap
+				);
+			}
+			set {
+				Wrap.frames = value.ToTargetArray();
+			}
+		}
+
+		public static SpriteAnimationClip Construct(string name, int fps, tk2dSpriteAnimationClip.WrapMode wrap_mode, params SpriteAnimationFrame[] frames) {
+			var new_clip = new SpriteAnimationClip(new tk2dSpriteAnimationClip());
+			new_clip.Wrap.name = name;
+			new_clip.Wrap.fps = fps;
+			new_clip.Wrap.wrapMode = wrap_mode;
+			new_clip.Wrap.frames = ListConverter.ToArray(frames, (f) => f.Wrap);
+			return new_clip;
+		}
+	}
+
+	public struct SpriteAnimation {
+		public tk2dSpriteAnimation Wrap;
+
+		internal List<SpriteAnimationClip> WorkingClipList;
+		internal int WorkingDepth;
+
+		internal SpriteAnimation(tk2dSpriteAnimation animation) {
+			Wrap = animation;
+			WorkingClipList = null;
+			WorkingDepth = 0;
+		}
+
+		public static implicit operator tk2dSpriteAnimation(SpriteAnimation s) => s.Wrap;
+
+		internal void BeginModifyingClips() {
+			if (WorkingDepth <= 0) {
+				WorkingClipList = new List<SpriteAnimationClip>();
+				for (int i = 0; i < Clips.Count; i++) {
+					WorkingClipList.Add(Clips[i]);
+				}
+			}
+			WorkingDepth += 1;
+		}
+
+		internal void CommitClips() {
+			WorkingDepth -= 1;
+			if (WorkingDepth <= 0) {
+				Clips = Clips.ConvertCompatibleList(WorkingClipList);
+				WorkingClipList = null;
+			}
+		}
+
+		internal int Add(SpriteAnimationClip clip) {
+			if (WorkingClipList == null) throw new Exception("Cannot add new frames while not working on frame list");
+
+			var clips_idx = WorkingClipList.Count;
+			WorkingClipList.Add(clip);
+
+			return clips_idx;
+		}
+
+		public ProxyList<SpriteAnimationClip, tk2dSpriteAnimationClip> Clips {
+			get {
+				return new ProxyList<SpriteAnimationClip, tk2dSpriteAnimationClip>(
+					Wrap.clips,
+					(from) => new SpriteAnimationClip(from),
+					(to) => to.Wrap
+				);
+			}
+			set {
+				Wrap.clips = value.ToTargetArray();
+			}
+		}
+
+		public static SpriteAnimation Construct(GameObject parent, params SpriteAnimationClip[] clips) {
+			var new_anim = new SpriteAnimation(parent.AddComponent<tk2dSpriteAnimation>());
+			new_anim.Wrap.clips = ListConverter.ToArray(clips, (f) => f.Wrap);
+			return new_anim;
+		}
+
+		public static SpriteAnimation Load(Tk0dConfigParser.ParsedAnimation parsed, string anim_namespace) {
+			// TODO make use of the name
+			var anim = Construct(SemiLoader.AnimationTemplateStorageObject);
+			var id = $"{anim_namespace}:{parsed.ID}";
+
+			var fps = parsed.DefaultFPS;
+
+			var coll_id = parsed.Collection;
+			if (!Gungeon.SpriteCollections.ContainsID(coll_id)) throw new Exception($"Semi collection '{coll_id}' doesn't exist. Did you forget to load it before loading the animation?");
+			var coll = Gungeon.SpriteCollections[coll_id];
+
+			try {
+				anim.BeginModifyingClips();
+				foreach (var clip in parsed.Clips) {
+					var tk0d_clip = SpriteAnimationClip.Construct(
+						clip.Value.Name,
+						clip.Value.FPS == 0 ? fps : clip.Value.FPS,
+						clip.Value.WrapMode
+					);
+
+					tk0d_clip.BeginModifyingFrames();
+					try {
+						var prefix = clip.Value.Prefix ?? "gungeon";
+						for (int i = 0; i < clip.Value.Frames.Count; i++) {
+							var frame = clip.Value.Frames[i];
+							string def = frame.Definition;
+							if (!def.Contains(":")) {
+								def = $"{prefix}:{frame.Definition}";
+							}
+
+							var tk0d_def_id = coll.GetIndex(def);
+							if (tk0d_def_id < 0) throw new Exception($"There is no sprite definition '{def}' in collection '{coll_id}'");
+
+							var xdef = coll.GetDefinition(def);
+
+							Console.WriteLine($"Adding frame {tk0d_def_id} {xdef?.Name}");
+
+							tk0d_clip.Add(SpriteAnimationFrame.Construct(
+								coll,
+								tk0d_def_id
+							));
+
+						}
+					} finally {
+						tk0d_clip.CommitFrames();
+					}
+
+					anim.Add(tk0d_clip);
+				}
+			} finally {
+				anim.CommitClips();
+			}
+
+			Gungeon.AnimationTemplates.Add(id, anim);
+			return anim;
+		}
+	}
+
+	public struct SpriteAnimator {
+		public tk2dSpriteAnimator Wrap;
+
+		internal SpriteAnimator(tk2dSpriteAnimator animator) {
+			Wrap = animator;
+		}
+
+		public static implicit operator tk2dSpriteAnimator(SpriteAnimator s) => s.Wrap;
+
+		public static SpriteAnimator Construct(GameObject parent, SpriteAnimation animation, string default_clip = null) {
+			var new_anim = new SpriteAnimator(parent.AddComponent<tk2dSpriteAnimator>());
+			new_anim.Wrap.Library = animation;
+			new_anim.Wrap.DefaultClipId = 0;
+			if (default_clip != null) {
+				int clip_id = -1;
+				for (int i = 0; i < animation.Wrap.clips.Length; i++) {
+					if (animation.Wrap.clips[i].name == default_clip) {
+						clip_id = i;
+						break;
+					}
+				}
+				if (clip_id == -1) throw new Exception($"Default clip '{default_clip}' doesn't exist.");
+			}
+			return new_anim;
 		}
 	}
 }

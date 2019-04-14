@@ -41,6 +41,7 @@ namespace Semi {
 
 		internal static UnityEngine.GameObject SpriteCollectionStorageObject;
 		internal static UnityEngine.GameObject SpriteTemplateStorageObject;
+		internal static UnityEngine.GameObject AnimationTemplateStorageObject;
         internal static Logger Logger = new Logger("Semi");
 
 		internal static DebugConsole.Console Console;
@@ -81,12 +82,16 @@ namespace Semi {
             ModsStorageObject = new UnityEngine.GameObject("Semi Mod Loader");
 			SpriteCollectionStorageObject = new UnityEngine.GameObject("Semi Mod Sprite Collections");
 			SpriteTemplateStorageObject = new UnityEngine.GameObject("Semi Mod Sprite Templates");
-			SpriteTemplateStorageObject.SetActive(false);
+			AnimationTemplateStorageObject = new UnityEngine.GameObject("Semi Mod Animation Templates");
+
 			SpriteCollectionStorageObject.SetActive(false);
+			SpriteTemplateStorageObject.SetActive(false);
+			AnimationTemplateStorageObject.SetActive(false);
 
 			UnityEngine.Object.DontDestroyOnLoad(ModsStorageObject);
 			UnityEngine.Object.DontDestroyOnLoad(SpriteCollectionStorageObject);
 			UnityEngine.Object.DontDestroyOnLoad(SpriteTemplateStorageObject);
+			UnityEngine.Object.DontDestroyOnLoad(AnimationTemplateStorageObject);
 
             Mods = new Dictionary<string, ModInfo>();
 
@@ -123,6 +128,7 @@ namespace Semi {
 
 			Gungeon.SpriteCollections = new IDPool<SpriteCollection>();
 			Gungeon.SpriteTemplates = new IDPool<Sprite>();
+			Gungeon.AnimationTemplates = new IDPool<SpriteAnimation>();
 			yield return mgr.StartCoroutine(LoadIDMaps());
 
 			EncounterIconCollection = AmmonomiconController.ForceInstance.EncounterIconCollection.Wrap();
@@ -337,6 +343,7 @@ namespace Semi {
 			UnityEngine.Object.DontDestroyOnLoad(new_go);
 
 			PickupObjectTreeBuilder.CleanBaseObject = new_go.gameObject;
+			PickupObjectTreeBuilder.StoredBarrel = ((Gun)magic_lamp).barrelOffset.gameObject;
 		}
 
 		internal static void InitializeTreeBuilders() {

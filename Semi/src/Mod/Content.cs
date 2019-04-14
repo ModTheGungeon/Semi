@@ -5,8 +5,6 @@ using UnityEngine;
 
 namespace Semi {
 	public abstract partial class Mod : MonoBehaviour {
-		internal static GameObject CleanPickupObjectBase;
-
 		public const string RESOURCES_DIR_NAME = "resources";
 		
 		internal bool RegisteringMode;
@@ -50,7 +48,9 @@ namespace Semi {
 			CheckMode();
 			id = GetFullID(id);
 			var tex = Texture2DLoader.LoadTexture2D(GetFullResourcePath(sprite_path));
-			var sprite_def = SpriteDefinition.Construct(tex, id);
+			var mat = new Material(ShaderCache.Acquire(SpriteDefinition.DEFAULT_SHADER));
+			mat.mainTexture = tex;
+			var sprite_def = SpriteDefinition.Construct(mat, id);
 
 			return sprite_def;
 		}
@@ -60,7 +60,9 @@ namespace Semi {
 			id = GetFullID(id);
 
 			var tex = Texture2DLoader.LoadTexture2D(GetFullResourcePath(sprite_path));
-			var sprite_def = SpriteDefinition.Construct(tex, id);
+			var mat = new Material(ShaderCache.Acquire(SpriteDefinition.DEFAULT_SHADER));
+			mat.mainTexture = tex;
+			var sprite_def = SpriteDefinition.Construct(mat, id);
 
 			SemiLoader.EncounterIconCollection.Register(sprite_def);
 
@@ -75,6 +77,7 @@ namespace Semi {
 				SemiLoader.SpriteCollectionStorageObject,
 				id,
 				id, // IDs are unique
+				null, // TODO sprite collection is passed null material - look into this
 				defs
 			);
 
@@ -145,14 +148,26 @@ namespace Semi {
 			return mod_loc;
 		}
 
-		public T RegisterItem<T>(string id, string enc_icon_id, string sprite_template_id, string name_key = "", string short_desc_key = "", string long_desc_key = "") where T : PassiveItem {
+		public T RegisterItem<T>(string id, string enc_icon_id, string sprite_template_id, string name_key = "", string short_desc_key = "", string long_desc_key = "") where T : PickupObject {
+			CheckMode();
 			id = GetFullID(id);
 			var sprite_def = SemiLoader.EncounterIconCollection.GetDefinition(enc_icon_id);
+			if (sprite_def == null) throw new ArgumentException($"There is no sprite definition '{sprite_def}' in the encounter icon collection");
 			var sprite_template = Gungeon.SpriteTemplates[sprite_template_id];
 
 			var new_inst = PickupObjectTreeBuilder.GetNewInactiveObject(id);
 			var pickup_object = PickupObjectTreeBuilder.AddPickupObject<T>(new_inst);
-			var journal_entry = PickupObjectTreeBuilder.CreateJournalEntry(name_key, long_desc_key, short_desc_key, sprite_def.Name);
+			if (pickup_object is Gun) {
+				var gun = pickup_object as Gun;
+				gun.Volley = ScriptableObject.CreateInstance<ProjectileVolleyData>();
+				gun.Volley.projectiles = new List<ProjectileModule>();
+				gun.Volley.projectiles.Add(new ProjectileModule());
+
+				var barrel = PickupObjectTreeBuilder.GetNewBarrel();
+				barrel.transform.parent = new_inst.transform;
+				gun.barrelOffset = barrel.transform;
+			}
+			var journal_entry = PickupObjectTreeBuilder.CreateJournalEntry(name_key, long_desc_key, short_desc_key, sprite_def.Value.Name);
 			var enc_track = PickupObjectTreeBuilder.AddEncounterTrackable(new_inst, journal_entry, $"SEMI/Items/{typeof(T).Name}/{id}");
 			var enc_db_entry = PickupObjectTreeBuilder.CreateEncounterDatabaseEntry(enc_track, $"SEMI/Items/{id}");
 			PickupObjectTreeBuilder.AddSprite(new_inst, sprite_template);
@@ -170,6 +185,22 @@ namespace Semi {
 			EncounterDatabase.Instance.Entries.Add(enc_db_entry);
 
 			return pickup_object;
+		}
+
+		public SpriteCollection LoadSpriteCollection(string path) {
+			CheckMode();
+			path = GetFullResourcePath(path);
+			var parsed = Tk0dConfigParser.ParseCollection(File.ReadAllText(path));
+			var dir = Path.GetDirectoryName(path);
+			return SpriteCollection.Load(parsed, dir, Config.ID);
+		}
+
+		public SpriteAnimation LoadSpriteAnimation(string path) {
+			CheckMode();
+			path = GetFullResourcePath(path);
+			var parsed = Tk0dConfigParser.ParseAnimation(File.ReadAllText(path));
+			var dir = Path.GetDirectoryName(path);
+			return SpriteAnimation.Load(parsed, Config.ID);
 		}
 	}
 }

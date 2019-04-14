@@ -4,11 +4,18 @@ using UnityEngine;
 namespace Semi {
 	public class PickupObjectTreeBuilder {
 		internal static GameObject CleanBaseObject;
+		internal static GameObject StoredBarrel;
 
 		public static GameObject GetNewInactiveObject(string name) {
 			var obj = Semi.FakePrefab.Clone(CleanBaseObject);
 			UnityEngine.Object.DontDestroyOnLoad(obj);
 			obj.name = name;
+			return obj;
+		}
+
+		public static GameObject GetNewBarrel() {
+			var obj = Semi.FakePrefab.Clone(StoredBarrel);
+			UnityEngine.Object.DontDestroyOnLoad(obj);
 			return obj;
 		}
 

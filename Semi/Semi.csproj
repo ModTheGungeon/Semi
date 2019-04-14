@@ -148,6 +148,8 @@
     <Compile Include="src\Mod\Mod.cs" />
     <Compile Include="src\Mod\Content.cs" />
     <Compile Include="src\TreeBuilders\ItemTreeBuilder.cs" />
+    <Compile Include="src\Parsers\Tk0dConfigParser.cs" />
+    <Compile Include="src\Patches\Gun.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="src\" />

@@ -27,6 +27,7 @@ namespace Semi {
 
 		public static IDPool<SpriteCollection> SpriteCollections { get; internal set; }
 		public static IDPool<Sprite> SpriteTemplates { get; internal set; }
+		public static IDPool<SpriteAnimation> AnimationTemplates { get; internal set; }
 
 		public static IDPool<I18N.LocalizationSource> Localizations { get; internal set; }
 		public static IDPool<I18N.Language> Languages { get; internal set; }
