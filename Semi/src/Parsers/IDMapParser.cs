@@ -7,9 +7,24 @@ namespace Semi {
             public IDMapFormatException(string msg) : base($"Mismatched ID map format: {msg}") { }
         }
 
+		/// <summary>
+		/// Defines how to acquire the item based on the ID in string format.
+		/// </summary>
         public delegate T AcquireItem(string id);
+		/// <summary>
+		/// Defines what to do with the item once it's been acquired, before registering it to the <c>IDPool</c>.
+		/// </summary>
 		public delegate void DoAfterAcquiredItem(string strid, T item);
 
+		/// <summary>
+		/// Parses a file in Semi IDMap format.
+		/// </summary>
+		/// <returns>A new <c>IDPool</c> containing all the specified objects.</returns>
+		/// <param name="file">IDMap file.</param>
+		/// <param name="nspace">Namespace to assign to all the entries.</param>
+		/// <param name="callback"><see cref="AcquireItem"/></param>
+		/// <param name="percent_space_escape">If set to <c>true</c>, triple percent signs will be replaced with single spaces in source IDs.</param>
+		/// <param name="do_after"><see cref="DoAfterAcquiredItem" /></param>
 		public static IDPool<T, TTag> Parse(StreamReader file, string nspace, AcquireItem callback, bool percent_space_escape = true, DoAfterAcquiredItem do_after = null) {
             var pool = new IDPool<T, TTag>();
 

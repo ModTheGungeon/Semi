@@ -4,6 +4,12 @@ using System.Collections.Generic;
 
 namespace Semi {
     public static class SimpleListFileParser {
+		/// <summary>
+		/// Loads a file into a string array containing each line as an element, excluding comments (marked by starting the line with '#').
+		/// </summary>
+		/// <returns>The array of lines.</returns>
+		/// <param name="file">Text file to load.</param>
+		/// <param name="trim">If set to <c>true</c>, lines will be trimmed (whitespace removed from either ends).</param>
         public static string[] Parse(StreamReader file, bool trim = true) {
             List<string> entries = null; 
             // slight optimization

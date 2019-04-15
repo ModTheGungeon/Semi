@@ -8,6 +8,9 @@ using MonoMod;
  */
 
 namespace Semi.Patches {
+	/// <summary>
+	/// Patches Gungeon GameManager class. Serves as the entry point for Semi.
+	/// </summary>
     [MonoModPatch("global::GameManager")]
     public class GameManager : BraveBehaviour {
         private extern void orig_Awake();

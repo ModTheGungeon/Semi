@@ -4,6 +4,10 @@ using System;
 using MonoMod;
 
 namespace Semi.Patches {
+	/// <summary>
+	/// Patches SaveManager to change save file location to avoid corruption or crashes if the save format is changed.
+	/// Currently broken/not used.
+	/// </summary>
 	[MonoModPatch("global::SaveManager")]
 	public class SaveManager {
 		public static global::SaveManager.SaveType MidGameSave = new global::SaveManager.SaveType {

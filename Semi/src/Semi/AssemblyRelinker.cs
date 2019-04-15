@@ -13,8 +13,8 @@ using Mono.Cecil.Cil;
  */
 
 namespace Semi {
-    public delegate TypeReference DGetRelinkedTypeReference(TypeReference type, MemberReference context);
-    public static class AssemblyRelinker {
+    internal delegate TypeReference DGetRelinkedTypeReference(TypeReference type, MemberReference context);
+    internal static class AssemblyRelinker {
         public static ModuleDefinition ETGModule;
         public static string ETGChecksum;
 

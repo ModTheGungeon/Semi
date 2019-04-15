@@ -6,6 +6,9 @@ using System.Collections.Generic;
 using System.Reflection;
 
 namespace Semi {
+	/// <summary>
+	/// Debug patch, will be removed.
+	/// </summary>
 	[MonoModPatch("global::AmmonomiconPageRenderer")]
 	public class AmmonomiconPageRenderer : global::AmmonomiconPageRenderer {
 		[MonoModLinkTo("global::AmmonomiconPageRenderer", "RectangleLineInfo")]

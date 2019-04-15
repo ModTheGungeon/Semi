@@ -132,7 +132,6 @@
     <Compile Include="src\Debug\SGUI\src\Modifiers\SRandomLabelModifier.cs" />
     <Compile Include="src\Debug\Console\ConsoleController.cs" />
     <Compile Include="src\Patches\MainMenuFoyerController.cs" />
-    <Compile Include="src\Loaders\SpriteDefinitionLoader.cs" />
     <Compile Include="src\Extensions\Texture2D.cs" />
     <Compile Include="src\Extensions\BinaryReader.cs" />
     <Compile Include="src\TK0D\MeshColliderSettings.cs" />

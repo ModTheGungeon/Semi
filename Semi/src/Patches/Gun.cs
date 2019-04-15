@@ -3,6 +3,9 @@ using UnityEngine;
 using MonoMod;
 
 namespace Semi {
+	/// <summary>
+	/// Debug patch, will be removed.
+	/// </summary>
 	[MonoModPatch("global::Gun")]
 	public class GunDebugPatch : global::Gun {
 		[MonoModIgnore]

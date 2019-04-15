@@ -9,63 +9,72 @@ namespace Semi {
 			Animation
 		}
 
-		internal class Tk0dConfigParserException : Exception {
-			internal Tk0dConfigParserException(int line, int character, string message = null) : base($"[at {line}:{character}] {message}") { }
+		/// <summary>
+		/// Exception thrown when the parser receives unexpected input.
+		/// </summary>
+		public class Tk0dConfigParserException : Exception {
+			public Tk0dConfigParserException(int line, int character, string message = null) : base($"[at {line}:{character}] {message}") { }
 		}
 
+		/// <summary>
+		/// Object representing the parsed collection.
+		/// </summary>
 		public struct ParsedCollection {
-			internal struct AttachPointData {
-				internal string DefinitionID;
-				internal string AttachPoint;
-				internal float X;
-				internal float Y;
-				internal float Z;
-				internal float Angle;
+			public struct AttachPointData {
+				public string DefinitionID;
+				public string AttachPoint;
+				public float X;
+				public float Y;
+				public float Z;
+				public float Angle;
 			}
 
-			internal struct Definition {
-				internal string ID;
-				internal int X;
-				internal int Y;
-				internal int W;
-				internal int H;
-				internal bool FlipH;
-				internal bool FlipV;
-				internal string SpritesheetOverride;
+			public struct Definition {
+				public string ID;
+				public int X;
+				public int Y;
+				public int W;
+				public int H;
+				public bool FlipH;
+				public bool FlipV;
+				public string SpritesheetOverride;
 			}
 
-			internal string ID;
-			internal string Name;
-			internal int UnitW;
-			internal int UnitH;
-			internal int SizeW;
-			internal int SizeH;
-			internal string SpritesheetPath;
-			internal Dictionary<string, Definition> Definitions;
-			internal Dictionary<string, List<AttachPointData>> AttachPoints;
+			public string ID;
+			public string Name;
+			public int UnitW;
+			public int UnitH;
+			public int SizeW;
+			public int SizeH;
+			public string SpritesheetPath;
+			public Dictionary<string, Definition> Definitions;
+			public Dictionary<string, List<AttachPointData>> AttachPoints;
 		}
 
+		/// <summary>
+		/// Object representing the parsed animation.
+		/// </summary>
 		public struct ParsedAnimation {
-			internal struct Frame {
-				internal string Definition;
-				internal bool OffGround;
-				internal bool Invulnerable;
+			public struct Frame {
+				public string Definition;
+				public bool OffGround;
+				public bool Invulnerable;
 			}
 
-			internal struct Clip {
-				internal string Name;
-				internal tk2dSpriteAnimationClip.WrapMode WrapMode;
-				internal int FPS;
-				internal string Prefix;
+			public struct Clip {
+				public string Name;
+				public tk2dSpriteAnimationClip.WrapMode WrapMode;
+				public int FPS;
+				public string Prefix;
 
-				internal List<Frame> Frames;
+				public List<Frame> Frames;
 			}
 
-			internal string ID;
-			internal string Name;
-			internal string Collection;
-			internal int DefaultFPS;
-			internal Dictionary<string, Clip> Clips;
+			public string ID;
+			public string Name;
+			public string Collection;
+			public int DefaultFPS;
+			public Dictionary<string, Clip> Clips;
 		}
 
 		internal string Input;
@@ -533,12 +542,22 @@ namespace Semi {
 			}
 		}
 
+		/// <summary>
+		/// Parses a file in Semi Collection format and produces a <c>ParsedCollection</c>.
+		/// </summary>
+		/// <returns>The parsed collection representation.</returns>
+		/// <param name="data">Contents of the Semi Collection file.</param>
 		public static ParsedCollection ParseCollection(string data) {
 			var parser = new Tk0dConfigParser(Mode.Collection, data);
 			parser.Parse();
 			return parser.Collection;
 		}
 
+		/// <summary>
+		/// Parses a file in Semi Animation format and produces a <c>ParsedAnimation</c>.
+		/// </summary>
+		/// <returns>The parsed animation representation.</returns>
+		/// <param name="data">Contents of the Semi Animation file.</param>
 		public static ParsedAnimation ParseAnimation(string data) {
 			var parser = new Tk0dConfigParser(Mode.Animation, data);
 			parser.Parse();

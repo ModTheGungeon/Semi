@@ -5,14 +5,24 @@ using UnityEngine;
 
 namespace Semi {
 	public abstract partial class Mod : MonoBehaviour {
+		/// <summary>
+		/// Name of the mod resources directory.
+		/// </summary>
 		public const string RESOURCES_DIR_NAME = "resources";
-		
+
 		internal bool RegisteringMode;
 		internal string ResourcePath {
 			get { return Path.Combine(Info.Path, RESOURCES_DIR_NAME); }
 		}
 
 		private static char[] _SeparatorSplitArray = { '\\', '/' };
+
+		/// <summary>
+		/// Normalize a path, removing all '..' entries. This is used to avoid filesystem access outside of the resources directory in Semi methods.
+		/// Note that this does not make mods secure, as there are still other ways that you could access the filesystem (for example, by directly using the <c>System.IO</c> APIs).
+		/// </summary>
+		/// <returns>The normalized path.</returns>
+		/// <param name="path">Path.</param>
 		public static string NormalizePath(string path) {
 			var split = path.ToLowerInvariant().Split(_SeparatorSplitArray, StringSplitOptions.RemoveEmptyEntries);
 			var list = new List<string>();
@@ -30,11 +40,24 @@ namespace Semi {
 			return string.Join("/", list.ToArray());
 		}
 
+		/// <summary>
+		/// Expands a path relative to the mod resources directory into an absolute path.
+		/// Additionally, it will convert forward slash directory separators into backward slashes on Windows.
+		/// Resource paths can only use forward slashes - this method will throw if it detects a backward slash.
+		/// </summary>
+		/// <returns>The full resource path.</returns>
+		/// <param name="res_path">Relative resource path.</param>
 		public string GetFullResourcePath(string res_path) {
+			if (res_path.Contains("\\")) throw new ArgumentException($"Mod resource paths cannot use backward slashes ('\\') to separate directories. Please use forward slashes ('/'), they will get converted appropriately depending on the current operating system.");
 			if (Path.PathSeparator == '\\') res_path = res_path.Replace('/', '\\');
 			return Path.Combine(ResourcePath, res_path);
 		}
 
+		/// <summary>
+		/// Expands a mod-local ID to a full ID (using the mod's ID as the namespace).
+		/// </summary>
+		/// <returns>The full ID including the namespace.</returns>
+		/// <param name="id">Mod-local ID (no namespace).</param>
 		public string GetFullID(string id) {
 			if (id.Contains(":")) throw new Exception($"'id' must not contain a namespace");
 			return $"{Config.ID}:{id}";
@@ -44,6 +67,12 @@ namespace Semi {
 			if (!RegisteringMode) throw new InvalidOperationException($"Content can only be registered in the RegisterContent method.");
 		}
 
+		/// <summary>
+		/// Creates a single sprite definition from an image resource.
+		/// </summary>
+		/// <returns>The sprite definition.</returns>
+		/// <param name="id">Mod-local ID for the new sprite definition.</param>
+		/// <param name="sprite_path">Relative resource path to the image.</param>
 		public SpriteDefinition CreateSpriteDefinition(string id, string sprite_path) {
 			CheckMode();
 			id = GetFullID(id);
@@ -55,6 +84,12 @@ namespace Semi {
 			return sprite_def;
 		}
 
+		/// <summary>
+		/// Registers an encounter icon (used for example in the Ammonomicon) from an image resource.
+		/// </summary>
+		/// <returns>The sprite definition of the new encounter icon.</returns>
+		/// <param name="id">Mod-local ID for the new encounter icon.</param>
+		/// <param name="sprite_path">Relative resource path to the image.</param>
 		public SpriteDefinition RegisterEncounterIcon(string id, string sprite_path) {
 			CheckMode();
 			id = GetFullID(id);
@@ -69,6 +104,12 @@ namespace Semi {
 			return sprite_def;
 		}
 
+		/// <summary>
+		/// Registers a new sprite collection.
+		/// </summary>
+		/// <returns>The new sprite collection.</returns>
+		/// <param name="id">Mod-local ID for the new collection.</param>
+		/// <param name="defs">Optional array of sprite definitions to initialize the sprite collection with.</param>
 		public SpriteCollection RegisterSpriteCollection(string id, params SpriteDefinition[] defs) {
 			CheckMode();
 			id = GetFullID(id);
@@ -86,6 +127,13 @@ namespace Semi {
 			return coll;
 		}
 
+		/// <summary>
+		/// Registers a new sprite template.
+		/// </summary>
+		/// <returns>The new sprite template.</returns>
+		/// <param name="id">Mod-local ID for the new sprite template.</param>
+		/// <param name="coll_id">Global ID of the sprite collection to uses.</param>
+		/// <param name="start_def_id">Optional global ID of the sprite definition from the sprite collection to use, the first definition will be used if not specified.</param>
 		public Sprite RegisterSpriteTemplate(string id, string coll_id, string start_def_id = null) {
 			CheckMode();
 			id = GetFullID(id);
@@ -112,6 +160,12 @@ namespace Semi {
 			return sprite;
 		}
 
+		/// <summary>
+		/// Attaches an instance of a sprite template to a GameObject.
+		/// </summary>
+		/// <returns>The new sprite instance parented to <c>target</c>.</returns>
+		/// <param name="target">Target object.</param>
+		/// <param name="id">Global ID of the sprite template.</param>
 		public Sprite AttachSpriteInstance(GameObject target, string id) {
 			id = GetFullID(id);
 
@@ -123,12 +177,27 @@ namespace Semi {
 			return new_sprite;
 		}
 
+		/// <summary>
+		/// Removes an existing sprite instance and attaches a new one to the same GameObject.
+		/// </summary>
+		/// <returns>The new sprite instance.</returns>
+		/// <param name="target">Sprite to replace.</param>
+		/// <param name="id">Global ID of the sprite template.</param>
 		public Sprite ReplaceSpriteInstance(Sprite target, string id) {
 			var go = target.GameObject;
 			UnityEngine.Object.Destroy(target.Wrap);
 			return AttachSpriteInstance(go, id);
 		}
 
+		/// <summary>
+		/// Registers a new localization.
+		/// </summary>
+		/// <returns>The representation of the new localization.</returns>
+		/// <param name="id">Mod-local ID for the new localization.</param>
+		/// <param name="path">Relative resource path to the localization text file.</param>
+		/// <param name="lang_id">Global ID of the language to apply this localization for.</param>
+		/// <param name="table">Target string table to apply this localization for.</param>
+		/// <param name="allow_overwrite">If set to <c>true</c> allows this localization to overwrite others (note - depends on loading order!).</param>
 		public I18N.ModLocalization RegisterLocalization(string id, string path, string lang_id, I18N.StringTable table, bool allow_overwrite = false) {
 			CheckMode();
 			id = GetFullID(id);
@@ -148,6 +217,17 @@ namespace Semi {
 			return mod_loc;
 		}
 
+		/// <summary>
+		/// Registers a new PickupObject.
+		/// </summary>
+		/// <returns>Prefab object for the newly registered item.</returns>
+		/// <param name="id">Mod-local ID for the new item.</param>
+		/// <param name="enc_icon_id">Global ID of the encounter icon to use for this item.</param>
+		/// <param name="sprite_template_id">Global ID of the sprite template to use for this item.</param>
+		/// <param name="name_key">Global ID of the localization string to use for the full name of this item.</param>
+		/// <param name="short_desc_key">Global ID of the localization string to use for the short description of this item.</param>
+		/// <param name="long_desc_key">Global ID of the localization string to use for the long description of this item.</param>
+		/// <typeparam name="T">Component type to initialize as the PickupObject.</typeparam>
 		public T RegisterItem<T>(string id, string enc_icon_id, string sprite_template_id, string name_key = "", string short_desc_key = "", string long_desc_key = "") where T : PickupObject {
 			CheckMode();
 			id = GetFullID(id);
@@ -187,6 +267,11 @@ namespace Semi {
 			return pickup_object;
 		}
 
+		/// <summary>
+		/// Loads a sprite collection in Semi Collection format.
+		/// </summary>
+		/// <returns>The newly registered sprite collection.</returns>
+		/// <param name="path">Relative resource path to the file in Semi Collection format.</param>
 		public SpriteCollection LoadSpriteCollection(string path) {
 			CheckMode();
 			path = GetFullResourcePath(path);
@@ -195,6 +280,11 @@ namespace Semi {
 			return SpriteCollection.Load(parsed, dir, Config.ID);
 		}
 
+		/// <summary>
+		/// Loads a sprite animation in Semi Animation format.
+		/// </summary>
+		/// <returns>The newly registered sprite animation.</returns>
+		/// <param name="path">Relative resource path to the file in Semi Animation format.</param>
 		public SpriteAnimation LoadSpriteAnimation(string path) {
 			CheckMode();
 			path = GetFullResourcePath(path);

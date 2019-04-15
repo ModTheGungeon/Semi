@@ -3,12 +3,19 @@ using System.IO;
 using UnityEngine;
 
 namespace Semi {
+	/// <summary>
+	/// Exception thrown when Semi detects a misconfiguration of the file hierarchy.
+	/// </summary>
     public class FileHierarchyException : Exception {
         public FileHierarchyException(string msg) : base($"Invalid file hierarchy: {msg}") { }
     }
 
     public class FileHierarchy {
         private static string _GameFolder;
+		/// <summary>
+		/// Gets the absolute path to the root folder that all the game data resides in.
+		/// </summary>
+		/// <value>The game folder.</value>
         public static string GameFolder {
             get {
                 if (_GameFolder != null) return _GameFolder;
@@ -17,6 +24,10 @@ namespace Semi {
         }
 
         private static string _ManagedFolder;
+		/// <summary>
+		/// Gets the absolute path to the folder where all the .NET assemblies reside in.
+		/// </summary>
+		/// <value>The Managed folder.</value>
         public static string ManagedFolder {
             get {
                 if (_ManagedFolder != null) return _ManagedFolder;
@@ -24,8 +35,15 @@ namespace Semi {
             }
         }
 
+		/// <summary>
+		/// The name of the folder inside the game folder from where mods are loaded.
+		/// </summary>
         public const string MODS_FOLDER_NAME = "SemiMods";
         private static string _ModsFolder;
+		/// <summary>
+		/// Gets the absolute path to the folder where mods are loaded from.
+		/// </summary>
+		/// <value>The mods folder.</value>
         public static string ModsFolder {
             get {
                 if (_ModsFolder != null) return _ModsFolder;
@@ -33,8 +51,15 @@ namespace Semi {
             }
         }
 
+		/// <summary>
+		/// The name of the text file that specifies what order mods should be loaded in first, before any unspecified mods that remain are loaded in default/filesystem order.
+		/// </summary>
         public const string MODS_ORDER_FILE_NAME = "order.txt";
         private static string _ModsOrderFile;
+		/// <summary>
+		/// Gets the absolute path to the file that specifies priority mod loading order.
+		/// </summary>
+		/// <value>The mods order file.</value>
         public static string ModsOrderFile {
             get {
                 if (_ModsOrderFile != null) return _ModsOrderFile;
@@ -42,8 +67,15 @@ namespace Semi {
             }
         }
 
+		/// <summary>
+		/// The name of the text file that specifies what mods should never be loaded, even if they are defined in the order list.
+		/// </summary>
         public const string MODS_BLACKLIST_FILE_NAME = "blacklist.txt";
         private static string _ModsBlacklistFile;
+		/// <summary>
+		/// Gets the absolute path to the file that specifies which mods to never load.
+		/// </summary>
+		/// <value>The mods blacklist file.</value>
         public static string ModsBlacklistFile {
             get {
                 if (_ModsBlacklistFile != null) return _ModsBlacklistFile;
@@ -51,8 +83,15 @@ namespace Semi {
             }
         }
 
+		/// <summary>
+		/// The name of the folder where all cached data related to mods is stored.
+		/// </summary>
         public const string MODS_CACHE_FOLDER_NAME = "Cache";
         private static string _ModsCacheFolder;
+		/// <summary>
+		/// Gets the absolute path to the folder that houses all cached data related to mods.
+		/// </summary>
+		/// <value>The mods cache folder.</value>
         public static string ModsCacheFolder {
             get {
                 if (_ModsCacheFolder != null) return _ModsCacheFolder;
@@ -60,8 +99,15 @@ namespace Semi {
             }
         }
 
+		/// <summary>
+		/// The name of the folder inside the mod cache folder where relinked assemblies are stored.
+		/// </summary>
         public const string MODS_CACHE_RELINK_FOLDER_NAME = "RelinkedAssemblies";
         private static string _ModsCacheRelinkFolder;
+		/// <summary>
+		/// Gets the absolute path to the folder that houses mod assemblies after they've been relinked to reroute references to MonoMod patch assemblies into the main game assembly.
+		/// </summary>
+		/// <value>The mod relink cache folder.</value>
         public static string ModsCacheRelinkFolder {
             get {
                 if (_ModsCacheRelinkFolder != null) return _ModsCacheRelinkFolder;
@@ -69,11 +115,17 @@ namespace Semi {
             }
         }
 
-        private const string ORDER_TXT_DEFAULT_TEXT = "# put names of mod folders/archives to be loaded in a specific order here\n# mods that aren't in this file will also be loaded,\n# but in alphabetical order";
+        private const string ORDER_TXT_DEFAULT_TEXT = "# put names of mod folders/archives to be loaded in a specific order here\n# mods that aren't in this file will also be loaded,\n# but in unspecified order";
         private const string BLACKLIST_TXT_DEFAULT_TEXT = "# put names of mod folders/archives that you don't want loaded here\n# this file will override the order.txt file if necessary";
 
+		/// <summary>
+		/// The name of the mod metadata file.
+		/// </summary>
         public const string MOD_INFO_FILE_NAME = "mod.yml";
 
+		/// <summary>
+		/// Verifies that the file hierarchy is correct, creates missing directories and files if needed.
+		/// </summary>
         public static void Verify() {
             if (File.Exists(ModsFolder)) throw new FileHierarchyException("There is no SemiMods folder, but there is a file under that same name");
             if (!Directory.Exists(ModsFolder)) {

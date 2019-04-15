@@ -6,20 +6,50 @@ using System.Reflection;
 using System.Collections;
 
 namespace Semi {
+	/// <summary>
+	/// Thrown when a mod metadata is invalid or points to files that don't exist.
+	/// </summary>
 	public class InvalidConfigException : Exception {
 		public InvalidConfigException(string message) : base($"Invalid config: {message}") { }
 	}
 
+	/// <summary>
+	/// Thrown when a mod fails to load for reasons other than misconfigured metadata.
+	/// </summary>
 	public class ModLoadException : Exception {
 		public ModLoadException(string mod_id, string message) : base($"Failed loading mod '{mod_id}': {message}") { }
 	}
 
+	/// <summary>
+	/// Main class of the Semi mod loader.
+	/// </summary>
 	public static class SemiLoader {
+		/// <summary>
+		/// Representation of a loaded mod.
+		/// </summary>
 		public class ModInfo {
+			/// <summary>
+			/// Instance of the loaded mod component.
+			/// </summary>
+			/// <value>The instance.</value>
 			public Mod Instance { get; internal set; }
+			/// <summary>
+			/// Loaded mod metadata.
+			/// </summary>
+			/// <value>The metadata.</value>
 			public ModConfig Config { get; internal set; }
+			/// <summary>
+			/// Absolute path of the mod's unpacked directory.
+			/// </summary>
+			/// <value>The path to the mod.</value>
 			public string Path { get; internal set; }
 
+			/// <summary>
+			/// Initializes a new instance of the <see cref="T:Semi.SemiLoader.ModInfo"/> class.
+			/// </summary>
+			/// <param name="instance">Mod instance.</param>
+			/// <param name="config">Metadata.</param>
+			/// <param name="path">Path.</param>
 			public ModInfo(Mod instance, ModConfig config, string path) {
 				Instance = instance;
 				Config = config;
@@ -27,13 +57,21 @@ namespace Semi {
 			}
 		}
 
+		/// <summary>
+		/// Specifies whether debug mode is enabled.
+		/// Debug mode enables some features of Semi that are intended to be disabled in release builds, for example the console.
+		/// </summary>
 #if DEBUG
 		public const bool DEBUG_MODE = true;
 #else
 		public const bool DEBUG_MODE = false;
 #endif
 
+		/// <summary>
+		/// String version of the mod loader.
+		/// </summary>
 		public const string VERSION = "cont-dev";
+
 		internal static bool Loaded = false;
 
         internal static Dictionary<string, ModInfo> Mods;
@@ -143,11 +181,11 @@ namespace Semi {
 			CommitContent();
         }
 
-		public static void BeginRegisteringContent() {
+		internal static void BeginRegisteringContent() {
 			EncounterIconCollection.BeginModifyingDefinitionList();
 		}
 
-		public static void CommitContent() {
+		internal static void CommitContent() {
 			EncounterIconCollection.CommitDefinitionList();
 			I18N.ReloadLocalizations();
 		}

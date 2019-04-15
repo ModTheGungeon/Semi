@@ -1,6 +1,9 @@
 ﻿using System;
 namespace Semi {
     public static class Gungeon {
+		/// <summary>
+		/// All the possible tag specifications for the Items IDPool.
+		/// </summary>
         [Flags]
         public enum ItemTag {
             Unknown = 1,
@@ -12,6 +15,9 @@ namespace Semi {
             Internal = 32
         }
 
+		/// <summary>
+		/// All the possible tag specifications for the Enemies IDPool.
+		/// </summary>
         [Flags]
         public enum EnemyTag {
             Unknown = 1,
@@ -22,14 +28,50 @@ namespace Semi {
             Internal = 32
         }
 
+		/// <summary>
+		/// ID pool containing all the items in the game, including consumables, guns, passives and actives.
+		/// This pool contains all Gungeon and mod pickups, including unused/excluded/unobtainable ones.
+		/// </summary>
+		/// <value>ID pool of the items.</value>
         public static IDPool<PickupObject, ItemTag> Items { get; internal set; }
+		/// <summary>
+		/// ID pool containing all the enemies in the game. This includes companions, which operate in the same way as enemies.
+		/// This pool contains all Gungeon and mod enemies, including unused/excluded/unobtainable ones.
+		/// </summary>
+		/// <value>ID pool of the enemies.</value>
         public static IDPool<AIActor, EnemyTag> Enemies { get; internal set; }
 
+		/// <summary>
+		/// ID pool containing all sprite collections registered by mods.
+		/// At this moment, this ID pool does not contain any Gungeon sprite collections. This might change in the future.
+		/// </summary>
+		/// <value>ID pool of mod sprite collections.</value>
 		public static IDPool<SpriteCollection> SpriteCollections { get; internal set; }
+		/// <summary>
+		/// ID pool containing all sprite templates registered by mods.
+		/// At this moment, this ID pool does not contain any Gungeon sprites. This is unlikely to change in the future.
+		/// </summary>
+		/// <value>ID pool of mod sprite templates.</value>
 		public static IDPool<Sprite> SpriteTemplates { get; internal set; }
+		/// <summary>
+		/// ID pool containing all animations registered by mods.
+		/// At this moment, this ID pool does not contain any Gungeon animations. This is unlikely to change in the future.
+		/// </summary>
+		/// <value>ID pool of mod animations.</value>
 		public static IDPool<SpriteAnimation> AnimationTemplates { get; internal set; }
 
+		/// <summary>
+		/// ID pool containing all localizations for all languages.
+		/// This pool contains both Gungeon and modded localizations, for every string table in every builtin language.
+		/// </summary>
+		/// <value>ID pool of available localizations.</value>
 		public static IDPool<I18N.LocalizationSource> Localizations { get; internal set; }
+
+		/// <summary>
+		/// ID pool containing all available languages.
+		/// This pool contains both Gungeon and modded languages.
+		/// </summary>
+		/// <value>ID pool of available languages.</value>
 		public static IDPool<I18N.Language> Languages { get; internal set; }
     }
 }

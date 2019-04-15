@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using MonoMod;
 
 namespace Semi.Patches {
+	/// <summary>
+	/// Patches StringTableManager to use <c>Semi.I18N</c> methods for changing the language.
+	/// This allows the game to load custom localizations when the language is changed through the UI.
+	/// </summary>
 	[MonoModPatch("global::StringTableManager")]
 	public static class StringTableManager {
 		[MonoModIgnore]

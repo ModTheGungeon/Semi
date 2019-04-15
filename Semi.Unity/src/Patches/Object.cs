@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Semi.Patches {
 	[MonoModPatch("UnityEngine.Object")]
-	public class UnityEngineObject {
+	internal class UnityEngineObject {
 		[MonoModOriginal]
 		public extern static UnityEngine.Object orig_Instantiate_opi(UnityEngine.Object original, Transform parent, bool instantiateInWorldSpace);
 

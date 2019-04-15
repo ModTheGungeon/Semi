@@ -5,6 +5,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace Semi.Patches {
+	/// <summary>
+	/// Patches MidGameSaveData to support loading Semi midgame saves (e.g. with modded item IDs)
+	/// </summary>
 	[MonoModPatch("global::MidGameSaveData")]
 	public class MidGameSaveData : global::MidGameSaveData {
 		[fsProperty]
@@ -132,8 +135,12 @@ namespace Semi.Patches {
 	//[MonoModPatch("global::MidGamePlayerData")]
 	//public class MidGamePlayerData {}
 	//
-	// not necessary - patches below have the same API
+	// not necessary - patches below expose the same API
 
+	/// <summary>
+	/// Patches MidGamePassiveItemData to add a string ItemID field.
+	/// Ignores numeric PickupObjectId field.
+	/// </summary>
 	[MonoModPatch("global::MidGamePassiveItemData")]
 	public class MidGamePassiveItemData {
 		public string ItemID = null;
@@ -157,6 +164,10 @@ namespace Semi.Patches {
 		}
 	}
 
+	/// <summary>
+	/// Patches MidGameActiveItemData to add a string ItemID field.
+	/// Ignores numeric PickupObjectId field.
+	/// </summary>
 	[MonoModPatch("global::MidGameActiveItemData")]
 	public class MidGameActiveItemData {
 		public string ItemID = null;
@@ -190,6 +201,10 @@ namespace Semi.Patches {
 		}
 	}
 
+	/// <summary>
+	/// Patches MidGameGunData to add a string ItemID field.
+	/// Ignores numeric PickupObjectId field.
+	/// </summary>
 	[MonoModPatch("global::MidGameGunData")]
 	public class MidGameGunData {
 		public string ItemID = null;

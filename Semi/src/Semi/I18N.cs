@@ -8,6 +8,11 @@ namespace Semi {
 	public static class I18N {
 		internal static Logger Logger = new Logger("I18N");
 
+		/// <summary>
+		/// Type of localization string table.
+		/// Different elements of the game will request localizations from a different string table.
+		/// For example, the GUI notification when you receive a synergy will request strings from the synergy table, but the one when you pick up an item will request strings from the item table.
+		/// </summary>
 		public enum StringTable {
 			Core,
 			Enemies,
@@ -17,6 +22,9 @@ namespace Semi {
 			UI
 		}
 
+		/// <summary>
+		/// Abstract localization source. Children of this class have to define how to load localization data.
+		/// </summary>
 		public abstract class LocalizationSource {
 			public string TargetLanguageID { get; internal set; }
 			public StringTable TargetStringTable { get; internal set; }
@@ -24,7 +32,13 @@ namespace Semi {
 			public abstract void LoadInto(Dictionary<string, StringTableManager.StringCollection> dict);
 		}
 
+		/// <summary>
+		/// Prefab localization source. This is used for localizations included with the game, to load them from the game's assets.
+		/// </summary>
 		public class PrefabLocalization : LocalizationSource {
+			/// <summary>
+			/// Path to the <c>TextAsset</c> prefab.
+			/// </summary>
 			public string Path;
 
 			internal static string GetPrefabMainName(StringTableManager.GungeonSupportedLanguages lang) {
@@ -67,12 +81,16 @@ namespace Semi {
 				return (TextAsset)BraveResources.Load("strings/" + path, typeof(TextAsset), ".txt");
 			}
 
-			public PrefabLocalization(StringTableManager.GungeonSupportedLanguages lang, StringTable table) {
+			internal PrefabLocalization(StringTableManager.GungeonSupportedLanguages lang, StringTable table) {
 				TargetLanguageID = GungeonLanguage.LanguageToID(lang);
 				TargetStringTable = table;
 				Path = GetPrefabPath(lang, table);
 			}
 
+			/// <summary>
+			/// Loads localization data from the asset specified in this class.
+			/// </summary>
+			/// <param name="dict">Target dictionary of strings.</param>
 			public override void LoadInto(Dictionary<string, StringTableManager.StringCollection> dict) {
 				var asset = LoadTextAsset(Path);
 				using (var reader = new StringReader(asset.text)) LoadLocalizationText(reader, dict);
@@ -80,11 +98,20 @@ namespace Semi {
 		}
 
 		public class ModLocalization : LocalizationSource {
+			/// <summary>
+			/// Absolute path to the text file containing the localization data.
+			/// </summary>
 			public string Path;
+			/// <summary>
+			/// <see cref="T:Semi.ModInfo"/> of the mod that added this localization.
+			/// </summary>
 			public SemiLoader.ModInfo Owner;
+			/// <summary>
+			/// Specifies whether to allow localizations loaded from this source to override sources loaded before it.
+			/// </summary>
 			public bool OverwriteMode = false;
 
-			public ModLocalization(SemiLoader.ModInfo owner, string path, string target_lang, StringTable target_table, bool allow_overwrite = false) {
+			internal ModLocalization(SemiLoader.ModInfo owner, string path, string target_lang, StringTable target_table, bool allow_overwrite = false) {
 				TargetLanguageID = Gungeon.Languages.ValidateEntry(target_lang);
 				TargetStringTable = target_table;
 				Path = path;
@@ -92,17 +119,32 @@ namespace Semi {
 				OverwriteMode = allow_overwrite;
 			}
 
+			/// <summary>
+			/// Loads localization data from the file specified in this class.
+			/// </summary>
+			/// <param name="dict">Target dictionary of strings.</param>
 			public override void LoadInto(Dictionary<string, StringTableManager.StringCollection> dict) {
 				using (var reader = new StreamReader(File.OpenRead(Path))) LoadLocalizationText(reader, dict, overwrite: OverwriteMode, default_namespace: Owner.Config.ID);
 			}
 		}
 
+		/// <summary>
+		/// Abstract representation of a language.
+		/// </summary>
 		public abstract class Language {
 			public string ID { get; internal set; }
 			public Patches.GungeonSupportedLanguages MappedLanguage { get; internal set; }
 		}
 
+		/// <summary>
+		/// Representation of a builtin (vanilla) language.
+		/// </summary>
 		public class GungeonLanguage : Language {
+			/// <summary>
+			/// Converts a <c>GungeonSupportedLanguages</c> value to a named ID.
+			/// </summary>
+			/// <returns>Global ID of this language.</returns>
+			/// <param name="lang">Builtin enum value of this language.</param>
 			public static string LanguageToID(StringTableManager.GungeonSupportedLanguages lang) {
 				switch (lang) {
 					case StringTableManager.GungeonSupportedLanguages.ENGLISH: return "gungeon:english";
@@ -121,12 +163,15 @@ namespace Semi {
 				}
 			}
 
-			public GungeonLanguage(StringTableManager.GungeonSupportedLanguages lang) {
+			internal GungeonLanguage(StringTableManager.GungeonSupportedLanguages lang) {
 				MappedLanguage = (Patches.GungeonSupportedLanguages)lang;
 				ID = LanguageToID(lang);
 			}
 		}
 
+		/// <summary>
+		/// Representation of a custom (modded) language.
+		/// </summary>
 		public class CustomLanguage : Language {
 			public CustomLanguage(string id) {
 				ID = id;
@@ -134,7 +179,7 @@ namespace Semi {
 			}
 		}
 
-		public static Dictionary<string, StringTableManager.StringCollection> LoadLocalizationText(TextReader reader, Dictionary<string, StringTableManager.StringCollection> dict, bool overwrite = false, string default_namespace = null) {
+		internal static Dictionary<string, StringTableManager.StringCollection> LoadLocalizationText(TextReader reader, Dictionary<string, StringTableManager.StringCollection> dict, bool overwrite = false, string default_namespace = null) {
 			// mostly based on copied StringTableManager code
 			// all the files have duplicate loading code but it all seems to be doing
 			// the same thing /shrug
@@ -192,6 +237,10 @@ namespace Semi {
 		}
 
 		private static string _CurrentLanguageID;
+		/// <summary>
+		/// Global ID of the currently selected language.
+		/// </summary>
+		/// <value>The current language ID.</value>
 		public static string CurrentLanguageID {
 			get {
 				if (_CurrentLanguageID != null) return _CurrentLanguageID;
@@ -203,7 +252,7 @@ namespace Semi {
 			}
 		}
 
-		public static void LoadLocalizationsForLanguage(string lang_id) {
+		internal static void LoadLocalizationsForLanguage(string lang_id) {
 			lang_id = Gungeon.Languages.ValidateEntry(lang_id);
 			Logger.Debug($"Scanning localizations for {lang_id}");
 
@@ -241,6 +290,10 @@ namespace Semi {
 			CurrentLanguageID = lang_id;
 		}
 
+		/// <summary>
+		/// Changes the current language to another one.
+		/// </summary>
+		/// <param name="id">Global ID of the language.</param>
 		public static void ChangeLanguage(string id) {
 			id = Gungeon.Languages.ValidateEntry(id);
 			Logger.Debug($"Changing language to '{id}'");
@@ -254,6 +307,9 @@ namespace Semi {
 			ChangeLanguage(id);
 		}
 
+		/// <summary>
+		/// Reloads loaded localization strings.
+		/// </summary>
 		public static void ReloadLocalizations() {
 			Logger.Debug($"Reloading localizations");
 			JournalEntry.ReloadDataSemaphore += 1;

@@ -5,19 +5,30 @@ using UnityEngine;
 using Logger = ModTheGungeon.Logger;
 
 namespace Semi {
+	/// <summary>
+	/// Wrapper struct for <c>tk2dSprite</c> that provides a cleaner interface and works transparently with anything that expects <c>tk2dSprite</c>s.
+	/// </summary>
 	public struct Sprite {
+		/// <summary>
+		/// Real tk2d object.
+		/// </summary>
 		public tk2dSprite Wrap;
 
 		internal Sprite(tk2dSprite sprite) {
 			Wrap = sprite;
 		}
 
+		/// <summary>
+		/// Implicit cast operator that allows you to use <c>Sprite</c> anywhere where <c>t2kdSprite</c> is expected.
+		/// </summary>
 		public static implicit operator tk2dSprite(Sprite s) => s.Wrap;
 
+		/// <value>The game object that this sprite is attached to.</value>
 		public GameObject GameObject {
 			get { try { return Wrap.gameObject; } catch { return null; } }
 		}
 
+		/// <value>The currently assigned sprite collection.</value>
 		public SpriteCollection Collection {
 			get { return new SpriteCollection(Wrap.Collection); }
 			set { Wrap.SetSprite(value, 0); }
@@ -28,6 +39,7 @@ namespace Semi {
 			set { Wrap.SetSprite(value); }
 		}
 
+		/// <value>The string ID of the currently displayed sprite definition.</value>
 		public string CurrentSpriteID {
 			get { return Collection.SpriteDefinitions[Wrap.spriteId].Name; }
 			set {
@@ -37,16 +49,19 @@ namespace Semi {
 			}
 		}
 
+		/// <value>The box collider.</value>
 		public BoxCollider BoxCollider {
 			get { return Wrap.boxCollider; }
 			set { Wrap.boxCollider = value; }
 		}
 
+		/// <value>The 2D box collider.</value>
 		public BoxCollider2D BoxCollider2D {
 			get { return Wrap.boxCollider2D; }
 			set { Wrap.boxCollider2D = value; }
 		}
 
+		/// <value>The mesh collider settings.</value>
 		public MeshColliderSettings MeshColliderSettings {
 			get { return new MeshColliderSettings(Wrap.meshCollider, Wrap.meshColliderMesh, Wrap.meshColliderPositions); }
 			set {
@@ -56,41 +71,55 @@ namespace Semi {
 			}
 		}
 
+		/// <value>The sorting order/render layer.</value>
 		public int SortingOrder {
 			get { return Wrap.SortingOrder; }
 			set { Wrap.SortingOrder = value; }
 		}
 
+		/// <value>Decides whether to autodetect footprint.</value>
 		public bool AutodetectFootprint {
 			get { return Wrap.autodetectFootprint; }
 			set { Wrap.autodetectFootprint = value; }
 		}
 
+		/// <value>Decides whether Z depth/sorting order should be managed automatically.</value>
 		public bool AutomaticallyManagesDepth {
 			get { return Wrap.automaticallyManagesDepth; }
 			set { Wrap.automaticallyManagesDepth = value; }
 		}
 
+		/// <value>Defines a custom footprint.</value>
 		public IntVector2 CustomFootprint {
 			get { return Wrap.customFootprint; }
 			set { Wrap.customFootprint = value; }
 		}
 
+		/// <value>Decides whether trimmed (whitespace-excluded) bounds should be used for automatically deciding depth.</value>
 		public bool UseTrimmedBoundsForDepth {
 			get { return Wrap.depthUsesTrimmedBounds; }
 			set { Wrap.depthUsesTrimmedBounds = value; }
 		}
 
+		/// <value>Flip horizontally.</value>
 		public bool FlipHorizontally {
 			get { return Wrap.FlipX; }
 			set { Wrap.FlipX = value; }
 		}
 
+		/// <value>Flip vertically.</value>
 		public bool FlipVertically {
 			get { return Wrap.FlipY; }
 			set { Wrap.FlipY = value; }
 		}
 
+		/// <summary>
+		/// Construct a new sprite on the specified GameObject using the collection and the sprite definition index.
+		/// </summary>
+		/// <returns>The newly constructed sprite.</returns>
+		/// <param name="parent"><c>GameObject</c> to add this sprite to.</param>
+		/// <param name="collection">The sprite collection to set.</param>
+		/// <param name="spritedef_id">The sprite definition index to set as the current sprite.</param>
 		public static Sprite Construct(GameObject parent, SpriteCollection collection, int spritedef_id) {
 			tk2dSprite sprite = parent.AddComponent<tk2dSprite>();
 
@@ -109,6 +138,10 @@ namespace Semi {
 			return new Sprite(sprite);
 		}
 
+		/// <summary>
+		/// Copies all fields from this sprite into another existing sprite instance.
+		/// </summary>
+		/// <param name="target">Target sprite.</param>
 		public void CopyTo(Sprite target) {
 			target.Wrap.attachParent = Wrap.attachParent;
 			target.Wrap.autodetectFootprint = Wrap.autodetectFootprint;
@@ -148,10 +181,16 @@ namespace Semi {
 		}
 	}
 
+	/// <summary>
+	/// Wrapper struct for <c>tk2dSpriteCollectionData</c> that provides a cleaner interface and works transparently with anything that expects <c>tk2dSpriteCollectionData</c>s.
+	/// </summary>
 	public struct SpriteCollection {
 		internal static Logger Logger = new Logger("SpriteCollection");
 		internal static Dictionary<string, IDPool<int>> SpritePoolMap = new Dictionary<string, IDPool<int>>();
 
+		/// <summary>
+		/// Real tk2d object.
+		/// </summary>
 		public tk2dSpriteCollectionData Wrap;
 
 		internal List<SpriteDefinition> WorkingDefinitionList;
@@ -172,17 +211,31 @@ namespace Semi {
 			WorkingDepth = 0;
 		}
 
+		/// <summary>
+		/// Implicit cast operator that allows you to use <c>SpriteCollection</c> anywhere where <c>t2kdSpriteCollectionData</c> is expected.
+		/// </summary>
 		public static implicit operator tk2dSpriteCollectionData(SpriteCollection s) => s.Wrap;
 
+		/// <summary>
+		/// Refreshes the lookup dictionary for definitions. Done automatically by <c>AddDefinition</c>/<c>AddDefinitions</c>.
+		/// </summary>
 		public void RefreshLookupDictionary() {
 			((Semi.Patches.tk2dSpriteCollectionData)(object)Wrap).spriteNameLookupDict = null;
 			Wrap.InitDictionary();
 		}
 
-		public int GetSpriteIdByName(string name) => Wrap.GetSpriteIdByName(name);
+		internal int GetSpriteIdByName(string name) => Wrap.GetSpriteIdByName(name);
 
+		/// <summary>
+		/// Adds a single sprite definition to this collection.
+		/// </summary>
+		/// <param name="def">The definition.</param>
 		public void AddDefinition(SpriteDefinition def) => AddDefinitions(def);
 
+		/// <summary>
+		/// Adds multiple sprite definitions at once to this collection.
+		/// </summary>
+		/// <param name="defs">The array of definitions.</param>
 		public void AddDefinitions(params SpriteDefinition[] defs) {
 			BeginModifyingDefinitionList();
 
@@ -244,6 +297,11 @@ namespace Semi {
 			}
 		}
 
+		/// <summary>
+		/// Gets the index of a sprite definition based on its ID.
+		/// </summary>
+		/// <returns>The index of the sprite definition or a value less than 0 if not found.</returns>
+		/// <param name="id">The ID of the sprite definition.</param>
 		public int GetIndex(string id) {
 			// we can't do ValidateEntry here because that'd check
 			// for gungeon: IDs too, and those aren't actually there
@@ -268,12 +326,18 @@ namespace Semi {
 			}
 		}
 
+		/// <summary>
+		/// Gets a sprite definition based on its ID.
+		/// </summary>
+		/// <returns>The sprite definition with this ID or <c>null</c> if it doesn't exist.</returns>
+		/// <param name="id">The ID of the definition.</param>
 		public SpriteDefinition? GetDefinition(string id) {
 			var idx = GetIndex(id);
 			if (idx < 0) return null;
 			return new SpriteDefinition(GetDefinitionByIndex(idx));
 		}
 
+		/// <value>The sprite definitions contained in this collection.</value>
 		public ProxyList<SpriteDefinition, tk2dSpriteDefinition> SpriteDefinitions {
 			get {
 				return new ProxyList<SpriteDefinition, tk2dSpriteDefinition>(
@@ -288,30 +352,44 @@ namespace Semi {
 			}
 		}
 
+		/// <value>The game object this collection is a component of.</value>
 		public GameObject GameObject {
 			get { try { return Wrap.gameObject; } catch { return null; } }
 		}
 
+		/// <value>Name of the sprite collection.</value>
 		public string Name {
 			get { return Wrap.spriteCollectionName; }
 			set { Wrap.spriteCollectionName = value; }
 		}
 
+		/// <value>Globally Unique ID of the sprite collection.</value>
 		public string GUID {
 			get { return Wrap.spriteCollectionGUID; } 
 			set { Wrap.spriteCollectionGUID = value; }
 		}
 
+		/// <value>Array of materials.</value>
 		public Material[] Materials {
 			get { return Wrap.materials; }
 			set { Wrap.materials = value; }
 		}
 
+		/// <value>Array of instances of materials.</value>
 		public Material[] MaterialInstances {
 			get { return Wrap.materialInsts; }
 			set { Wrap.materialInsts = value; }
 		}
 
+		/// <summary>
+		/// Constructs a new sprite collection.
+		/// </summary>
+		/// <returns>The new sprite collection.</returns>
+		/// <param name="parent">GameObject to add this collection to.</param>
+		/// <param name="name">Name.</param>
+		/// <param name="unique_id">Unique identifier.</param>
+		/// <param name="material">Material.</param>
+		/// <param name="defs">Optional array of preset definitions.</param>
 		public static SpriteCollection Construct(GameObject parent, string name, string unique_id, Material material, params SpriteDefinition[] defs) {
 			var coll = parent.AddComponent<tk2dSpriteCollectionData>().Wrap();
 
@@ -339,6 +417,14 @@ namespace Semi {
 			return new SpriteCollection(coll);
 		}
 
+		/// <summary>
+		/// Load a Semi Collection format file from its parsed representation.
+		/// The collection will be attached to the global modded sprite collection game object.
+		/// </summary>
+		/// <returns>The new sprite collection.</returns>
+		/// <param name="parsed">Parsed representation of the Semi Collection.</param>
+		/// <param name="base_dir">Base directory to load referenced assets from.</param>
+		/// <param name="coll_namespace">Namespace to use for the collection and the definitions.</param>
 		public static SpriteCollection Load(Tk0dConfigParser.ParsedCollection parsed, string base_dir, string coll_namespace) {
 			if (parsed.SpritesheetPath == null || parsed.SpritesheetPath.Trim() == "") throw new Exception("Missing spritesheet path!");
 			var tex = Texture2DLoader.LoadTexture2D(Path.Combine(base_dir, parsed.SpritesheetPath));
@@ -409,8 +495,18 @@ namespace Semi {
 		}
 	}
 
+	/// <summary>
+	/// Wrapper struct for <c>tk2dSpriteDefinition</c> that provides a cleaner interface and works transparently with anything that expects <c>tk2dSpriteDefinition</c>s.
+	/// </summary>
 	public struct SpriteDefinition {
+		/// <summary>
+		/// Real tk2d object.
+		/// </summary>
 		public tk2dSpriteDefinition Wrap;
+
+		/// <summary>
+		/// Default normals.
+		/// </summary>
 		public static readonly Vector3[] DEFAULT_NORMALS = {
 					new Vector3(0.0f, 0.0f, -1.0f),
 					new Vector3(0.0f, 0.0f, -1.0f),
@@ -418,6 +514,9 @@ namespace Semi {
 					new Vector3(0.0f, 0.0f, -1.0f),
 		};
 
+		/// <summary>
+		/// Default tangents.
+		/// </summary>
 		public static readonly Vector4[] DEFAULT_TANGENTS = {
 					new Vector4(1.0f, 0.0f, 0.0f, 1.0f),
 					new Vector4(1.0f, 0.0f, 0.0f, 1.0f),
@@ -425,78 +524,98 @@ namespace Semi {
 					new Vector4(1.0f, 0.0f, 0.0f, 1.0f),
 		};
 
-		public static readonly Vector2[] UV_MAP_FULL_TOPLEFT = {
-					new Vector2(0, 1),
-					new Vector2(1, 1),
-					new Vector2(0, 0),
-					new Vector2(1, 0)
-		};
-
-		public static readonly Vector2 DEFAULT_TEXEL_SIZE = new Vector2(1 / 16f, 1 / 16f);
+		/// <summary>
+		/// Default sprite shader.
+		/// </summary>
 		public static readonly string DEFAULT_SHADER = "Sprites/Default";
 
 		internal SpriteDefinition(tk2dSpriteDefinition def) {
 			Wrap = def;
 		}
 
+		/// <summary>
+		/// Implicit cast operator that allows you to use <c>SpriteDefinition</c> anywhere where <c>t2kdSpriteDefinition</c> is expected.
+		/// </summary>
 		public static implicit operator tk2dSpriteDefinition(SpriteDefinition s) => s.Wrap;
 
+		/// <value>The material.</value>
 		public Material Material {
 			get { return Wrap.materialInst; }
 			set { Wrap.materialInst = value; }
 		}
 
+		/// <value>The texture (modifies the <c>Material</c>).</value>
 		public Texture2D Texture {
 			get { return Wrap.materialInst.mainTexture as Texture2D; }
 			set { Wrap.materialInst.mainTexture = value; }
 		}
 
+		/// <value>The sprite definition name (ID).</value>
 		public string Name {
 			get { return Wrap.name; }
 			set { Wrap.name = value; }
 		}
 
-		// TODO @disinfo Verify whether this is actually the top left corner
-		public Vector2 CornerTopLeft {
+		/// <value>First position (sprite geometry).</value>
+		public Vector2 Position0 {
 			get { return Wrap.position0; }
 			set { Wrap.position0 = value; }
 		}
 
-		public Vector2 CornerTopRight {
+		/// <value>Second position (sprite geometry).</value>
+		public Vector2 Position1 {
 			get { return Wrap.position1; }
 			set { Wrap.position1 = value; }
 		}
 
-		public Vector2 CornerBottomRight {
+		/// <value>Third position (sprite geometry).</value>
+		public Vector2 Position2 {
 			get { return Wrap.position2; }
 			set { Wrap.position2 = value; }
 		}
 
-		public Vector2 CornerBottomLeft {
+		/// <value>Fourth position (sprite geometry).</value>
+		public Vector2 Position3 {
 			get { return Wrap.position3; }
 			set { Wrap.position3 = value; }
 		}
 
+		/// <value>Center of trimmed bounds.</value>
 		public Vector2 TrimmedBoundsCenter {
 			get { return Wrap.boundsDataCenter; }
 			set { Wrap.boundsDataCenter = value; }
 		}
 
+		/// <value>Extents of trimmed bounds.</value>
 		public Vector2 TrimmedBoundsExtents {
 			get { return Wrap.boundsDataExtents; }
 			set { Wrap.boundsDataExtents = value; }
 		}
 
+		/// <value>Center of untrimmed bounds.</value>
 		public Vector2 UntrimmedBoundsCenter {
 			get { return Wrap.untrimmedBoundsDataCenter; }
 			set { Wrap.untrimmedBoundsDataCenter = value; }
 		}
 
+		/// <value>Extents of untrimmed bounds.</value>
 		public Vector2 UntrimmedBoundsExtents {
 			get { return Wrap.untrimmedBoundsDataExtents; }
 			set { Wrap.untrimmedBoundsDataExtents = value; }
 		}
 
+		/// <summary>
+		/// Generates sprite geometry.
+		/// </summary>
+		/// <param name="xy">X and Y coordinates (top left origin).</param>
+		/// <param name="wh">Width and height.</param>
+		/// <param name="tex_size">Texel size.</param>
+		/// <param name="scale">Scale.</param>
+		/// <param name="uvs">UV array.</param>
+		/// <param name="position0">First quad coordinate.</param>
+		/// <param name="position1">Second quad coordinate.</param>
+		/// <param name="position2">Third quad coordinate.</param>
+		/// <param name="position3">Fourth quad coordinate.</param>
 		public static void GenerateGeometry(IntVector2 xy, IntVector2 wh, IntVector2 tex_size, Vector2 scale, out Vector2[] uvs, out Vector3 position0, out Vector3 position1, out Vector3 position2, out Vector3 position3) {
 			var xo = (float)xy.x / tex_size.x;
 			var yo = (float)xy.y / tex_size.y;
@@ -521,6 +640,16 @@ namespace Semi {
 			position3 = new Vector3(w, h);
 		}
 
+		/// <summary>
+		/// Constructs a new sprite definition
+		/// </summary>
+		/// <returns>The new sprite definition.</returns>
+		/// <param name="mat">Material with assigned texture.</param>
+		/// <param name="override_name">Optional name override.</param>
+		/// <param name="region_x">Optional region X coordinate (top left, only used if all 4 region arguments are provided).</param>
+		/// <param name="region_y">Optional region Y coordinate (top left, only used if all 4 region arguments are provided).</param>
+		/// <param name="region_w">Optional region width (only used if all 4 region arguments are provided).</param>
+		/// <param name="region_h">Optional region height (only used if all 4 region arguments are provided).</param>
 		public static SpriteDefinition Construct(Material mat, string override_name = null, int? region_x = null, int? region_y = null, int? region_w = null, int? region_h = null) {
 			//if (!Texture2DLoader.IsEqualPowerOfTwo(texture)) throw new Exception("Texture size must be equal powers of two!");
 
@@ -586,13 +715,22 @@ namespace Semi {
 		}
 	}
 
+	/// <summary>
+	/// Wrapper struct for <c>tk2dSpriteAnimationFrame</c> that provides a cleaner interface and works transparently with anything that expects <c>tk2dSpriteAnimationFrame</c>s.
+	/// </summary>
 	public struct SpriteAnimationFrame {
+		/// <summary>
+		/// Real tk2d object.
+		/// </summary>
 		public tk2dSpriteAnimationFrame Wrap;
 
 		internal SpriteAnimationFrame(tk2dSpriteAnimationFrame frame) {
 			Wrap = frame;
 		}
 
+		/// <summary>
+		/// Implicit cast operator that allows you to use <c>SpriteAnimationFrame</c> anywhere where <c>tk2dSpriteAnimationFrame</c> is expected.
+		/// </summary>
 		public static implicit operator tk2dSpriteAnimationFrame(SpriteAnimationFrame s) => s.Wrap;
 
 		internal static SpriteAnimationFrame Construct(SpriteCollection coll, int definition) {
@@ -602,6 +740,12 @@ namespace Semi {
 			return new_frame;
 		}
 
+		/// <summary>
+		/// Constructs a new sprite animation frame.
+		/// </summary>
+		/// <returns>The new sprite animation frame.</returns>
+		/// <param name="coll">Sprite collection that this frame takes the sprite from.</param>
+		/// <param name="definition">ID of the definition within the collection.</param>
 		public static SpriteAnimationFrame Construct(SpriteCollection coll, string definition) {
 			var id = coll.GetIndex(definition);
 			if (id < 0) throw new Exception($"Sprite definition {definition} doesn't exist - did you forget a namespace?");
@@ -609,7 +753,13 @@ namespace Semi {
 		}
 	}
 
+	/// <summary>
+	/// Wrapper struct for <c>tk2dSpriteAnimationClip</c> that provides a cleaner interface and works transparently with anything that expects <c>tk2dSpriteAnimationClip</c>s.
+	/// </summary>
 	public struct SpriteAnimationClip {
+		/// <summary>
+		/// Real tk2d object.
+		/// </summary>
 		public tk2dSpriteAnimationClip Wrap;
 
 		internal List<SpriteAnimationFrame> WorkingFrameList;
@@ -621,6 +771,9 @@ namespace Semi {
 			WorkingDepth = 0;
 		}
 
+		/// <summary>
+		/// Implicit cast operator that allows you to use <c>SpriteAnimationClip</c> anywhere where <c>tk2dSpriteAnimationClip</c> is expected.
+		/// </summary>
 		public static implicit operator tk2dSpriteAnimationClip(SpriteAnimationClip s) => s.Wrap;
 
 		internal void BeginModifyingFrames() {
@@ -650,6 +803,7 @@ namespace Semi {
 			return frames_idx;
 		}
 
+		/// <value>Frames in the animation clip.</value>
 		public ProxyList<SpriteAnimationFrame, tk2dSpriteAnimationFrame> Frames {
 			get {
 				return new ProxyList<SpriteAnimationFrame, tk2dSpriteAnimationFrame>(
@@ -663,6 +817,14 @@ namespace Semi {
 			}
 		}
 
+		/// <summary>
+		/// Constructs a new sprite animation clip.
+		/// </summary>
+		/// <returns>The new animation clip.</returns>
+		/// <param name="name">Name.</param>
+		/// <param name="fps">FPS.</param>
+		/// <param name="wrap_mode">Wrap mode.</param>
+		/// <param name="frames">Optional array of preset frames.</param>
 		public static SpriteAnimationClip Construct(string name, int fps, tk2dSpriteAnimationClip.WrapMode wrap_mode, params SpriteAnimationFrame[] frames) {
 			var new_clip = new SpriteAnimationClip(new tk2dSpriteAnimationClip());
 			new_clip.Wrap.name = name;
@@ -673,7 +835,13 @@ namespace Semi {
 		}
 	}
 
+	/// <summary>
+	/// Wrapper struct for <c>tk2dSpriteAnimation</c> that provides a cleaner interface and works transparently with anything that expects <c>tk2dSpriteAnimation</c>s.
+	/// </summary>
 	public struct SpriteAnimation {
+		/// <summary>
+		/// Real tk2d object.
+		/// </summary>
 		public tk2dSpriteAnimation Wrap;
 
 		internal List<SpriteAnimationClip> WorkingClipList;
@@ -685,6 +853,9 @@ namespace Semi {
 			WorkingDepth = 0;
 		}
 
+		/// <summary>
+		/// Implicit cast operator that allows you to use <c>SpriteAnimation</c> anywhere where <c>tk2dSpriteAnimation</c> is expected.
+		/// </summary>
 		public static implicit operator tk2dSpriteAnimation(SpriteAnimation s) => s.Wrap;
 
 		internal void BeginModifyingClips() {
@@ -714,6 +885,7 @@ namespace Semi {
 			return clips_idx;
 		}
 
+		/// <value>All of the clips in this sprite animation.</value>
 		public ProxyList<SpriteAnimationClip, tk2dSpriteAnimationClip> Clips {
 			get {
 				return new ProxyList<SpriteAnimationClip, tk2dSpriteAnimationClip>(
@@ -727,12 +899,25 @@ namespace Semi {
 			}
 		}
 
+		/// <summary>
+		/// Constructs a new sprite animation.
+		/// </summary>
+		/// <returns>The new sprite animation.</returns>
+		/// <param name="parent">The game object to add this animation to.</param>
+		/// <param name="clips">Optional array of preset clips.</param>
 		public static SpriteAnimation Construct(GameObject parent, params SpriteAnimationClip[] clips) {
 			var new_anim = new SpriteAnimation(parent.AddComponent<tk2dSpriteAnimation>());
 			new_anim.Wrap.clips = ListConverter.ToArray(clips, (f) => f.Wrap);
 			return new_anim;
 		}
 
+		/// <summary>
+		/// Load a Semi Animation format file from its parsed representation.
+		/// The animation will be attached to the global modded animation game object.
+		/// </summary>
+		/// <returns>The new sprite collection.</returns>
+		/// <param name="parsed">Parsed representation of the Semi Animation.</param>
+		/// <param name="anim_namespace">Namespace to use for registering the animation.</param>
 		public static SpriteAnimation Load(Tk0dConfigParser.ParsedAnimation parsed, string anim_namespace) {
 			// TODO make use of the name
 			var anim = Construct(SemiLoader.AnimationTemplateStorageObject);
@@ -791,15 +976,31 @@ namespace Semi {
 		}
 	}
 
+	/// <summary>
+	/// Wrapper struct for <c>tk2dSpriteAnimator</c> that provides a cleaner interface and works transparently with anything that expects <c>tk2dSpriteAnimator</c>s.
+	/// </summary>
 	public struct SpriteAnimator {
+		/// <summary>
+		/// Real tk2d object.
+		/// </summary>
 		public tk2dSpriteAnimator Wrap;
 
 		internal SpriteAnimator(tk2dSpriteAnimator animator) {
 			Wrap = animator;
 		}
 
+		/// <summary>
+		/// Implicit cast operator that allows you to use <c>SpriteAnimator</c> anywhere where <c>tk2dSpriteAnimator</c> is expected.
+		/// </summary>
 		public static implicit operator tk2dSpriteAnimator(SpriteAnimator s) => s.Wrap;
 
+		/// <summary>
+		/// Constructs a new sprite animator.
+		/// </summary>
+		/// <returns>The new sprite animator.</returns>
+		/// <param name="parent">The game object to add this animator to.</param>
+		/// <param name="animation">The <c>SpriteAnimation</c> object to use for the animator.</param>
+		/// <param name="default_clip">Optional name of the default clip. If not set, the first clip will be used.</param>
 		public static SpriteAnimator Construct(GameObject parent, SpriteAnimation animation, string default_clip = null) {
 			var new_anim = new SpriteAnimator(parent.AddComponent<tk2dSpriteAnimator>());
 			new_anim.Wrap.Library = animation;

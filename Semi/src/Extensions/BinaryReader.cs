@@ -5,6 +5,11 @@ using System.Text;
 namespace Semi {
 	public static class BinaryReaderExt {
 		// http://stackoverflow.com/a/8613300
+		/// <summary>
+		/// Reads all bytes from the stream into a byte array.
+		/// </summary>
+		/// <returns>Array of all the remaining bytes in this stream.</returns>
+		/// <param name="reader">Target reader.</param>
 		public static byte[] ReadAllBytes(this BinaryReader reader) {
 			const int bufferSize = 4096;
 			using (var ms = new MemoryStream()) {
