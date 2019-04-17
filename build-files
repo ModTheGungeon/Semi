@@ -9,6 +9,6 @@ Semi/bin/{TARGET}/MonoMod.Utils.dll
 Semi/bin/{TARGET}/Assembly-CSharp.SemiLoader.mm.pdb
 Semi/bin/{TARGET}/Logger.pdb
 Semi/bin/{TARGET}/Mono.Cecil.Mdb.dll
-Semi/bin/{TARGET}/Mono.Cecil.Rocks.dll
-Semi/bin/{TARGET}/MonoMod.RuntimeDetour.dll
+#Semi/bin/{TARGET}/Mono.Cecil.Rocks.dll
+#Semi/bin/{TARGET}/MonoMod.RuntimeDetour.dll
 Semi/bin/{TARGET}/YamlDotNet.dll

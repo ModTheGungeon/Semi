@@ -1015,6 +1015,7 @@ namespace Semi {
 				}
 				if (clip_id == -1) throw new Exception($"Default clip '{default_clip}' doesn't exist.");
 			}
+
 			return new_anim;
 		}
 	}

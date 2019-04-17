@@ -325,8 +325,6 @@ namespace Semi {
                 );
             }
 
-			yield return null;
-
             using (StreamReader stream = new StreamReader(asm.GetManifestResourceStream("idmaps:enemies.txt"))) {
                 Logger.Debug($"IDMap enemies.txt: stream = {stream}");
                 Gungeon.Enemies = IDMapParser<AIActor, Gungeon.EnemyTag>.Parse(
@@ -335,6 +333,17 @@ namespace Semi {
                     (id) => EnemyDatabase.AssetBundle.LoadAsset<UnityEngine.GameObject>(id).GetComponent<AIActor>()
                 );
             }
+
+
+			using (StreamReader stream = new StreamReader(asm.GetManifestResourceStream("idmaps:synergies.txt"))) {
+				Logger.Debug($"IDMap synergies.txt: stream = {stream}");
+				Gungeon.Synergies = IDMapParser<AdvancedSynergyEntry, SynergyEntry.SynergyActivation>.Parse(
+					stream,
+					"gungeon",
+					(id) => GameManager.Instance.SynergyManager.synergies[int.Parse(id)]
+				);
+			}
+			yield return null;
         }
 
 		internal static void LoadBuiltinLanguages() {

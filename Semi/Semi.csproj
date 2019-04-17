@@ -73,7 +73,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="src\Semi\SemiLoader.cs" />
     <Compile Include="src\Patches\GameManager.cs" />
     <Compile Include="src\YAML\ModConfig.cs" />
     <Compile Include="src\YAML\SerializationHelper.cs" />
@@ -149,6 +148,7 @@
     <Compile Include="src\TreeBuilders\ItemTreeBuilder.cs" />
     <Compile Include="src\Parsers\Tk0dConfigParser.cs" />
     <Compile Include="src\Patches\Gun.cs" />
+    <Compile Include="src\Semi\SemiLoader.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="src\" />
@@ -185,6 +185,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="res\idmaps\items.txt">
       <LogicalName>idmaps:items.txt</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="res\idmaps\synergies.txt">
+      <LogicalName>idmaps:synergies.txt</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

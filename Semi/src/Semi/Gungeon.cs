@@ -40,6 +40,12 @@ namespace Semi {
 		/// </summary>
 		/// <value>ID pool of the enemies.</value>
         public static IDPool<AIActor, EnemyTag> Enemies { get; internal set; }
+		/// <summary>
+		/// ID pool containing all the synergies in the game.
+		/// This pool contains all Gungeon and mod synergies, including unused/excluded/unobtainable ones.
+		/// </summary>
+		/// <value>ID pool of the synergies.</value>
+		public static IDPool<AdvancedSynergyEntry, SynergyEntry.SynergyActivation> Synergies { get; internal set; }
 
 		/// <summary>
 		/// ID pool containing all sprite collections registered by mods.
