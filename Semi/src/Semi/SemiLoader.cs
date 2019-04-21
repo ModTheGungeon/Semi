@@ -89,9 +89,13 @@ namespace Semi {
 
 		internal static SpriteCollection EncounterIconCollection;
 
+		internal static HashSet<string> ActiveSynergyIDs = new HashSet<string>();
+
+		internal static Dictionary<string, Gungeon.SynergyStateChangeAction> SynergyActivatedActions = new Dictionary<string, Gungeon.SynergyStateChangeAction>();
+		internal static Dictionary<string, Gungeon.SynergyStateChangeAction> SynergyDeactivatedActions = new Dictionary<string, Gungeon.SynergyStateChangeAction>();
+
 		//internal static GlobalSpriteCollectionManager AmmonomiconCollectionManager;
 		//internal static GlobalSpriteCollectionManager ItemCollectionManager;
-
 
 		internal static IEnumerator OnGameManagerAlive(GameManager mgr) {
 			// INVESTIGATING:
@@ -309,6 +313,16 @@ namespace Semi {
             }
         }
 
+		internal static string[] ConvertItemIDList(IList<int> ids) {
+			var ary = new string[ids.Count];
+			for (int i = 0; i < ids.Count; i++) {
+				var id = ids[i];
+				var string_id = ((Patches.PickupObject)PickupObjectDatabase.Instance.Objects[id])?.UniqueItemID;
+				ary[i] = string_id;
+			}
+			return ary;
+		}
+
         internal static IEnumerator LoadIDMaps() {
             var asm = Assembly.GetExecutingAssembly();
             Logger.Debug("Loading IDMaps");
@@ -340,7 +354,19 @@ namespace Semi {
 				Gungeon.Synergies = IDMapParser<AdvancedSynergyEntry, SynergyEntry.SynergyActivation>.Parse(
 					stream,
 					"gungeon",
-					(id) => GameManager.Instance.SynergyManager.synergies[int.Parse(id)]
+					(id) => GameManager.Instance.SynergyManager.synergies[int.Parse(id)],
+					do_after: (id, gungeon_syn) => {
+						var syn = (Semi.Patches.AdvancedSynergyEntry)gungeon_syn;
+
+						syn.OptionalGuns = ConvertItemIDList(syn.OptionalGunIDs);
+						syn.MandatoryGuns = ConvertItemIDList(syn.MandatoryGunIDs);
+						syn.OptionalItems = ConvertItemIDList(syn.OptionalItemIDs);
+						syn.MandatoryItems = ConvertItemIDList(syn.MandatoryItemIDs);
+						syn.UniqueID = id;
+
+						// null these out so that accessing these fields will error
+						syn.OptionalGunIDs = syn.MandatoryGunIDs = syn.OptionalItemIDs = syn.MandatoryItemIDs = null;
+					}
 				);
 			}
 			yield return null;
@@ -371,6 +397,22 @@ namespace Semi {
 				Gungeon.Localizations[$"{I18N.GungeonLanguage.LanguageToID(lang)}_items"] = new I18N.PrefabLocalization(lang, I18N.StringTable.Items);
 				Gungeon.Localizations[$"{I18N.GungeonLanguage.LanguageToID(lang)}_synergies"] = new I18N.PrefabLocalization(lang, I18N.StringTable.Synergies);
 				Gungeon.Localizations[$"{I18N.GungeonLanguage.LanguageToID(lang)}_ui"] = new I18N.PrefabLocalization(lang, I18N.StringTable.UI);
+			}
+		}
+
+		internal static void InvokeSynergyActivated(string id, PlayerController p) {
+			id = IDPool<AdvancedSynergyEntry>.Resolve(id);
+			Gungeon.SynergyStateChangeAction action = null;
+			if (SynergyActivatedActions.TryGetValue(id, out action)) {
+				action.Invoke(p);
+			}
+		}
+
+		internal static void InvokeSynergyDeactivated(string id, PlayerController p) {
+			id = IDPool<AdvancedSynergyEntry>.Resolve(id);
+			Gungeon.SynergyStateChangeAction action = null;
+			if (SynergyDeactivatedActions.TryGetValue(id, out action)) {
+				action.Invoke(p);
 			}
 		}
 

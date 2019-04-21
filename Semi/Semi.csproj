@@ -149,6 +149,12 @@
     <Compile Include="src\Parsers\Tk0dConfigParser.cs" />
     <Compile Include="src\Patches\Gun.cs" />
     <Compile Include="src\Semi\SemiLoader.cs" />
+    <Compile Include="src\Patches\AdvancedSynergyEntry.cs" />
+    <Compile Include="src\Patches\RewardManager.cs" />
+    <Compile Include="src\Patches\AmmonomiconPokedexEntry.cs" />
+    <Compile Include="src\Patches\MinimapUIController.cs" />
+    <Compile Include="src\Patches\UINotificationController.cs" />
+    <Compile Include="src\Patches\PlayerStats.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="src\" />

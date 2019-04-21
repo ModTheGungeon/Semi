@@ -353,6 +353,21 @@ namespace Semi {
             }
         }
 
+		/// <summary>
+		/// Resolves a list of IDs (<c>IList</c> interface). See <see cref="Resolve"/>.
+		/// If <c>ids</c> is <c>null</c>, the result of this method will be a string array of size 0.
+		/// </summary>
+		/// <returns>Array of resolved IDs.</returns>
+		/// <param name="ids">List of IDs.</param>
+		public static string[] ResolveList(IList<string> ids) {
+			if (ids == null) return new string[0];
+			var ary = new string[ids.Count];
+			for (int i = 0; i < ids.Count; i++) {
+				ary[i] = Resolve(ids[i]);
+			}
+			return ary;
+		}
+
         //Strut
 
 		/// <summary>

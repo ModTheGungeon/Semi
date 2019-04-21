@@ -237,6 +237,7 @@ namespace Semi {
 
 			var new_inst = PickupObjectTreeBuilder.GetNewInactiveObject(id);
 			var pickup_object = PickupObjectTreeBuilder.AddPickupObject<T>(new_inst);
+			((Patches.PickupObject)(object)pickup_object).UniqueItemID = id;
 			if (pickup_object is Gun) {
 				var gun = pickup_object as Gun;
 				gun.Volley = ScriptableObject.CreateInstance<ProjectileVolleyData>();
@@ -265,6 +266,35 @@ namespace Semi {
 			EncounterDatabase.Instance.Entries.Add(enc_db_entry);
 
 			return pickup_object;
+		}
+
+		public AdvancedSynergyEntry RegisterSynergy(string id, string name_loc_id, int objects_required, string[] optional_gun_ids = null, string[] mandatory_gun_ids = null, string[] optional_item_ids = null, string[] mandatory_item_ids = null, List<StatModifier> stat_modifiers = null, bool active_when_gun_unequipped = false, bool ignore_lich_eye_bullets = false, bool require_at_least_one_gun_and_one_item = false, bool suppress_vfx = false) {
+			CheckMode();
+			id = GetFullID(id);
+
+			var syn = new Patches.AdvancedSynergyEntry {
+				ActivationStatus = SynergyEntry.SynergyActivation.ACTIVE,
+				OptionalGuns = IDPool<PickupObject>.ResolveList(optional_gun_ids),
+				MandatoryGuns = IDPool<PickupObject>.ResolveList(mandatory_gun_ids),
+				OptionalItems = IDPool<PickupObject>.ResolveList(optional_item_ids),
+				MandatoryItems = IDPool<PickupObject>.ResolveList(mandatory_item_ids),
+				NameKey = name_loc_id,
+				statModifiers = stat_modifiers,
+				NumberObjectsRequired = objects_required,
+				ActiveWhenGunUnequipped = active_when_gun_unequipped,
+				IgnoreLichEyeBullets = ignore_lich_eye_bullets,
+				RequiresAtLeastOneGunAndOneItem = require_at_least_one_gun_and_one_item,
+				SuppressVFX = suppress_vfx,
+				bonusSynergies = new List<CustomSynergyType>(),
+				UniqueID = id
+			};
+
+			//TODO @performance use a working state on this, like collections
+			var synergies = new List<AdvancedSynergyEntry>(GameManager.Instance.SynergyManager.synergies);
+			synergies.Add(syn);
+			GameManager.Instance.SynergyManager.synergies = synergies.ToArray();
+
+			return syn;
 		}
 
 		/// <summary>

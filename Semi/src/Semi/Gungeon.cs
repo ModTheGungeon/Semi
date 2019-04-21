@@ -29,6 +29,11 @@ namespace Semi {
         }
 
 		/// <summary>
+		/// Delegate used for synergy activation/synergy deactivation events.
+		/// </summary>
+		public delegate void SynergyStateChangeAction(PlayerController p);
+
+		/// <summary>
 		/// ID pool containing all the items in the game, including consumables, guns, passives and actives.
 		/// This pool contains all Gungeon and mod pickups, including unused/excluded/unobtainable ones.
 		/// </summary>
@@ -79,5 +84,31 @@ namespace Semi {
 		/// </summary>
 		/// <value>ID pool of available languages.</value>
 		public static IDPool<I18N.Language> Languages { get; internal set; }
+
+
+		public static void OnSynergyActivated(string id, SynergyStateChangeAction action) {
+			id = IDPool<AdvancedSynergyEntry>.Resolve(id);
+			SynergyStateChangeAction existing_action = null;
+			if (!SemiLoader.SynergyActivatedActions.TryGetValue(id, out existing_action)) {
+				SemiLoader.SynergyActivatedActions[id] = action;
+			} else {
+				existing_action += action;
+			}
+		}
+
+		public static void OnSynergyDeactivated(string id, SynergyStateChangeAction action) {
+			id = IDPool<AdvancedSynergyEntry>.Resolve(id);
+			SynergyStateChangeAction existing_action = null;
+			if (!SemiLoader.SynergyDeactivatedActions.TryGetValue(id, out existing_action)) {
+				SemiLoader.SynergyDeactivatedActions[id] = action;
+			} else {
+				existing_action += action;
+			}
+		}
+
+		public static bool IsSynergyActive(string id) {
+			id = IDPool<AdvancedSynergyEntry>.Resolve(id);
+			return SemiLoader.ActiveSynergyIDs.Contains(id);
+		}
     }
 }
