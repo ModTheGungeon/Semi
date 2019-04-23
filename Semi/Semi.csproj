@@ -61,14 +61,20 @@
     <Reference Include="UnityEngine.PhysicsModule">
       <HintPath>..\libs\gungeon\UnityEngine.PhysicsModule.dll</HintPath>
     </Reference>
-    <Reference Include="MonoMod.Utils">
-      <HintPath>..\packages\MonoMod.Utils.19.4.10.9\lib\net35\MonoMod.Utils.dll</HintPath>
-    </Reference>
-    <Reference Include="MonoMod">
-      <HintPath>..\packages\MonoMod.19.4.10.9\lib\net35\MonoMod.exe</HintPath>
-    </Reference>
     <Reference Include="Mono.Cecil">
       <HintPath>..\packages\Mono.Cecil.0.10.3\lib\net35\Mono.Cecil.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoMod">
+      <HintPath>..\libs\MonoMod\MonoMod.exe</HintPath>
+    </Reference>
+    <Reference Include="MonoMod.RuntimeDetour">
+      <HintPath>..\libs\MonoMod\MonoMod.RuntimeDetour.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoMod.Utils">
+      <HintPath>..\libs\MonoMod\MonoMod.Utils.dll</HintPath>
+    </Reference>
+    <Reference Include="MMHOOK_Assembly-CSharp">
+      <HintPath>..\libs\gungeon\MMHOOK_Assembly-CSharp.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

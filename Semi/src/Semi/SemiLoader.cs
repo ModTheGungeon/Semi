@@ -181,8 +181,10 @@ namespace Semi {
             LoadMods();
 
 			BeginRegisteringContent();
-			RunContentMods();
+			RegisterContentInMods();
 			CommitContent();
+
+			InitializeContentInMods();
         }
 
 		internal static void BeginRegisteringContent() {
@@ -194,14 +196,23 @@ namespace Semi {
 			I18N.ReloadLocalizations();
 		}
 
-		internal static void RunContentMods() {
-			Logger.Info("Running content mods");
+		internal static void RegisterContentInMods() {
+			Logger.Info("Running RegisterContent()");
 
 			foreach (var mod in Mods) {
 				Logger.Debug($"Registering content in '{mod.Key}'");
 				mod.Value.Instance.RegisteringMode = true;
 				mod.Value.Instance.RegisterContent();
 				mod.Value.Instance.RegisteringMode = false;
+			}
+		}
+
+		internal static void InitializeContentInMods() {
+			Logger.Info("Running InitializeContent()");
+
+			foreach (var mod in Mods) {
+				Logger.Debug($"Initializing content in '{mod.Key}'");
+				mod.Value.Instance.InitializeContent();
 			}
 		}
 

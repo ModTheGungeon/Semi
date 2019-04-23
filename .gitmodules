@@ -1,6 +1,3 @@
 [submodule "libs/Logger"]
 	path = libs/Logger
 	url = https://github.com/ModTheGungeon/Logger
-[submodule "libs/MonoMod"]
-	path = libs/MonoMod
-	url = https://github.com/0x0ade/MonoMod

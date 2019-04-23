@@ -44,6 +44,13 @@ namespace Semi {
 		public abstract void RegisterContent();
 
 		/// <summary>
+		/// Called after all <c>RegisterContent</c> methods are ran.
+		/// You can't register any new content in this method, but you can use pre-existing references and modify their fields.
+		/// You can do things like iterating on items in this method because no new ID pool entries will be added.
+		/// </summary>
+		public abstract void InitializeContent();
+
+		/// <summary>
 		/// Called when Semi loads the mod.
 		/// You cannot register any content in this method. Use it to setup fields and such.
 		/// </summary>

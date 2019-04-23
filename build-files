@@ -5,7 +5,9 @@ Semi/bin/{TARGET}/Logger.dll
 Semi/bin/{TARGET}/Mono.Cecil.dll
 Semi/bin/{TARGET}/Mono.Cecil.Pdb.dll
 Semi/bin/{TARGET}/MonoMod.exe
+Semi/bin/{TARGET}/MonoMod.RuntimeDetour.dll
 Semi/bin/{TARGET}/MonoMod.Utils.dll
+Semi/bin/{TARGET}/MMHOOK_Assembly-CSharp.dll
 Semi/bin/{TARGET}/Assembly-CSharp.SemiLoader.mm.pdb
 Semi/bin/{TARGET}/Logger.pdb
 Semi/bin/{TARGET}/Mono.Cecil.Mdb.dll
