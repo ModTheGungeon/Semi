@@ -303,7 +303,21 @@ namespace Semi {
             if (asm == null) throw new ModLoadException(mod_config.ID, "Failed loading/relinking assembly");
 
             Logger.Debug($"Searching for Mod subclasses");
-            var types = asm.GetTypes();
+			Type[] types = null;
+			try {
+				types = asm.GetTypes();
+			} catch (ReflectionTypeLoadException e) {
+				Logger.Error($"Failed loading types from mod:");
+				if (e.LoaderExceptions == null) {
+					Logger.ErrorIndent("(No loader exceptions)");
+				} else {
+					for (int i = 0; i < e.LoaderExceptions.Length; i++) {
+						var ex = e.LoaderExceptions[i];
+						Logger.ErrorIndent($"- [{ex.GetType().Name}] {ex.Message}");
+					}
+				}
+				return;
+			}
             Logger.Debug($"{types.Length} type(s)");
             for (int i = 0; i < types.Length; i++) {
                 var type = types[i];
