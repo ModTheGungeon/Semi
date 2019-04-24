@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion 
 
 :: Requirements
-if not "%msbuild" == "" goto :skip_msbuild
+if not "%msbuild%" == "" goto :skip_msbuild
 if not exist "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MSBuild.exe" (
     echo ERROR: Microsoft.NET framework 3.5 not found. Make sure you have Visual Studio installed.
     goto _exit
@@ -61,40 +61,27 @@ if %errorlevel%==0 (
   call %msbuild% || goto :error
 )
 
-rem for /f "tokens=*" %%L in (build-files) do (
-rem   set "line=%%L"
-rem   setlocal enabledelayedexpansion
-rem   echo !line!
-rem   set str=!line:{TARGET}=%target%!
-rem   echo !str!
-rem   set "line=!line:/=\!"
-rem   endlocal
-rem )
-
 for /f "tokens=*" %%L in (build-files) do (
   set "line=%%L"
   setlocal enabledelayedexpansion
+  echo !line!
+  set str=!line:{TARGET}=%target%!
+  echo !str!
   set "line=!line:/=\!"
-   if not "!line:~0,1!"=="#" (
+  if not "!line:~0,1!"=="#" (
     set "file_ex=!line:{TARGET}=%target%!"
     set "file=!file_ex:{TARGET-UNSIGNED}=%target_unsigned%!"
-    for %%f in (!file!) do set target=%%~nxf
-      rem
-
-    echo !line!
-    set "file_ex=!line:{TARGET}=A!"
-    echo !file_ex!
-    call echo %%line%%
     echo Copying '!file!' to '%build%/!target!'
 
     for %%i in (!file!) do (
       if exist %%~si\nul (
-        robocopy "!file!" "%build%/!target!" /s /e
+         robocopy "!file!" "%build%" /s /e
       ) else (
-        copy "!file!" "%build%/!target!"
+        copy "!file!" "%build%"
       )
     )
   )
+  endlocal
 )
 
 :: Zipping it all up
