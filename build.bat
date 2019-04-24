@@ -2,22 +2,29 @@
 setlocal EnableDelayedExpansion 
 
 :: Requirements
+if not "%msbuild" == "" goto :skip_msbuild
 if not exist "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MSBuild.exe" (
     echo ERROR: Microsoft.NET framework 3.5 not found. Make sure you have Visual Studio installed.
     goto _exit
 ) 
 set msbuild="C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MSBuild.exe"
-     
+
+:skip_msbuild
+
+if not "%sevenz%" == "" goto :skip_7z
+
 set sevenz=7z
-if exist "D:\Program Files\7-Zip\7z.exe" (
-    set sevenz="D:\Program Files\7-Zip\7z.exe"
+if exist "C:\Program Files\7-Zip\7z.exe" (
+    set sevenz="C:\Program Files\7-Zip\7z.exe"
     goto prep
 )
 
-if exist "D:\Program Files(x86)\7-Zip\7z.exe" (
-    set sevenz="D:\Program Files (x86)\7-Zip\7z.exe"
+if exist "C:\Program Files(x86)\7-Zip\7z.exe" (
+    set sevenz="C:\Program Files (x86)\7-Zip\7z.exe"
     goto prep
 )  
+
+:skip_7z
 
 where 7z >nul 2>nul
 if not %errorlevel%==0 (
