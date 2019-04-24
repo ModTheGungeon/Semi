@@ -49,10 +49,10 @@ mkdir "%build%" 2>nul
 :: Build
 where xbuild >nul 2>nul
 if %errorlevel%==0 (
-  ::call xbuild
+  ::call xbuild || goto :error
   rem
 ) else (
-  call %msbuild%
+  call %msbuild% || goto :error
 )
 
 for /f "tokens=*" %%L in (build-files) do (
@@ -92,9 +92,16 @@ rem )
 
 :: Zipping it all up
 pushd "%build%"
-%sevenz% a SEMI-LOADER.zip *
+%sevenz% a SEMI-LOADER.zip * || goto :error
 popd
-move "%build%\SEMI-LOADER.zip" "%build_zip%"
+move "%build%\SEMI-LOADER.zip" "%build_zip%" || goto :error
+
+goto _exit
+
+:: Error
+:_error
+echo "Error - terminating script."
+exit /b 1
 
 :: The End
 :_exit
