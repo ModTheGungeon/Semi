@@ -1,17 +1,18 @@
 @echo off
 setlocal EnableDelayedExpansion 
+setlocal EnableExtensions
 
 :: Requirements
-if not "%msbuild%" == "" goto :skip_msbuild
-if not exist "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MSBuild.exe" (
+if defined msbuild goto :skip_msbuild
+if not exist "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\Current\Bin\MSBuild.exe" (
     echo ERROR: Microsoft.NET framework 3.5 not found. Make sure you have Visual Studio installed.
     goto _exit
 ) 
-set msbuild="C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MSBuild.exe"
+set msbuild="C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\Current\Bin\MSBuild.exe"
 
 :skip_msbuild
 
-if not "%sevenz%" == "" goto :skip_7z
+if defined sevenz goto :skip_7z
 
 set sevenz=7z
 if exist "C:\Program Files\7-Zip\7z.exe" (
@@ -58,7 +59,7 @@ if %errorlevel%==0 (
   ::call xbuild || goto :error
   rem
 ) else (
-  call %msbuild% || goto :error
+  call "%msbuild%" || goto :error
 )
 
 for /f "tokens=*" %%L in (build-files) do (
@@ -75,9 +76,9 @@ for /f "tokens=*" %%L in (build-files) do (
 
     for %%i in (!file!) do (
       if exist %%~si\nul (
-         robocopy "!file!" "%build%" /s /e
+        robocopy "!file!" "%build%" /s /e || goto :error
       ) else (
-        copy "!file!" "%build%"
+        copy "!file!" "%build%" || goto :error
       )
     )
   )
@@ -93,8 +94,8 @@ move "%build%\SEMI-LOADER.zip" "%build_zip%" || goto :error
 goto _exit
 
 :: Error
-:_error
-echo "Error - terminating script."
+:error
+echo ERROR: Failed while running commands. Terminating script.
 exit /b 1
 
 :: The End
