@@ -61,40 +61,41 @@ if %errorlevel%==0 (
   call %msbuild% || goto :error
 )
 
+rem for /f "tokens=*" %%L in (build-files) do (
+rem   set "line=%%L"
+rem   setlocal enabledelayedexpansion
+rem   echo !line!
+rem   set str=!line:{TARGET}=%target%!
+rem   echo !str!
+rem   set "line=!line:/=\!"
+rem   endlocal
+rem )
+
 for /f "tokens=*" %%L in (build-files) do (
   set "line=%%L"
   setlocal enabledelayedexpansion
-  echo !line!
-  set str=!line:{TARGET}=%target%!
-  echo !str!
   set "line=!line:/=\!"
-  endlocal
+   if not "!line:~0,1!"=="#" (
+    set "file_ex=!line:{TARGET}=%target%!"
+    set "file=!file_ex:{TARGET-UNSIGNED}=%target_unsigned%!"
+    for %%f in (!file!) do set target=%%~nxf
+      rem
+
+    echo !line!
+    set "file_ex=!line:{TARGET}=A!"
+    echo !file_ex!
+    call echo %%line%%
+    echo Copying '!file!' to '%build%/!target!'
+
+    for %%i in (!file!) do (
+      if exist %%~si\nul (
+        robocopy "!file!" "%build%/!target!" /s /e
+      ) else (
+        copy "!file!" "%build%/!target!"
+      )
+    )
+  )
 )
-
-rem for /f "tokens=*" %%L in (build-files) do (
-rem   set "line=%%L"
-rem   set "line=!line:/=\!"
-rem   if not "!line:~0,1!"=="#" (
-rem     set "file_ex=!line:{TARGET}=%target%!"
-rem     set "file=!file_ex:{TARGET-UNSIGNED}=%target_unsigned%!"
-rem     for %%f in (!file!) do set target=%%~nxf
-rem       rem
-
-rem     echo !line!
-rem     set "file_ex=!line:{TARGET}=A!"
-rem     echo !file_ex!
-rem     call echo %%line%%
-rem     echo Copying '!file!' to '%build%/!target!'
-
-rem     for %%i in (!file!) do (
-rem       if exist %%~si\nul (
-rem         robocopy "!file!" "%build%/!target!" /s /e
-rem       ) else (
-rem         copy "!file!" "%build%/!target!"
-rem       )
-rem     )
-rem   )
-rem )
 
 :: Zipping it all up
 pushd "%build%"
