@@ -24,14 +24,13 @@ if exist "C:\Program Files(x86)\7-Zip\7z.exe" (
     goto prep
 )  
 
-:skip_7z
-
 where 7z >nul 2>nul
 if not %errorlevel%==0 (
     echo ERROR: 7zip was not found. Make sure that you have it installed and in the PATH.
     goto _exit
 )
 
+:skip_7z
 
 :prep
 set target=Debug
