@@ -59,10 +59,10 @@
       <HintPath>..\libs\gungeon\UnityEngine.PhysicsModule.dll</HintPath>
     </Reference>
     <Reference Include="MonoMod">
-      <HintPath>..\packages\MonoMod.19.4.10.9\lib\net35\MonoMod.exe</HintPath>
+      <HintPath>..\libs\MonoMod\MonoMod.exe</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil">
-      <HintPath>..\packages\Mono.Cecil.0.10.3\lib\net35\Mono.Cecil.dll</HintPath>
+      <HintPath>..\libs\MonoMod\Mono.Cecil.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
