@@ -57,6 +57,13 @@ namespace Semi {
 
             ModuleDefinition md = ModuleDefinition.ReadModule(stream, new ReaderParameters(ReadingMode.Immediate));
 
+			for (int i = md.AssemblyReferences.Count - 1; i >= 0; i--) {
+				var asmRef = md.AssemblyReferences[i];
+				if (asmRef.FullName.Contains(".mm")) {
+					md.AssemblyReferences.RemoveAt(i);
+				}
+			}
+
             foreach (TypeDefinition type in md.Types) {
                 RelinkType(type);
             }
