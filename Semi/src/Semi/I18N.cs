@@ -97,6 +97,37 @@ namespace Semi {
 			}
 		}
 
+		public class RuntimeLocalization : LocalizationSource {
+			/// <summary>
+			/// Specifies whether to allow localizations loaded from this source to override sources loaded before it.
+			/// </summary>
+			public bool OverwriteMode = false;
+			/// <summary>
+			/// <see cref="T:Semi.ModInfo"/> of the mod that added this localization.
+			/// </summary>
+			public SemiLoader.ModInfo Owner;
+			/// <summary>
+			/// The localization file.
+			/// </summary>
+			public string Data;
+
+			public RuntimeLocalization(SemiLoader.ModInfo owner, string data, string target_lang, StringTable target_table, bool allow_overwrite = false) {
+				TargetLanguageID = Gungeon.Languages.ValidateEntry(target_lang);
+				TargetStringTable = target_table;
+				Data = data;
+				OverwriteMode = allow_overwrite;
+				Owner = owner;
+			}
+
+			/// <summary>
+			/// Loads localization data from the provided string.
+			/// </summary>
+			/// <param name="dict">Target dictionary of strings.</param>
+			public override void LoadInto(Dictionary<string, StringTableManager.StringCollection> dict) {
+				LoadLocalizationText(new StringReader(Data), dict, overwrite: OverwriteMode, default_namespace: Owner.Config.ID);
+			}
+		}
+
 		public class ModLocalization : LocalizationSource {
 			/// <summary>
 			/// Absolute path to the text file containing the localization data.

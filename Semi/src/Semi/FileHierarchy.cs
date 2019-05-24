@@ -36,6 +36,21 @@ namespace Semi {
         }
 
 		/// <summary>
+		/// The name of the file that determines mods to ignore during validation.
+		/// </summary>
+		public const string MY_MODS_FILE_NAME = "MySemiMods.txt";
+		private static string _MyModsFile;
+		/// <summary>
+		/// Gets the absolute path to the file listing mods to ignore during checksum validation.
+		/// </summary>
+		public static string MyModsFile {
+			get {
+				if (_MyModsFile != null) return _MyModsFile;
+				return _MyModsFile = Path.Combine(GameFolder, MY_MODS_FILE_NAME);
+			}
+		}
+
+		/// <summary>
 		/// The name of the folder inside the game folder from where mods are loaded.
 		/// </summary>
         public const string MODS_FOLDER_NAME = "SemiMods";
@@ -117,6 +132,7 @@ namespace Semi {
 
         private const string ORDER_TXT_DEFAULT_TEXT = "# put names of mod folders/archives to be loaded in a specific order here\n# mods that aren't in this file will also be loaded,\n# but in unspecified order";
         private const string BLACKLIST_TXT_DEFAULT_TEXT = "# put names of mod folders/archives that you don't want loaded here\n# this file will override the order.txt file if necessary";
+		private const string MY_MODS_TXT_DEFAULT_TEXT = "# put IDs of mods that you're working on\n# to allow them to load without validating the online checksum\n# do not trust anybody telling you to put in their mod here if you haven't written it,\n# as they could be trying to work around the security features to make you run a malicious mod\n\n";
 
 		/// <summary>
 		/// The name of the mod metadata file.
@@ -150,6 +166,10 @@ namespace Semi {
                 SemiLoader.Logger.Debug("Mod assembly relink cache folder didn't exist, creating");
                 Directory.CreateDirectory(ModsCacheRelinkFolder);
             }
+			if (!File.Exists(MyModsFile)) {
+				SemiLoader.Logger.Debug("MySemiMods.txt file didn't exist, creating");
+				using (var f = File.CreateText(MyModsFile)) f.Write(MY_MODS_TXT_DEFAULT_TEXT);
+			}
             SemiLoader.Logger.Debug("File hierarchy verified");
         }
     }

@@ -425,9 +425,10 @@ namespace Semi {
 		/// <param name="parsed">Parsed representation of the Semi Collection.</param>
 		/// <param name="base_dir">Base directory to load referenced assets from.</param>
 		/// <param name="coll_namespace">Namespace to use for the collection and the definitions.</param>
-		public static SpriteCollection Load(Tk0dConfigParser.ParsedCollection parsed, string base_dir, string coll_namespace) {
-			if (parsed.SpritesheetPath == null || parsed.SpritesheetPath.Trim() == "") throw new Exception("Missing spritesheet path!");
-			var tex = Texture2DLoader.LoadTexture2D(Path.Combine(base_dir, parsed.SpritesheetPath));
+		public static SpriteCollection Load(Tk0dConfigParser.ParsedCollection parsed, string base_dir, string coll_namespace, Texture2D override_spritesheet = null) {
+			if (override_spritesheet == null && (parsed.SpritesheetPath == null || parsed.SpritesheetPath.Trim() == "")) throw new Exception("Missing spritesheet path!");
+			var tex = override_spritesheet;
+			if (tex == null) tex = Texture2DLoader.LoadTexture2D(Path.Combine(base_dir, parsed.SpritesheetPath));
 			var mat = new Material(ShaderCache.Acquire(SpriteDefinition.DEFAULT_SHADER));
 			mat.mainTexture = tex;
 

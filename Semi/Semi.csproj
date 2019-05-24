@@ -76,6 +76,9 @@
     <Reference Include="MMHOOK_Assembly-CSharp">
       <HintPath>..\libs\gungeon\MMHOOK_Assembly-CSharp.dll</HintPath>
     </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>..\libs\gungeon\Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -151,7 +154,7 @@
     <Compile Include="src\Patches\StringTableManager.cs" />
     <Compile Include="src\Mod\Mod.cs" />
     <Compile Include="src\Mod\Content.cs" />
-    <Compile Include="src\TreeBuilders\ItemTreeBuilder.cs" />
+    <Compile Include="src\TreeBuilders\PickupObjectTreeBuilder.cs" />
     <Compile Include="src\Parsers\Tk0dConfigParser.cs" />
     <Compile Include="src\Patches\Gun.cs" />
     <Compile Include="src\Semi\SemiLoader.cs" />
@@ -161,6 +164,10 @@
     <Compile Include="src\Patches\MinimapUIController.cs" />
     <Compile Include="src\Patches\UINotificationController.cs" />
     <Compile Include="src\Patches\PlayerStats.cs" />
+    <Compile Include="src\TreeBuilders\EntityTreeBuilder.cs" />
+    <Compile Include="src\Extensions\GameObject.cs" />
+    <Compile Include="src\UI\UI.cs" />
+    <Compile Include="src\Semi\ModVerification.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="src\" />
@@ -175,6 +182,7 @@
     <Folder Include="src\Items\" />
     <Folder Include="src\Mod\" />
     <Folder Include="src\TreeBuilders\" />
+    <Folder Include="src\UI\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -200,6 +208,18 @@
     </EmbeddedResource>
     <EmbeddedResource Include="res\idmaps\synergies.txt">
       <LogicalName>idmaps:synergies.txt</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="res\gun\gtcktp.png">
+      <LogicalName>gun:gtcktp.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="res\gun\gtcktp_enc.png">
+      <LogicalName>gun:gtcktp_enc.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="res\gun\gun.semi.coll">
+      <LogicalName>gun:gun.semi.coll</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="res\gun\gun.semi.anim">
+      <LogicalName>gun:gun.semi.anim</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

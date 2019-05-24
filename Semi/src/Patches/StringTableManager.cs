@@ -9,6 +9,12 @@ namespace Semi.Patches {
 	/// </summary>
 	[MonoModPatch("global::StringTableManager")]
 	public static class StringTableManager {
+		internal static bool CreeperAwMan;
+
+		internal static string RetrieveString(byte[] b) {
+			return System.Text.Encoding.ASCII.GetString(b);
+		}
+
 		[MonoModIgnore]
 		public static Dictionary<string, global::StringTableManager.StringCollection> m_introTable;
 

@@ -1,0 +1,34 @@
+@id gun_anim
+@name Gun Animation
+@collection fun_times:gun_coll
+
+clip fire prefix fun_times wrapmode once fps 12:
+	gun_fire_001
+	gun_fire_002
+
+clip idle prefix fun_times wrapmode loop fps 12:
+	gun_001
+
+clip intro prefix fun_times wrapmode once fps 12:
+	gun_001
+	gun_002
+	gun_003
+	gun_004
+	gun_005
+	gun_006
+	gun_007
+	gun_008
+	gun_009
+	gun_010
+	gun_011
+	gun_012
+	gun_013
+	gun_014
+	gun_015
+	gun_016
+	gun_017
+	gun_018
+	gun_019
+	gun_020
+	gun_021
+	gun_022

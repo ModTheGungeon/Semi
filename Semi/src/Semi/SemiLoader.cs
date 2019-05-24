@@ -20,6 +20,10 @@ namespace Semi {
 		public ModLoadException(string mod_id, string message) : base($"Failed loading mod '{mod_id}': {message}") { }
 	}
 
+	public class ChecksumMismatchException : ModLoadException {
+		public ChecksumMismatchException(string mod_id) : base(mod_id, "Checksum mismatch. Someone might be trying to trick you into running a malicious mod or an edited mod.") { }
+	}
+
 	/// <summary>
 	/// Main class of the Semi mod loader.
 	/// </summary>
@@ -73,6 +77,8 @@ namespace Semi {
 		public const string VERSION = "cont-dev";
 
 		internal static bool Loaded = false;
+		internal static bool ValidateMods = true;
+		internal static bool SaveModChecksums = true;
 
         internal static Dictionary<string, ModInfo> Mods;
         internal static UnityEngine.GameObject ModsStorageObject;
@@ -94,31 +100,7 @@ namespace Semi {
 		internal static Dictionary<string, Gungeon.SynergyStateChangeAction> SynergyActivatedActions = new Dictionary<string, Gungeon.SynergyStateChangeAction>();
 		internal static Dictionary<string, Gungeon.SynergyStateChangeAction> SynergyDeactivatedActions = new Dictionary<string, Gungeon.SynergyStateChangeAction>();
 
-		//internal static GlobalSpriteCollectionManager AmmonomiconCollectionManager;
-		//internal static GlobalSpriteCollectionManager ItemCollectionManager;
-
 		internal static IEnumerator OnGameManagerAlive(GameManager mgr) {
-			// INVESTIGATING:
-			// native exception a couple seconds after entering a room
-			// (varies in time, mostly consistent but not 100%, didn't happen once (at least
-			//  not for a very long time) with same conditions where it happened)
-			//
-			//doesnt happen if paused in entered room
-			// NOT fakeprefab related
-			// no sprites added
-			//no items
-			//(no mod content)
-			//only semi +the mod itself was loaded
-			// investigate recent stuff:
-			//   - the mgr argument on this method
-			//   - the PickupObjectTreeBuilder base object thing
-			//     (null exception is in a destructor :thinking:)
-			//   - don't bother testing fakeprefab (tried commenting out the patch)
-			// unsure if this was happening before but highly doubt it
-			// doesn't happen in classic etgmod so...
-			// try uncommenting one-by-one feature until it goes away?
-			// also try not loading any mods at all
-
             Logger.Debug("GameManager alive");
 			
             ModsStorageObject = new UnityEngine.GameObject("Semi Mod Loader");
@@ -138,6 +120,14 @@ namespace Semi {
             Mods = new Dictionary<string, ModInfo>();
 
 			if (DEBUG_MODE) {
+				var args = Environment.GetCommandLineArgs();
+				for (int i = 0; i < args.Length; i++) {
+					var arg = args[i];
+					if (arg == "--disable-mod-validation") {
+						ValidateMods = false;
+					}
+				}
+
 				Logger.Debug($"Debug mode active");
 				GUIRoot = SGUI.SGUIRoot.Setup();
 
@@ -224,6 +214,7 @@ namespace Semi {
 
             var order_ary = SimpleListFileParser.ParseFile(FileHierarchy.ModsOrderFile, trim: true);
             var ignore_ary = SimpleListFileParser.ParseFile(FileHierarchy.ModsBlacklistFile, trim: true);
+			var my_mods_ary = SimpleListFileParser.ParseFile(FileHierarchy.MyModsFile, trim: true);
 
             List<string> loaded_mods_list = null;
             // we only need this list if there are mods with forced order
@@ -244,7 +235,12 @@ namespace Semi {
 
                     loaded_mods_list.Add(filename);
 
-                    LoadModDir(filename, mod_file);
+					try {
+						LoadModDir(filename, mod_file, my_mods_ary);
+					} catch (Exception e) {
+						Logger.Error($"Failed loading mod: [{e.GetType().Name}] {e.Message}");
+						Logger.ErrorPretty(e.StackTrace);
+					}
                 }
             }
 
@@ -257,12 +253,18 @@ namespace Semi {
                 if (filename == FileHierarchy.MODS_ORDER_FILE_NAME) continue;
                 if (filename == FileHierarchy.MODS_BLACKLIST_FILE_NAME) continue;
                 if (filename == FileHierarchy.MODS_CACHE_FOLDER_NAME) continue;
+				if (filename.EndsWithInvariant(".sum")) continue;
 
                 if (ignore_ary != null && ignore_ary.Contains(filename)) continue;
                 if (loaded_mods_list != null && loaded_mods_list.Contains(filename)) continue;
 
                 if (File.Exists(mod_file)) throw new Exception("mod archives not supported yet");
-                LoadModDir(filename, mod_file);
+                try {
+					LoadModDir(filename, mod_file, my_mods_ary);
+				} catch (Exception e) {
+					Logger.Error($"Failed loading mod: [{e.GetType().Name}] {e.Message}");
+					Logger.ErrorPretty(e.StackTrace);
+				}
             }
         }
 
@@ -281,13 +283,29 @@ namespace Semi {
             };
         }
 
-        internal static void LoadModDir(string dir_name, string dir_path) {
+        internal static void LoadModDir(string dir_name, string dir_path, string[] trusted_mod_ids = null) {
             var config_path = Path.Combine(dir_path, FileHierarchy.MOD_INFO_FILE_NAME);
             if (!File.Exists(config_path)) throw new InvalidConfigException($"Tried loading mod '{dir_name}' but it has no {FileHierarchy.MOD_INFO_FILE_NAME} file.");
 
             var mod_config = SerializationHelper.DeserializeFile<ModConfig>(config_path);
             if (mod_config.ID == null) throw new InvalidConfigException($"Tried loading mod '{dir_name}', but the config file does not specify an ID");
             ValidateModID(dir_name, mod_config.ID);
+
+			if (trusted_mod_ids != null && trusted_mod_ids.Contains(mod_config.ID)) {
+				Logger.Debug($"Is trusted mod - not verifying checksum");
+			} else if (ValidateMods) {
+				Logger.Debug($"Verifying mod checksum");
+				var hash = ModVerification.GetModHash(dir_path, mod_config);
+				if (SaveModChecksums) {
+					File.WriteAllBytes(Path.Combine(FileHierarchy.ModsFolder, $"{dir_name}.sum"), hash);
+				}
+				if (ModVerification.ValidateHashOnline(mod_config.ID, hash)) {
+					Logger.Info($"Valid mod checksum");
+				} else {
+					Logger.Error($"Invalid mod checksum");
+					throw new ChecksumMismatchException(mod_config.ID);
+				}
+			}
 
             var dll_name = mod_config.DLL ?? "mod.dll";
             var dll_path = Path.Combine(dir_path, dll_name);
@@ -441,6 +459,8 @@ namespace Semi {
 			}
 		}
 
+
+
 		internal static void InitializePickupObjectTreeBuilder() {
 			var magic_lamp = PickupObjectDatabase.GetById(0);
 
@@ -458,6 +478,49 @@ namespace Semi {
 
 			PickupObjectTreeBuilder.CleanBaseObject = new_go.gameObject;
 			PickupObjectTreeBuilder.StoredBarrel = ((Gun)magic_lamp).barrelOffset.gameObject;
+		}
+
+		internal static void InitializeEntityTreeBuilder() {
+			var bullet_kin = (UnityEngine.GameObject)EnemyDatabase.AssetBundle.LoadAsset("BulletMan");
+			bullet_kin.SetActive(false);
+			var new_go = UnityEngine.Object.Instantiate(bullet_kin);
+			bullet_kin.SetActive(true);
+
+			new_go.DestroyComponentIfExists<tk2dSprite>();
+			new_go.DestroyComponentIfExists<tk2dSpriteAnimator>();
+			new_go.DestroyComponentIfExists<SpeculativeRigidbody>();
+			new_go.DestroyComponentIfExists<AIActor>();
+			new_go.DestroyComponentIfExists<AIShooter>();
+			new_go.DestroyComponentIfExists<AIBulletBank>();
+			new_go.DestroyComponentIfExists<HitEffectHandler>();
+			new_go.DestroyComponentIfExists<HealthHaver>();
+			new_go.DestroyComponentIfExists<KnockbackDoer>();
+			new_go.DestroyComponentIfExists<AIAnimator>();
+			new_go.DestroyComponentIfExists<ObjectVisibilityManager>();
+			new_go.DestroyComponentIfExists<BehaviorSpeculator>();
+			new_go.DestroyComponentIfExists<EncounterTrackable>();
+
+			UnityEngine.Object.DontDestroyOnLoad(new_go);
+
+			EntityTreeBuilder.CleanBaseObject = new_go;
+
+			var new_corpse_go = UnityEngine.Object.Instantiate(bullet_kin.GetComponent<AIActor>().CorpseObject);
+			new_corpse_go.DestroyComponentIfExists<DebrisObject>();
+			new_corpse_go.DestroyComponentIfExists<tk2dSprite>();
+			new_corpse_go.DestroyComponentIfExists<tk2dSpriteAnimator>();
+
+			UnityEngine.Object.DontDestroyOnLoad(new_corpse_go);
+
+			EntityTreeBuilder.CleanBaseCorpseObject = new_corpse_go;
+
+			var new_bullet_go = UnityEngine.Object.Instantiate(bullet_kin.GetComponent<AIBulletBank>().Bullets[0].BulletObject);
+			new_bullet_go.DestroyComponentIfExists<BulletScriptBehavior>();
+			new_bullet_go.DestroyComponentIfExists<Projectile>();
+
+			UnityEngine.Object.DontDestroyOnLoad(new_bullet_go);
+
+			EntityTreeBuilder.CleanBaseBulletObject = new_bullet_go;
+
 		}
 
 		internal static void InitializeTreeBuilders() {
