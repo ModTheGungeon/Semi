@@ -4,6 +4,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Collections;
+using System.Linq;
 
 namespace Semi {
 	/// <summary>
@@ -141,6 +142,7 @@ namespace Semi {
 				UnityEngine.Object.DontDestroyOnLoad(ConsoleController);
 			}
 
+			InitializeUIHelpers();
 			InitializeTreeBuilders();
 			Logger.Debug($"Waiting frame to delete tree builder base objects");
 			yield return null;
@@ -525,6 +527,58 @@ namespace Semi {
 
 		internal static void InitializeTreeBuilders() {
 			InitializePickupObjectTreeBuilder();
+		}
+
+		internal static void InitializeMainMenuUIHelpers() {
+			UI.MainMenuGUIManager = dfGUIManager.ActiveManagers.ElementAt(2);
+		}
+
+		internal static IEnumerator InitializeUIHelpers() {
+			//var quick_restart_details = (UnityEngine.GameObject)BraveResources.Load("QuickRestartDetailsPanel", ".prefab");
+			//UI.YesNoDialogPrefab = FakePrefab.Clone(quick_restart_details);
+			UI.YesNoDialogPrefab = FakePrefab.Clone(GameUIRoot.Instance.AreYouSurePanel.gameObject);
+
+			var ok_dialog = FakePrefab.Clone(GameUIRoot.Instance.AreYouSurePanel.gameObject);
+
+
+
+			ok_dialog.transform.Find("AreYouSurePanelBGSlicedSprite").gameObject.GetComponent<dfSlicedSprite>().SpriteName = "options_border_001_bg\t";
+			var sprite = ok_dialog.transform.Find("AreYouSurePanelBGSlicedSprite").gameObject.GetComponent<dfSlicedSprite>();
+			Logger.Debug($"sprite name: {sprite.SpriteName}");
+			for (int i = 0; i < sprite.Atlas.Items.Count; i++) {
+				Logger.Debug($"- {sprite.Atlas.Items[i].name}");
+			}
+			UnityEngine.Object.Destroy(ok_dialog.transform.Find("YesButton").gameObject);
+			var no_button = ok_dialog.transform.Find("NoButton").GetComponent<dfButton>();
+			no_button.gameObject.name = "OKButton";
+
+			var go = FakePrefab.Clone(ok_dialog);
+			var panel = go.GetComponent<dfPanel>();
+			panel.RemoveControl(panel.transform.GetChild(1).GetComponent<dfControl>());
+			panel.RemoveControl(panel.transform.GetChild(2).GetComponent<dfControl>());
+			panel.RemoveControl(panel.transform.GetChild(3).GetComponent<dfControl>());
+			panel.RemoveControl(panel.transform.GetChild(4).GetComponent<dfControl>());
+			UnityEngine.Object.Destroy(panel.transform.GetChild(1));
+			UnityEngine.Object.Destroy(panel.transform.GetChild(2));
+			UnityEngine.Object.Destroy(panel.transform.GetChild(3));
+			UnityEngine.Object.Destroy(panel.transform.GetChild(4));
+			yield return null;
+			var button = panel.AddControl<dfButton>();
+			button.NormalBackgroundColor = new UnityEngine.Color32(255, 0, 0, 127);
+			button.PressedBackgroundColor = new UnityEngine.Color32(0, 0, 255, 127);
+			button.Text = "Test";
+			button.Anchor = dfAnchorStyle.Left | dfAnchorStyle.Right;
+			button.Width = 400;
+
+			UI.OKDialogPrefab = go;
+
+			for (int i = 0; i < UI.YesNoDialogPrefab.gameObject.transform.childCount; i++) {
+				System.Console.WriteLine($"XXX YESNO CHILD {i}: {UI.YesNoDialogPrefab.gameObject.transform.GetChild(i)}");
+			}
+
+			for (int i = 0; i < UI.OKDialogPrefab.gameObject.transform.childCount; i++) {
+				System.Console.WriteLine($"XXX OK CHILD {i}: {UI.OKDialogPrefab.gameObject.transform.GetChild(i)}");
+			}
 		}
     }
 }

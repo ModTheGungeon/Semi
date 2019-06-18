@@ -45,5 +45,12 @@ namespace Semi.Patches {
 			return FakePrefab.Instantiate(original, orig_Instantiate_oprp(original, position, rotation, parent));
 		}
 
+		[MonoModOriginal]
+		public extern static T orig_Instantiate_fuck_unity<T>(T original) where T : UnityEngine.Object;
+
+		[MonoModOriginalName("orig_Instantiate_fuck_unity")]
+		public static T Instantiate<T>(T original) where T : UnityEngine.Object {
+			return (T)FakePrefab.Instantiate(original, orig_Instantiate_fuck_unity(original));
+		}
 	}
 }

@@ -15,6 +15,7 @@ namespace Semi {
 	public class FakePrefab : Component {
 		internal static HashSet<GameObject> ExistingFakePrefabs = new HashSet<GameObject>();
 		internal static Logger Logger = new Logger("FakePrefab");
+		public static Func<UnityEngine.Object, UnityEngine.Object> RawInstantiateMethod;
 
 		/// <summary>
 		/// Checks if an object is marked as a fake prefab.
@@ -28,6 +29,16 @@ namespace Semi {
 				return ExistingFakePrefabs.Contains(((Component)o).gameObject);
 			}
 			return false;
+		}
+
+		/// <summary>
+		/// Creates a new fake prefab (you can add components to this like usual)
+		/// </summary>
+		public static GameObject Create(string name = null) {
+			var go = new GameObject(name);
+			go.SetActive(false);
+			MarkAsFakePrefab(go);
+			return go;
 		}
 
 		/// <summary>
