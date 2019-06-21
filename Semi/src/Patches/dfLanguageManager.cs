@@ -7,7 +7,7 @@ namespace Semi.Patches {
 	/// Patches dfLanguageManager to use <c>Semi.I18N</c>.
 	/// </summary>
 	[MonoModPatch("global::dfLanguageManager")]
-	public class dfLanguageManger : global::dfLanguageManager {
+	public class dfLanguageManager : global::dfLanguageManager {
 		[MonoModIgnore]
 		private Dictionary<string, string> strings = new Dictionary<string, string>();
 

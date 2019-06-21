@@ -473,7 +473,7 @@ namespace Semi {
 				Gungeon.Localizations[$"{I18N.GungeonLanguage.LanguageToID(lang)}_intro"] = new I18N.PrefabLocalization(lang, I18N.StringTable.Intro);
 				Gungeon.Localizations[$"{I18N.GungeonLanguage.LanguageToID(lang)}_items"] = new I18N.PrefabLocalization(lang, I18N.StringTable.Items);
 				Gungeon.Localizations[$"{I18N.GungeonLanguage.LanguageToID(lang)}_synergies"] = new I18N.PrefabLocalization(lang, I18N.StringTable.Synergies);
-				Gungeon.Localizations[$"{I18N.GungeonLanguage.LanguageToID(lang)}_ui"] = new I18N.PrefabLocalization(lang, I18N.StringTable.UI);
+				Gungeon.Localizations[$"{I18N.GungeonLanguage.LanguageToID(lang)}_ui"] = new I18N.PrefabLocalization(lang, I18N.StringTable.UI, format: I18N.LocalizationSource.FormatType.DF);
 
 				var lang_id = I18N.GungeonLanguage.LanguageToID(lang);
 				var lang_name = IDPool<bool>.Split(lang_id).Name;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections;
 using System.IO;
 using UnityEngine;
 using Logger = ModTheGungeon.Logger;
@@ -30,9 +31,16 @@ namespace Semi {
 		public abstract class LocalizationSource {
 			public string TargetLanguageID { get; internal set; }
 			public StringTable TargetStringTable { get; internal set; }
+			public FormatType Format { get; internal set; }
 
 			public abstract void LoadInto(Dictionary<string, StringTableManager.StringCollection> dict);
+			public abstract void LoadInto(Dictionary<string, string> dict);
 			public abstract void LoadIntoDF(Dictionary<string, string> dict);
+
+			public enum FormatType {
+				Gungeon,
+				DF
+			}
 		}
 
 		/// <summary>
@@ -84,10 +92,11 @@ namespace Semi {
 				return (TextAsset)BraveResources.Load("strings/" + path, typeof(TextAsset), ".txt");
 			}
 
-			internal PrefabLocalization(StringTableManager.GungeonSupportedLanguages lang, StringTable table) {
+			internal PrefabLocalization(StringTableManager.GungeonSupportedLanguages lang, StringTable table, FormatType format = FormatType.Gungeon) {
 				TargetLanguageID = GungeonLanguage.LanguageToID(lang);
 				TargetStringTable = table;
 				Path = GetPrefabPath(lang, table);
+				Format = format;
 			}
 
 			/// <summary>
@@ -95,6 +104,11 @@ namespace Semi {
 			/// </summary>
 			/// <param name="dict">Target dictionary of strings.</param>
 			public override void LoadInto(Dictionary<string, StringTableManager.StringCollection> dict) {
+				var asset = LoadTextAsset(Path);
+				using (var reader = new StringReader(asset.text)) LoadLocalizationText(reader, dict);
+			}
+
+			public override void LoadInto(Dictionary<string, string> dict) {
 				var asset = LoadTextAsset(Path);
 				using (var reader = new StringReader(asset.text)) LoadLocalizationText(reader, dict);
 			}
@@ -119,12 +133,13 @@ namespace Semi {
 			/// </summary>
 			public string Data;
 
-			public RuntimeLocalization(string default_namespace, string data, string target_lang, StringTable target_table, bool allow_overwrite = false) {
+			public RuntimeLocalization(string default_namespace, string data, string target_lang, StringTable target_table, bool allow_overwrite = false, FormatType format = FormatType.Gungeon) {
 				TargetLanguageID = Gungeon.Languages.ValidateEntry(target_lang);
 				TargetStringTable = target_table;
 				Data = data;
 				OverwriteMode = allow_overwrite;
 				DefaultNamespace = default_namespace;
+				Format = format;
 			}
 
 			/// <summary>
@@ -132,6 +147,10 @@ namespace Semi {
 			/// </summary>
 			/// <param name="dict">Target dictionary of strings.</param>
 			public override void LoadInto(Dictionary<string, StringTableManager.StringCollection> dict) {
+				LoadLocalizationText(new StringReader(Data), dict, overwrite: OverwriteMode, default_namespace: DefaultNamespace);
+			}
+
+			public override void LoadInto(Dictionary<string, string> dict) {
 				LoadLocalizationText(new StringReader(Data), dict, overwrite: OverwriteMode, default_namespace: DefaultNamespace);
 			}
 
@@ -154,12 +173,13 @@ namespace Semi {
 			/// </summary>
 			public bool OverwriteMode = false;
 
-			internal ModLocalization(SemiLoader.ModInfo owner, string path, string target_lang, StringTable target_table, bool allow_overwrite = false) {
+			internal ModLocalization(SemiLoader.ModInfo owner, string path, string target_lang, StringTable target_table, bool allow_overwrite = false, FormatType format = FormatType.Gungeon) {
 				TargetLanguageID = Gungeon.Languages.ValidateEntry(target_lang);
 				TargetStringTable = target_table;
 				Path = path;
 				Owner = owner;
 				OverwriteMode = allow_overwrite;
+				Format = format;
 			}
 
 			/// <summary>
@@ -167,6 +187,10 @@ namespace Semi {
 			/// </summary>
 			/// <param name="dict">Target dictionary of strings.</param>
 			public override void LoadInto(Dictionary<string, StringTableManager.StringCollection> dict) {
+				using (var reader = new StreamReader(File.OpenRead(Path))) LoadLocalizationText(reader, dict, overwrite: OverwriteMode, default_namespace: Owner.Config.ID);
+			}
+
+			public override void LoadInto(Dictionary<string, string> dict) {
 				using (var reader = new StreamReader(File.OpenRead(Path))) LoadLocalizationText(reader, dict, overwrite: OverwriteMode, default_namespace: Owner.Config.ID);
 			}
 
@@ -226,7 +250,7 @@ namespace Semi {
 			}
 		}
 
-		internal static Dictionary<string, StringTableManager.StringCollection> LoadLocalizationText(TextReader reader, Dictionary<string, StringTableManager.StringCollection> dict, bool overwrite = false, string default_namespace = null) {
+		internal static void LoadLocalizationTextGeneral(TextReader reader, Func<string, bool> dupe_check, Action<string, StringTableManager.StringCollection> assign_action, bool overwrite = false, string default_namespace = null) {
 			// mostly based on copied StringTableManager code
 			// all the files have duplicate loading code but it all seems to be doing
 			// the same thing /shrug
@@ -250,17 +274,16 @@ namespace Semi {
 							}
 
 							if (id.StartsWithInvariant("gungeon:")) {
-								var pair = id.SplitIntoPair(":");
-								text = $"#{pair.EverythingElse}";
+								text = $"#{id.Substring("gungeon:".Length)}";
 							} else {
 								text = $"#{id}";
 							}
 						}
 
-						if (dict.ContainsKey(text) && !overwrite) {
+						if (dupe_check.Invoke(text) && !overwrite) {
 							Logger.Error($"Failed to add duplicate key to table: {text}");
 						} else {
-							dict[text] = coll;
+							assign_action.Invoke(text, coll);
 						}
 					} else {
 						if (coll == null) continue;
@@ -278,8 +301,39 @@ namespace Semi {
 					}
 				}
 			}
+		}
+
+		internal static Dictionary<string, StringTableManager.StringCollection> LoadLocalizationText(TextReader reader, Dictionary<string, StringTableManager.StringCollection> dict, bool overwrite = false, string default_namespace = null) {
+			LoadLocalizationTextGeneral(reader, (id) => dict.ContainsKey(id), (id, coll) => dict[id] = coll, overwrite, default_namespace);
 			return dict;
 		}
+
+		internal static Dictionary<string, string> LoadLocalizationText(TextReader reader, Dictionary<string, string> dict, bool overwrite = false, string default_namespace = null) {
+			StringTableManager.StringCollection last_coll = null;
+			string last_id = null;
+
+			LoadLocalizationTextGeneral(reader, (id) => dict.ContainsKey(id), (id, coll) => {
+				if (last_coll != null) {
+					var str = last_coll.GetExactString(0);
+					if (last_coll.Count() > 1) {
+						Logger.Warn($"Randomized localizations are not supported by DF localization. Only the first option ('{str}') will be used.");
+					}
+					dict[last_id] = str;
+				}
+				last_id = id;
+				last_coll = coll;
+			}, overwrite, default_namespace);
+
+			if (last_id != null) {
+				dict[last_id] = last_coll.GetExactString(0);
+				if (last_coll.Count() > 1) {
+					Logger.Warn($"Randomized localizations are not supported by DF localization. Only the first option ('{dict[last_id]}') will be used.");
+				}
+			}
+
+			return dict;
+		}
+			
 
 		internal static Dictionary<string, string> LoadDFLocalizationText(TextReader reader, Dictionary<string, string> dict, bool overwrite = false, string default_namespace = null) {
 			string text;
@@ -353,7 +407,7 @@ namespace Semi {
 			}
 		}
 
-		internal static void LoadDFLocalizationsForLanguage(string lang_id) {
+		internal static void LoadDFLocalizationsForLanguage(string lang_id, bool prefabs = false) {
 			lang_id = Gungeon.Languages.ValidateEntry(lang_id);
 			Logger.Debug($"Scanning localizations for {lang_id}");
 
@@ -363,22 +417,20 @@ namespace Semi {
 				if (target_lang_id == lang_id && loc.TargetStringTable == StringTable.UI) {
 					Logger.Debug($"Found DFGUI localization '{pair.Key}' ({loc.GetType().Name})");
 
-					loc.LoadIntoDF(CurrentUIDict);
+					if ((loc is PrefabLocalization) != prefabs) continue;
+					// only prefabs if prefabs == true, no prefabs if prefabs == false
+
+					if (loc.Format == LocalizationSource.FormatType.DF) loc.LoadIntoDF(CurrentUIDict);
+					else loc.LoadInto(CurrentUIDict);
 				}
 			}
 
 			CurrentLanguageID = lang_id;
 		}
 
-		internal static void LoadLocalizationsForLanguage(string lang_id) {
+		internal static void LoadLocalizationsForLanguage(string lang_id, bool prefabs = false) {
 			lang_id = Gungeon.Languages.ValidateEntry(lang_id);
 			Logger.Debug($"Scanning localizations for {lang_id}");
-
-			var core_dict = new Dictionary<string, StringTableManager.StringCollection>();
-			var enemies_dict = new Dictionary<string, StringTableManager.StringCollection>();
-			var intro_dict = new Dictionary<string, StringTableManager.StringCollection>();
-			var synergy_dict = new Dictionary<string, StringTableManager.StringCollection>();
-			var items_dict = new Dictionary<string, StringTableManager.StringCollection>();
 
 			foreach (var pair in Gungeon.Localizations.Pairs) {
 				var loc = pair.Value;
@@ -386,23 +438,26 @@ namespace Semi {
 				if (target_lang_id == lang_id) {
 					Logger.Debug($"Found localization '{pair.Key}' for table {loc.TargetStringTable} ({loc.GetType().Name})");
 
+					if (loc.Format == LocalizationSource.FormatType.DF && loc.TargetStringTable != StringTable.UI) {
+						Logger.Error("Cannot load a DF format localization for anything other than the UI string table.");
+						continue;
+					}
+
+					if ((loc is PrefabLocalization) != prefabs) continue;
+					// only prefabs if prefabs == true, no prefabs if prefabs == false
+
 					switch (loc.TargetStringTable) {
-						case StringTable.Core: loc.LoadInto(core_dict); break;
-						case StringTable.Enemies: loc.LoadInto(enemies_dict); break;
-						case StringTable.Intro: loc.LoadInto(intro_dict); break;
+						case StringTable.Core: loc.LoadInto(Patches.StringTableManager.m_coreTable); break;
+						case StringTable.Enemies: loc.LoadInto(Patches.StringTableManager.m_enemiesTable); break;
+						case StringTable.Intro: loc.LoadInto(Patches.StringTableManager.m_introTable); break;
 						case StringTable.UI: break; // this is used/handled by DF stuff
-						case StringTable.Synergies: loc.LoadInto(synergy_dict); break;
-						case StringTable.Items: loc.LoadInto(items_dict); break;
+						case StringTable.Synergies: loc.LoadInto(Patches.StringTableManager.m_synergyTable); break;
+						case StringTable.Items: loc.LoadInto(Patches.StringTableManager.m_itemsTable); break;
 						default: throw new InvalidOperationException($"Unknown string table {loc.TargetStringTable}");
 					}
 				}
 			}
 
-			Patches.StringTableManager.m_coreTable = core_dict;
-			Patches.StringTableManager.m_enemiesTable = enemies_dict;
-			Patches.StringTableManager.m_introTable = intro_dict;
-			Patches.StringTableManager.m_itemsTable = items_dict;
-			Patches.StringTableManager.m_synergyTable = synergy_dict;
 			CurrentLanguageID = lang_id;
 		}
 
@@ -430,9 +485,18 @@ namespace Semi {
 			Logger.Debug($"Reloading localizations");
 			JournalEntry.ReloadDataSemaphore += 1;
 			StringTableManager.ReloadAllTables();
-			LoadLocalizationsForLanguage(CurrentLanguageID);
 			CurrentUIDict = new Dictionary<string, string>();
-			LoadDFLocalizationsForLanguage(CurrentLanguageID);
+			Patches.StringTableManager.m_coreTable = new Dictionary<string, StringTableManager.StringCollection>();
+			Patches.StringTableManager.m_enemiesTable = new Dictionary<string, StringTableManager.StringCollection>();
+			Patches.StringTableManager.m_introTable = new Dictionary<string, StringTableManager.StringCollection>();
+			Patches.StringTableManager.m_itemsTable = new Dictionary<string, StringTableManager.StringCollection>();
+			Patches.StringTableManager.m_synergyTable = new Dictionary<string, StringTableManager.StringCollection>();
+			Logger.Debug($"Loading prefab (builtin) localizations first");
+			LoadLocalizationsForLanguage(CurrentLanguageID, prefabs: true);
+			LoadDFLocalizationsForLanguage(CurrentLanguageID, prefabs: true);
+			Logger.Debug($"Loading modded and runtime localizations");
+			LoadLocalizationsForLanguage(CurrentLanguageID, prefabs: false);
+			LoadDFLocalizationsForLanguage(CurrentLanguageID, prefabs: false);
 			dfLanguageManager.ChangeGungeonLanguage(); // just to trigger the UI locales update
 		}
 
