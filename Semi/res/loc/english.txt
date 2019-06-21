@@ -1,0 +1,8 @@
+﻿#X
+X
+#LOADERROR_TITLE
+Error
+#LOADERROR_SUBTITLE
+Semi failed to load certain installed mods.
+#ERROR_CHECKSUM
+Checksum mismatch. Either the mod has not been approved or it has been edited, likely by someone other than its author. For your safety, it's been disabled.

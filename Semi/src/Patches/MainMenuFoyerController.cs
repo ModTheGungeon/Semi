@@ -14,6 +14,7 @@ namespace Semi.Patches {
 	public class MainMenuFoyerController : global::MainMenuFoyerController {
 		public static MainMenuFoyerController Instance = null;
 		public List<dfControl> CustomFadingControls = null;
+		private static bool _OpenedLoadErrorScreen = false;
 
 		private extern void orig_Awake();
 
@@ -28,9 +29,21 @@ namespace Semi.Patches {
 
 		public extern void orig_InitializeMainMenu();
 
-		public void InitializeMainMenu() {
+		public new void InitializeMainMenu() {
 			orig_InitializeMainMenu();
 			SemiLoader.InitializeMainMenuUIHelpers();
+		}
+
+		[MonoModIgnore]
+		private extern bool IsDioramaRevealed(bool doReveal = false);
+
+		private extern void orig_Update();
+		private void Update() {
+			orig_Update();
+			if (!_OpenedLoadErrorScreen && IsDioramaRevealed(false)) {
+				_OpenedLoadErrorScreen = true;
+				SemiLoader.OpenLoadErrorScreenIfNecessary();
+			}
 		}
 	}
 

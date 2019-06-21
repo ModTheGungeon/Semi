@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Collections;
 using System.Linq;
+using UnityEngine;
+using Logger = ModTheGungeon.Logger;
 
 namespace Semi {
 	/// <summary>
@@ -22,7 +24,7 @@ namespace Semi {
 	}
 
 	public class ChecksumMismatchException : ModLoadException {
-		public ChecksumMismatchException(string mod_id) : base(mod_id, "Checksum mismatch. Someone might be trying to trick you into running a malicious mod or an edited mod.") { }
+		public ChecksumMismatchException(string mod_id) : base(mod_id, "Checksum mismatch. The mod has been edited, likely by someone other than its author. For your safety, it's been disabled.") { }
 	}
 
 	/// <summary>
@@ -94,6 +96,10 @@ namespace Semi {
 
 		internal static SGUI.SGUIRoot GUIRoot;
 
+		internal static string CurrentLoadingModName;
+		internal static string CurrentLoadingModID;
+		internal static List<ModError> ModLoadErrors;
+
 		internal static SpriteCollection EncounterIconCollection;
 
 		internal static HashSet<string> ActiveSynergyIDs = new HashSet<string>();
@@ -103,7 +109,9 @@ namespace Semi {
 
 		internal static IEnumerator OnGameManagerAlive(GameManager mgr) {
             Logger.Debug("GameManager alive");
-			
+
+			ModLoadErrors = new List<ModError>();
+
             ModsStorageObject = new UnityEngine.GameObject("Semi Mod Loader");
 			SpriteCollectionStorageObject = new UnityEngine.GameObject("Semi Mod Sprite Collections");
 			SpriteTemplateStorageObject = new UnityEngine.GameObject("Semi Mod Sprite Templates");
@@ -240,6 +248,11 @@ namespace Semi {
 					try {
 						LoadModDir(filename, mod_file, my_mods_ary);
 					} catch (Exception e) {
+						ModLoadErrors.Add(new ModError {
+							Name = CurrentLoadingModName,
+							ID = CurrentLoadingModID ?? filename,
+							Exception = e
+						});
 						Logger.Error($"Failed loading mod: [{e.GetType().Name}] {e.Message}");
 						Logger.ErrorPretty(e.StackTrace);
 					}
@@ -264,6 +277,11 @@ namespace Semi {
                 try {
 					LoadModDir(filename, mod_file, my_mods_ary);
 				} catch (Exception e) {
+					ModLoadErrors.Add(new ModError {
+						Name = CurrentLoadingModName,
+						ID = CurrentLoadingModID ?? filename,
+						Exception = e
+					});
 					Logger.Error($"Failed loading mod: [{e.GetType().Name}] {e.Message}");
 					Logger.ErrorPretty(e.StackTrace);
 				}
@@ -286,11 +304,17 @@ namespace Semi {
         }
 
         internal static void LoadModDir(string dir_name, string dir_path, string[] trusted_mod_ids = null) {
+			CurrentLoadingModID = null;
+			CurrentLoadingModName = null;
+
             var config_path = Path.Combine(dir_path, FileHierarchy.MOD_INFO_FILE_NAME);
             if (!File.Exists(config_path)) throw new InvalidConfigException($"Tried loading mod '{dir_name}' but it has no {FileHierarchy.MOD_INFO_FILE_NAME} file.");
 
             var mod_config = SerializationHelper.DeserializeFile<ModConfig>(config_path);
             if (mod_config.ID == null) throw new InvalidConfigException($"Tried loading mod '{dir_name}', but the config file does not specify an ID");
+			CurrentLoadingModID = mod_config.ID;
+			CurrentLoadingModName = mod_config.Name;
+
             ValidateModID(dir_name, mod_config.ID);
 
 			if (trusted_mod_ids != null && trusted_mod_ids.Contains(mod_config.ID)) {
@@ -357,6 +381,14 @@ namespace Semi {
                 mod_instance.Loaded();
             }
         }
+
+		internal static void OpenLoadErrorScreenIfNecessary() {
+			Logger.Debug($"Checking if error screen needs to be opened: {ModLoadErrors.Count} error(s)");
+			if (ModLoadErrors.Count > 0) {
+				Logger.Debug($"Opening error screen");
+				UI.OpenLoadErrorScreen(ModLoadErrors);
+			}
+		}
 
 		internal static string[] ConvertItemIDList(IList<int> ids) {
 			var ary = new string[ids.Count];
@@ -442,6 +474,16 @@ namespace Semi {
 				Gungeon.Localizations[$"{I18N.GungeonLanguage.LanguageToID(lang)}_items"] = new I18N.PrefabLocalization(lang, I18N.StringTable.Items);
 				Gungeon.Localizations[$"{I18N.GungeonLanguage.LanguageToID(lang)}_synergies"] = new I18N.PrefabLocalization(lang, I18N.StringTable.Synergies);
 				Gungeon.Localizations[$"{I18N.GungeonLanguage.LanguageToID(lang)}_ui"] = new I18N.PrefabLocalization(lang, I18N.StringTable.UI);
+
+				var lang_id = I18N.GungeonLanguage.LanguageToID(lang);
+				var lang_name = IDPool<bool>.Split(lang_id).Name;
+				var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"loc:{lang_name}.txt");
+				if (stream != null) {
+					var text = new StreamReader(stream).ReadToEnd();
+					Logger.Debug($"Found Semi localization stream for {lang_id}");
+					Gungeon.Localizations[$"semi:{lang_name}_core"] = new I18N.RuntimeLocalization("semi", text, lang_id, I18N.StringTable.Core);
+					stream.Close();
+				}
 			}
 		}
 
@@ -531,54 +573,57 @@ namespace Semi {
 
 		internal static void InitializeMainMenuUIHelpers() {
 			UI.MainMenuGUIManager = dfGUIManager.ActiveManagers.ElementAt(2);
+
+			UI.GungeonFont = Patches.MainMenuFoyerController.Instance.VersionLabel.Font;
+
+			InitializeLoadErrorScreen();
 		}
 
-		internal static IEnumerator InitializeUIHelpers() {
-			//var quick_restart_details = (UnityEngine.GameObject)BraveResources.Load("QuickRestartDetailsPanel", ".prefab");
-			//UI.YesNoDialogPrefab = FakePrefab.Clone(quick_restart_details);
-			UI.YesNoDialogPrefab = FakePrefab.Clone(GameUIRoot.Instance.AreYouSurePanel.gameObject);
+		internal static void InitializeLoadErrorScreen() {
+			var title = GameUIRoot.Instance.Manager.AddControl<dfLabel>();
+			title.zindex = 3;
+			title.AutoSize = true;
+			title.Text = "Error";
+			title.BackgroundColor = Color.black;
+			title.Color = Color.red;
+			title.Font = UI.GungeonFont;
+			title.TextScale = 3;
+			title.IsVisible = false;
+			title.Position = new Vector3(-title.Size.x / 2, Screen.height / 2, 0);
+			UI.LoadErrorTitle = title;
 
-			var ok_dialog = FakePrefab.Clone(GameUIRoot.Instance.AreYouSurePanel.gameObject);
+			var subtitle = GameUIRoot.Instance.Manager.AddControl<dfLabel>();
+			subtitle.zindex = 3;
+			subtitle.AutoSize = true;
+			subtitle.Text = "Semi failed to load certain installed mods.";
+			subtitle.BackgroundColor = Color.black;
+			subtitle.Color = Color.gray;
+			subtitle.Font = UI.GungeonFont;
+			subtitle.TextScale = 3;
+			subtitle.IsVisible = false;
+			subtitle.Position = new Vector3(-subtitle.Size.x / 2, title.Position.y - title.Size.y / 2 - 15);
+			UI.LoadErrorSubtitle = subtitle;
 
+			var ok_button = GameUIRoot.Instance.Manager.AddControl<dfButton>();
+			ok_button.zindex = 3;
+			ok_button.AutoSize = true;
+			ok_button.Text = "OK";
+			ok_button.Color = Color.white;
+			ok_button.NormalBackgroundColor = new Color(255 / 66f, 255 / 66f, 255 / 66f);
+			ok_button.FocusBackgroundColor = new Color(255 / 66f, 255 / 66f, 255 / 66f);
+			ok_button.HoverBackgroundColor = new Color(255 / 96f, 255 / 96f, 255 / 96f);
+			ok_button.TextScale = 3;
+			ok_button.IsVisible = false;
+			ok_button.Position = new Vector3(-ok_button.Size.x / 2, -Screen.height / 2);
+			ok_button.Click += (control, mouseEvent) => {
+				mouseEvent.Use();
+				UI.CloseLoadErrorScreen();
+			};
+			UI.LoadErrorOKButton = ok_button;
+		}
 
-
-			ok_dialog.transform.Find("AreYouSurePanelBGSlicedSprite").gameObject.GetComponent<dfSlicedSprite>().SpriteName = "options_border_001_bg\t";
-			var sprite = ok_dialog.transform.Find("AreYouSurePanelBGSlicedSprite").gameObject.GetComponent<dfSlicedSprite>();
-			Logger.Debug($"sprite name: {sprite.SpriteName}");
-			for (int i = 0; i < sprite.Atlas.Items.Count; i++) {
-				Logger.Debug($"- {sprite.Atlas.Items[i].name}");
-			}
-			UnityEngine.Object.Destroy(ok_dialog.transform.Find("YesButton").gameObject);
-			var no_button = ok_dialog.transform.Find("NoButton").GetComponent<dfButton>();
-			no_button.gameObject.name = "OKButton";
-
-			var go = FakePrefab.Clone(ok_dialog);
-			var panel = go.GetComponent<dfPanel>();
-			panel.RemoveControl(panel.transform.GetChild(1).GetComponent<dfControl>());
-			panel.RemoveControl(panel.transform.GetChild(2).GetComponent<dfControl>());
-			panel.RemoveControl(panel.transform.GetChild(3).GetComponent<dfControl>());
-			panel.RemoveControl(panel.transform.GetChild(4).GetComponent<dfControl>());
-			UnityEngine.Object.Destroy(panel.transform.GetChild(1));
-			UnityEngine.Object.Destroy(panel.transform.GetChild(2));
-			UnityEngine.Object.Destroy(panel.transform.GetChild(3));
-			UnityEngine.Object.Destroy(panel.transform.GetChild(4));
-			yield return null;
-			var button = panel.AddControl<dfButton>();
-			button.NormalBackgroundColor = new UnityEngine.Color32(255, 0, 0, 127);
-			button.PressedBackgroundColor = new UnityEngine.Color32(0, 0, 255, 127);
-			button.Text = "Test";
-			button.Anchor = dfAnchorStyle.Left | dfAnchorStyle.Right;
-			button.Width = 400;
-
-			UI.OKDialogPrefab = go;
-
-			for (int i = 0; i < UI.YesNoDialogPrefab.gameObject.transform.childCount; i++) {
-				System.Console.WriteLine($"XXX YESNO CHILD {i}: {UI.YesNoDialogPrefab.gameObject.transform.GetChild(i)}");
-			}
-
-			for (int i = 0; i < UI.OKDialogPrefab.gameObject.transform.childCount; i++) {
-				System.Console.WriteLine($"XXX OK CHILD {i}: {UI.OKDialogPrefab.gameObject.transform.GetChild(i)}");
-			}
+		internal static void InitializeUIHelpers() {
+			
 		}
     }
 }

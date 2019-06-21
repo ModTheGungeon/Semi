@@ -954,8 +954,6 @@ namespace Semi {
 
 							var xdef = coll.GetDefinition(def);
 
-							Console.WriteLine($"Adding frame {tk0d_def_id} {xdef?.Name}");
-
 							tk0d_clip.Add(SpriteAnimationFrame.Construct(
 								coll,
 								tk0d_def_id

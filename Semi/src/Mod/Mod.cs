@@ -56,4 +56,23 @@ namespace Semi {
 		/// </summary>
         public abstract void Loaded();
     }
+
+	public struct ModError {
+		public Exception Exception;
+		public string Name;
+		public string ID;
+
+		public string DisplayName {
+			get {
+				if (Name == null) return ID;
+				return $"{Name} ({ID})";
+			}
+		}
+
+		public string ExceptionInfo {
+			get {
+				return $"[{Exception.GetType().FullName}] {Exception.Message}";
+			}
+		}
+	}
 }

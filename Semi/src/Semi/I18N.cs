@@ -8,6 +8,8 @@ namespace Semi {
 	public static class I18N {
 		internal static Logger Logger = new Logger("I18N");
 
+		internal static Dictionary<string, string> CurrentUIDict = null;
+
 		/// <summary>
 		/// Type of localization string table.
 		/// Different elements of the game will request localizations from a different string table.
@@ -30,6 +32,7 @@ namespace Semi {
 			public StringTable TargetStringTable { get; internal set; }
 
 			public abstract void LoadInto(Dictionary<string, StringTableManager.StringCollection> dict);
+			public abstract void LoadIntoDF(Dictionary<string, string> dict);
 		}
 
 		/// <summary>
@@ -95,6 +98,11 @@ namespace Semi {
 				var asset = LoadTextAsset(Path);
 				using (var reader = new StringReader(asset.text)) LoadLocalizationText(reader, dict);
 			}
+
+			public override void LoadIntoDF(Dictionary<string, string> dict) {
+				var asset = LoadTextAsset(Path);
+				using (var reader = new StringReader(asset.text)) LoadDFLocalizationText(reader, dict);
+			}
 		}
 
 		public class RuntimeLocalization : LocalizationSource {
@@ -103,20 +111,20 @@ namespace Semi {
 			/// </summary>
 			public bool OverwriteMode = false;
 			/// <summary>
-			/// <see cref="T:Semi.ModInfo"/> of the mod that added this localization.
+			/// Default namespace for the entries in this localization file.
 			/// </summary>
-			public SemiLoader.ModInfo Owner;
+			public string DefaultNamespace;
 			/// <summary>
 			/// The localization file.
 			/// </summary>
 			public string Data;
 
-			public RuntimeLocalization(SemiLoader.ModInfo owner, string data, string target_lang, StringTable target_table, bool allow_overwrite = false) {
+			public RuntimeLocalization(string default_namespace, string data, string target_lang, StringTable target_table, bool allow_overwrite = false) {
 				TargetLanguageID = Gungeon.Languages.ValidateEntry(target_lang);
 				TargetStringTable = target_table;
 				Data = data;
 				OverwriteMode = allow_overwrite;
-				Owner = owner;
+				DefaultNamespace = default_namespace;
 			}
 
 			/// <summary>
@@ -124,7 +132,11 @@ namespace Semi {
 			/// </summary>
 			/// <param name="dict">Target dictionary of strings.</param>
 			public override void LoadInto(Dictionary<string, StringTableManager.StringCollection> dict) {
-				LoadLocalizationText(new StringReader(Data), dict, overwrite: OverwriteMode, default_namespace: Owner.Config.ID);
+				LoadLocalizationText(new StringReader(Data), dict, overwrite: OverwriteMode, default_namespace: DefaultNamespace);
+			}
+
+			public override void LoadIntoDF(Dictionary<string, string> dict) {
+				LoadDFLocalizationText(new StringReader(Data), dict, overwrite: OverwriteMode, default_namespace: DefaultNamespace);
 			}
 		}
 
@@ -156,6 +168,10 @@ namespace Semi {
 			/// <param name="dict">Target dictionary of strings.</param>
 			public override void LoadInto(Dictionary<string, StringTableManager.StringCollection> dict) {
 				using (var reader = new StreamReader(File.OpenRead(Path))) LoadLocalizationText(reader, dict, overwrite: OverwriteMode, default_namespace: Owner.Config.ID);
+			}
+
+			public override void LoadIntoDF(Dictionary<string, string> dict) {
+				using (var reader = new StreamReader(File.OpenRead(Path))) LoadDFLocalizationText(reader, dict, overwrite: OverwriteMode, default_namespace: Owner.Config.ID);
 			}
 		}
 
@@ -216,8 +232,6 @@ namespace Semi {
 			// the same thing /shrug
 			StringTableManager.StringCollection coll = null;
 
-			Logger.Debug($"Loading localization text. State: coll = {coll}, reader = {reader}, dict = {dict}");
-
 			string text;
 			while ((text = reader.ReadLine()) != null) {
 				if (!text.StartsWithInvariant("//")) {
@@ -267,6 +281,61 @@ namespace Semi {
 			return dict;
 		}
 
+		internal static Dictionary<string, string> LoadDFLocalizationText(TextReader reader, Dictionary<string, string> dict, bool overwrite = false, string default_namespace = null) {
+			string text;
+			while ((text = reader.ReadLine()) != null) {
+				if (text.Trim() == "") continue;
+
+				if (!text.StartsWithInvariant("//")) {
+					if (text.StartsWithInvariant("#")) {
+						var elements = text.Split(new char[] { '"' }, StringSplitOptions.RemoveEmptyEntries);
+						// we split on " instead of ,
+						// because from my research it appears that " is never used escaped,
+						// and commas appear in the localized text
+
+						string value = null;
+
+						if (elements.Length < 2) {
+							Logger.Warn($"DF loc line has <2 elements! Assuming empty value string.");
+							value = "";
+						} else value = elements[1];
+
+						var key = elements[0].Substring(1, elements[0].Length - 2);
+
+						if (default_namespace != null) {
+							if (key.Count(':') > 1) {
+								Logger.Error($"Failed to add invalid key to table: {key}");
+								continue;
+							}
+
+							if (!key.Contains(":")) {
+								key = $"{default_namespace}:{key}";
+							}
+
+							if (key.StartsWithInvariant("gungeon:")) {
+								var pair = key.SplitIntoPair(":");
+								key = $"{pair.EverythingElse}";
+							}
+						}
+
+						key = $"#{key}";
+
+						if (elements.Length > 2) {
+							Logger.Warn($"Ignoring unknown elements in DF loc line: #{text}");
+						}
+
+						if (dict.ContainsKey(key) && !overwrite) {
+							Logger.Error($"Failed to add duplicate key to table: {text}");
+						} else {
+							Logger.Debug($"DF INSERT KEY: {key} VALUE: {value}");
+							dict[key] = value;
+						}
+					}
+				}
+			}
+			return dict;
+		}
+
 		private static string _CurrentLanguageID;
 		/// <summary>
 		/// Global ID of the currently selected language.
@@ -280,7 +349,25 @@ namespace Semi {
 			internal set {
 				var lang = Gungeon.Languages[value];
 				GameManager.Options.CurrentLanguage = (StringTableManager.GungeonSupportedLanguages)lang.MappedLanguage;
+				_CurrentLanguageID = value;
 			}
+		}
+
+		internal static void LoadDFLocalizationsForLanguage(string lang_id) {
+			lang_id = Gungeon.Languages.ValidateEntry(lang_id);
+			Logger.Debug($"Scanning localizations for {lang_id}");
+
+			foreach (var pair in Gungeon.Localizations.Pairs) {
+				var loc = pair.Value;
+				var target_lang_id = IDPool<LocalizationSource>.Resolve(loc.TargetLanguageID);
+				if (target_lang_id == lang_id && loc.TargetStringTable == StringTable.UI) {
+					Logger.Debug($"Found DFGUI localization '{pair.Key}' ({loc.GetType().Name})");
+
+					loc.LoadIntoDF(CurrentUIDict);
+				}
+			}
+
+			CurrentLanguageID = lang_id;
 		}
 
 		internal static void LoadLocalizationsForLanguage(string lang_id) {
@@ -290,7 +377,6 @@ namespace Semi {
 			var core_dict = new Dictionary<string, StringTableManager.StringCollection>();
 			var enemies_dict = new Dictionary<string, StringTableManager.StringCollection>();
 			var intro_dict = new Dictionary<string, StringTableManager.StringCollection>();
-			var ui_dict = new Dictionary<string, StringTableManager.StringCollection>();
 			var synergy_dict = new Dictionary<string, StringTableManager.StringCollection>();
 			var items_dict = new Dictionary<string, StringTableManager.StringCollection>();
 
@@ -304,7 +390,7 @@ namespace Semi {
 						case StringTable.Core: loc.LoadInto(core_dict); break;
 						case StringTable.Enemies: loc.LoadInto(enemies_dict); break;
 						case StringTable.Intro: loc.LoadInto(intro_dict); break;
-						case StringTable.UI: loc.LoadInto(ui_dict); break;
+						case StringTable.UI: break; // this is used/handled by DF stuff
 						case StringTable.Synergies: loc.LoadInto(synergy_dict); break;
 						case StringTable.Items: loc.LoadInto(items_dict); break;
 						default: throw new InvalidOperationException($"Unknown string table {loc.TargetStringTable}");
@@ -317,7 +403,6 @@ namespace Semi {
 			Patches.StringTableManager.m_introTable = intro_dict;
 			Patches.StringTableManager.m_itemsTable = items_dict;
 			Patches.StringTableManager.m_synergyTable = synergy_dict;
-			Patches.StringTableManager.m_uiTable = ui_dict;
 			CurrentLanguageID = lang_id;
 		}
 
@@ -346,6 +431,9 @@ namespace Semi {
 			JournalEntry.ReloadDataSemaphore += 1;
 			StringTableManager.ReloadAllTables();
 			LoadLocalizationsForLanguage(CurrentLanguageID);
+			CurrentUIDict = new Dictionary<string, string>();
+			LoadDFLocalizationsForLanguage(CurrentLanguageID);
+			dfLanguageManager.ChangeGungeonLanguage(); // just to trigger the UI locales update
 		}
 
 	}

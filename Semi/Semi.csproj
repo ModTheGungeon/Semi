@@ -156,7 +156,6 @@
     <Compile Include="src\Mod\Content.cs" />
     <Compile Include="src\TreeBuilders\PickupObjectTreeBuilder.cs" />
     <Compile Include="src\Parsers\Tk0dConfigParser.cs" />
-    <Compile Include="src\Patches\Gun.cs" />
     <Compile Include="src\Semi\SemiLoader.cs" />
     <Compile Include="src\Patches\AdvancedSynergyEntry.cs" />
     <Compile Include="src\Patches\RewardManager.cs" />
@@ -169,6 +168,7 @@
     <Compile Include="src\UI\UI.cs" />
     <Compile Include="src\Semi\ModVerification.cs" />
     <Compile Include="src\Patches\GameUIRoot.cs" />
+    <Compile Include="src\Patches\dfLanguageManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="src\" />
@@ -184,6 +184,7 @@
     <Folder Include="src\Mod\" />
     <Folder Include="src\TreeBuilders\" />
     <Folder Include="src\UI\" />
+    <Folder Include="res\loc\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -221,6 +222,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="res\gun\gun.semi.anim">
       <LogicalName>gun:gun.semi.anim</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="res\loc\english.txt">
+      <LogicalName>loc:english.txt</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="res\loc\polish.txt">
+      <LogicalName>loc:polish.txt</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

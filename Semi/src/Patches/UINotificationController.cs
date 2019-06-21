@@ -106,12 +106,6 @@ Gun
 #GUN_LONGDESC
 Test.
 ";
-			foreach (var pair in Gungeon.Languages.Pairs) {
-				var loc = new I18N.RuntimeLocalization(m2, loc_data, pair.Key, I18N.StringTable.Items);
-				var split_key = IDPool<I18N.Language>.Split(pair.Key);
-				var id = $"fun_times:{split_key.Name}_items";
-				Gungeon.Localizations.Add(id, loc);
-			}
 
 			m.RegisteringMode = false;
 		}

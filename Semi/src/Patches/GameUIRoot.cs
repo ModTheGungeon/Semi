@@ -10,7 +10,7 @@ namespace Semi.Patches {
 		protected override void InvariantUpdate(float realDeltaTime) {
 			if (!_SemiUIInitialized) {
 				_SemiUIInitialized = true;
-				global::GameManager.Instance.StartCoroutine(SemiLoader.InitializeUIHelpers());
+				SemiLoader.InitializeUIHelpers();
 			}
 			orig_InvariantUpdate(realDeltaTime);
 		}
