@@ -86,6 +86,8 @@ namespace Semi {
         internal static Dictionary<string, ModInfo> Mods;
         internal static UnityEngine.GameObject ModsStorageObject;
 
+		internal static UnityEngine.GameObject MusicStreamBufferUpdateObject;
+
 		internal static UnityEngine.GameObject SpriteCollectionStorageObject;
 		internal static UnityEngine.GameObject SpriteTemplateStorageObject;
 		internal static UnityEngine.GameObject AnimationTemplateStorageObject;
@@ -158,8 +160,7 @@ namespace Semi {
         }
 
 		internal static IEnumerator OnGameManagerReady(GameManager mgr) {
-			Logger.Debug($"Initializing audio device");
-			RayAudio.AudioDevice.Initialize();
+			InitializeAudio();
 
 			InitializeUIHelpers();
 			InitializeTreeBuilders();
@@ -199,6 +200,7 @@ namespace Semi {
 		internal static void CommitContent() {
 			EncounterIconCollection.CommitDefinitionList();
 			I18N.ReloadLocalizations();
+			InitializeStreamBufferUpdateBehaviourCache();
 		}
 
 		internal static void RegisterContentInMods() {
@@ -508,7 +510,33 @@ namespace Semi {
 			}
 		}
 
+		internal static void InitializeAudio() {
+			Gungeon.ModAudioTracks = new IDPool<Audio>();
 
+			Logger.Debug($"Initializing audio device");
+			RayAudio.AudioDevice.Initialize();
+
+			Logger.Debug($"Initializing stream buffer refresh");
+			InitializeStreamBufferUpdateBehaviour();
+		}
+
+		internal static void InitializeStreamBufferUpdateBehaviour() {
+			MusicStreamBufferUpdateObject = new GameObject("SEMI: Music Stream Buffer Update Behaviour");
+			MusicStreamBufferUpdateObject.AddComponent<StreamBufferUpdateBehaviour>();
+		}
+
+		internal static void InitializeStreamBufferUpdateBehaviourCache() {
+			var len = Gungeon.ModAudioTracks.Count;
+
+			StreamBufferUpdateBehaviour.Paused = true;
+			StreamBufferUpdateBehaviour.Tracks = new List<Audio>();
+
+			foreach (var tr in Gungeon.ModAudioTracks.Entries) {
+				StreamBufferUpdateBehaviour.Tracks.Add(tr);
+			}
+
+			StreamBufferUpdateBehaviour.Paused = false;
+		}
 
 		internal static void InitializePickupObjectTreeBuilder() {
 			var magic_lamp = PickupObjectDatabase.GetById(0);

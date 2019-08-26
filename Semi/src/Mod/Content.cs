@@ -322,5 +322,27 @@ namespace Semi {
 			var dir = Path.GetDirectoryName(path);
 			return SpriteAnimation.Load(parsed, Config.ID);
 		}
+
+		public Sound RegisterSound(string local_id, string path) {
+			CheckMode();
+			var full_id = GetFullID(local_id);
+			path = GetFullResourcePath(path);
+			var sound = new Sound(RayAudio.Sound.Load(path));
+			Gungeon.ModAudioTracks.Add(full_id, sound);
+			return sound;
+		}
+
+		public Music RegisterMusic(string local_id, string path) {
+			CheckMode();
+			var full_id = GetFullID(local_id);
+			path = GetFullResourcePath(path);
+			var music = new Music(RayAudio.MusicStream.Load(path));
+			Gungeon.ModAudioTracks.Add(full_id, music);
+			return music;
+		}
+
+		public void OverrideAudio(string old_id, string new_id) {
+			Audio.AudioOverrides[old_id] = new_id;
+		}
 	}
 }

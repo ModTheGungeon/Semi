@@ -85,6 +85,12 @@ namespace Semi {
 		/// <value>ID pool of available languages.</value>
 		public static IDPool<I18N.Language> Languages { get; internal set; }
 
+		/// <summary>
+		/// ID pool containing audio tracks registered by mods.
+		/// At this moment, this ID pool does not contain any Gungeon (WWise) audio. This will likely never change.
+		/// </summary>
+		/// <value>ID pool of mod sounds.</value>
+		public static IDPool<Audio> ModAudioTracks { get; internal set; }
 
 		public static void OnSynergyActivated(string id, SynergyStateChangeAction action) {
 			id = IDPool<AdvancedSynergyEntry>.Resolve(id);

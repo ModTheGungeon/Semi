@@ -97,9 +97,6 @@
     <Reference Include="YamlDotNet">
       <HintPath>..\packages\YamlDotNet.6.0.0\lib\net35\YamlDotNet.dll</HintPath>
     </Reference>
-    <Reference Include="NVorbis">
-      <HintPath>..\packages\NVorbis.0.8.6\lib\net35\NVorbis.dll</HintPath>
-    </Reference>
     <Reference Include="RayAudio">
       <HintPath>..\libs\RayAudio.dll</HintPath>
     </Reference>
@@ -194,6 +191,10 @@
     <Compile Include="src\Patches\GameUIRoot.cs" />
     <Compile Include="src\Patches\dfLanguageManager.cs" />
     <Compile Include="src\Patches\GameStatsManager.cs" />
+    <Compile Include="src\Patches\AkSoundEngine.cs" />
+    <Compile Include="src\Semi\Audio.cs" />
+    <Compile Include="src\Semi\WWiseAudioBridge.cs" />
+    <Compile Include="src\Semi\StreamBufferUpdateBehaviour.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="src\" />
