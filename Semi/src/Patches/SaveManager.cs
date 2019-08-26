@@ -6,31 +6,30 @@ using MonoMod;
 namespace Semi.Patches {
 	/// <summary>
 	/// Patches SaveManager to change save file location to avoid corruption or crashes if the save format is changed.
-	/// Currently broken/not used.
 	/// </summary>
 	[MonoModPatch("global::SaveManager")]
-	public class SaveManager {
-		public static global::SaveManager.SaveType MidGameSave = new global::SaveManager.SaveType {
-			filePattern = "modded_Active{0}.game",
-			legacyFilePattern = "activeSlot{0}.txt",
-			encrypted = true,
-			backupCount = 0,
-			backupPattern = "modded_Active{0}.backup.{1}",
-			backupMinTimeMin = 60
-		};
+	public static class SaveManager {
+		[MonoModIgnore]
+		public static global::SaveManager.SaveType GameSave;
 
-		public static global::SaveManager.SaveType OptionsSave = new global::SaveManager.SaveType {
-			filePattern = "modded_Slot{0}.options",
-			legacyFilePattern = "optionsSlot{0}.txt"
-		};
+		[MonoModIgnore]
+		public static global::SaveManager.SaveType OptionsSave;
 
-		public static global::SaveManager.SaveType GameSave = new global::SaveManager.SaveType {
-			filePattern = "modded_Slot{0}.save",
-			encrypted = true,
-			backupCount = 3,
-			backupPattern = "modded_Slot{0}.backup.{1}",
-			backupMinTimeMin = 45,
-			legacyFilePattern = "gameStatsSlot{0}.txt"
-		};
+		[MonoModIgnore]
+		public static global::SaveManager.SaveType MidGameSave;
+
+		[MonoModOriginal]
+		public static void orig_ctor_global() { }
+
+		[MonoModConstructor]
+		[MonoModOriginalName("orig_ctor_global")]
+		public static void ctor_global() {
+			orig_ctor_global();
+			MidGameSave.filePattern = "modded_Active{0}.game";
+			MidGameSave.backupPattern = "modded_Active{0}.backup.{1}";
+			OptionsSave.filePattern = "modded_Slot{0}.options";
+			GameSave.filePattern = "modded_Slot{0}.save";
+			GameSave.backupPattern = "modded_Slot{0}.backup.{1}";
+		}
 	}
 }

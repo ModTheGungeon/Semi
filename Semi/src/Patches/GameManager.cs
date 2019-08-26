@@ -16,13 +16,14 @@ namespace Semi.Patches {
         private extern void orig_Awake();
 
         private void Awake() {
-            orig_Awake();
 			if (!SemiLoader.Loaded) {
 				SemiLoader.Loaded = true;
 				SemiLoader.Logger.Info($"Semi Loader {SemiLoader.VERSION} starting");
 
-				StartCoroutine(SemiLoader.OnGameManagerAlive((global::GameManager)(object)this));
+				SemiLoader.OnGameManagerAlive((global::GameManager)(object)this);
 			}
+            orig_Awake();
+			StartCoroutine(SemiLoader.OnGameManagerReady((global::GameManager)(object)this));
         }
     }
 }

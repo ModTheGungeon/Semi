@@ -55,6 +55,20 @@ namespace Semi {
 		/// You cannot register any content in this method. Use it to setup fields and such.
 		/// </summary>
         public abstract void Loaded();
+
+		/// <summary>
+		/// Called when the save file is updated.
+		/// This method should return a string that you will later load in Deserialize().
+		/// Use this to implement persistence in your mod (save file interaction).
+		/// </summary>
+		public virtual string Serialize() { return null; }
+
+		/// <summary>
+		/// Called when the save file is loaded.
+		/// This method is fed the last recorded result of Serialize().
+		/// Use this to implement persistence in your mod (save file interaction).
+		/// </summary>
+		public virtual void Deserialize(string s) { }
     }
 
 	public struct ModError {

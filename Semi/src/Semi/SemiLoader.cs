@@ -107,7 +107,7 @@ namespace Semi {
 		internal static Dictionary<string, Gungeon.SynergyStateChangeAction> SynergyActivatedActions = new Dictionary<string, Gungeon.SynergyStateChangeAction>();
 		internal static Dictionary<string, Gungeon.SynergyStateChangeAction> SynergyDeactivatedActions = new Dictionary<string, Gungeon.SynergyStateChangeAction>();
 
-		internal static IEnumerator OnGameManagerAlive(GameManager mgr) {
+		internal static void OnGameManagerAlive(GameManager mgr) {
             Logger.Debug("GameManager alive");
 
 			ModLoadErrors = new List<ModError>();
@@ -150,13 +150,21 @@ namespace Semi {
 				UnityEngine.Object.DontDestroyOnLoad(ConsoleController);
 			}
 
+			Gungeon.Languages = new IDPool<I18N.Language>();
+			Gungeon.Localizations = new IDPool<I18N.LocalizationSource>();
+
+			FileHierarchy.Verify();
+			LoadMods();
+        }
+
+		internal static IEnumerator OnGameManagerReady(GameManager mgr) {
+			Logger.Debug($"Initializing audio device");
+			RayAudio.AudioDevice.Initialize();
+
 			InitializeUIHelpers();
 			InitializeTreeBuilders();
 			Logger.Debug($"Waiting frame to delete tree builder base objects");
 			yield return null;
-
-			Gungeon.Languages = new IDPool<I18N.Language>();
-			Gungeon.Localizations = new IDPool<I18N.LocalizationSource>();
 
 			LoadBuiltinLanguages();
 			yield return null;
@@ -177,15 +185,12 @@ namespace Semi {
 			//SimpleSpriteLoader.BaseSprite = Gungeon.Items["gungeon:singularity"].GetComponent<tk2dSprite>();
 			//ItemCollectionManager = new GlobalSpriteCollectionManager(SimpleSpriteLoader.BaseSprite.Collection);
 
-            FileHierarchy.Verify();
-            LoadMods();
-
 			BeginRegisteringContent();
 			RegisterContentInMods();
 			CommitContent();
 
 			InitializeContentInMods();
-        }
+		}
 
 		internal static void BeginRegisteringContent() {
 			EncounterIconCollection.BeginModifyingDefinitionList();
@@ -421,7 +426,7 @@ namespace Semi {
                 Gungeon.Enemies = IDMapParser<AIActor, Gungeon.EnemyTag>.Parse(
                     stream,
                     "gungeon",
-                    (id) => EnemyDatabase.AssetBundle.LoadAsset<UnityEngine.GameObject>(id).GetComponent<AIActor>()
+					(id) => EnemyDatabase.Instance.Entries[int.Parse(id)].GetPrefab<AIActor>()
                 );
             }
 

@@ -14,3 +14,6 @@ Semi/bin/{TARGET}/Mono.Cecil.Mdb.dll
 #Semi/bin/{TARGET}/Mono.Cecil.Rocks.dll
 #Semi/bin/{TARGET}/MonoMod.RuntimeDetour.dll
 Semi/bin/{TARGET}/YamlDotNet.dll
+Semi/bin/{TARGET}/NVorbis.dll
+Plugins
+libs/RayAudio.dll
