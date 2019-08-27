@@ -191,6 +191,7 @@
     <Compile Include="src\Patches\API\PlayerStats.cs" />
     <Compile Include="src\Patches\TK0D\tk2dSpriteCollectionData.cs" />
     <Compile Include="src\Mod\Misc.cs" />
+    <Compile Include="src\Semi\RuntimeAtlas.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="src\" />
