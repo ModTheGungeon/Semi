@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using Logger = ModTheGungeon.Logger;
 
 namespace Semi {
     public abstract partial class Mod : MonoBehaviour {
@@ -18,6 +19,12 @@ namespace Semi {
         public ModConfig Config {
 			get { return Info.Config; }
         }
+
+		/// <summary>
+		/// </summary>
+		public Logger Logger {
+			get; internal set;
+		}
 
 		/// <summary>
 		/// Gets the stored representation of the loaded mod.

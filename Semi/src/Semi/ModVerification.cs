@@ -10,12 +10,26 @@ using System.Net.Security;
 
 namespace Semi {
 	public static class ModVerification {
+		// Mod verification is done based on the ModTheGungeon/SemiModVerification GitHub repository
+
+		/// <summary>
+		/// Base URL of the raw file content in the SemiModVerification repository.
+		/// </summary>
 		internal const string BASE_VERIFICATION_URL = "https://raw.githubusercontent.com/ModTheGungeon/SemiModVerification/master/";
 
 		internal static Logger Logger = new Logger("ModVerification");
 
+		/// <summary>
+		/// Alphabetic Comparison<string>.
+		/// </summary>
 		internal static Comparison<string> StringAlphabeticComparison = (x, y) => string.Compare(x, y);
 
+		/// <summary>
+		/// Calculates a checksum of all files in the directory.
+		/// </summary>
+		/// <returns>The mod's checksum.</returns>
+		/// <param name="dir_path">Path to the mod's directory.</param>
+		/// <param name="config">The mod's config object.</param>
 		public static byte[] GetModHash(string dir_path, ModConfig config) {
 			var hash = new List<byte>();
 
@@ -44,6 +58,12 @@ namespace Semi {
 			}
 		}
 
+		/// <summary>
+		/// Compares two hashes.
+		/// </summary>
+		/// <returns><c>true</c>, if hashes match, <c>false</c> otherwise.</returns>
+		/// <param name="valid">The known valid hash.</param>
+		/// <param name="computed">The computed hash..</param>
 		public static bool ValidateHash(byte[] valid, byte[] computed) {
 			if (valid.Length != computed.Length) return false;
 			for (int i = 0; i < valid.Length; i++) {
@@ -52,6 +72,12 @@ namespace Semi {
 			return true;
 		}
 
+		/// <summary>
+		/// Compares two hashes based on the SemiModVerification repository.
+		/// </summary>
+		/// <returns><c>true</c>, if hashes match, <c>false</c> otherwise.</returns>
+		/// <param name="mod_id">ID of the mod.</param>
+		/// <param name="hash">The computed hash.</param>
 		public static bool ValidateHashOnline(string mod_id, byte[] hash) {
 			var url = $"{BASE_VERIFICATION_URL}{mod_id}";
 

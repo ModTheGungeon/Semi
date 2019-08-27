@@ -6,15 +6,29 @@ using Logger = ModTheGungeon.Logger;
 namespace Semi {
 
 	public abstract class Audio : IDisposable {
+		/// <summary>
+		/// Volume category, one value for each bar in settings.
+		/// </summary>
 		public enum VolumeCategory {
 			Sound,
 			Music,
 			UI
 		}
+
+		/// <summary>
+		/// A dictionary of audio overrides, for replacing audio tracks with other audio tracks.
+		/// </summary>
 		internal static Dictionary<string, string> AudioOverrides = new Dictionary<string, string>();
 
+		/// <summary>
+		/// The volume category of this audio track.
+		/// </summary>
 		public VolumeCategory Category;
 
+		/// <summary>
+		/// Volume for Sound set in the settings.
+		/// </summary>
+		/// <value>0f -> 1f</value>
 		public static float SoundVolume {
 			get {
 				return GameManager.Options.SoundVolume / 100f;
@@ -24,6 +38,10 @@ namespace Semi {
 			}
 		}
 
+		/// <summary>
+		/// Volume for Music set in the settings.
+		/// </summary>
+		/// <value>0f -> 1f</value>
 		public static float MusicVolume {
 			get {
 				return GameManager.Options.MusicVolume / 100f;
@@ -33,6 +51,11 @@ namespace Semi {
 			}
 		}
 
+
+		/// <summary>
+		/// Volume for UI set in the settings.
+		/// </summary>
+		/// <value>0f -> 1f</value>
 		public static float UIVolume {
 			get {
 				return GameManager.Options.UIVolume / 100f;
@@ -42,20 +65,65 @@ namespace Semi {
 			}
 		}
 
+		/// <summary>
+		/// Plays an audio track with the specified ID.
+		/// </summary>
+		/// <param name="id">ID of the audio track.</param>
+		/// <param name="source">Source GameObject.</param>
 		public static void Play(string id, GameObject source = null) {
 			global::AkSoundEngine.PostEvent(id, source);
 		}
 
+		/// <summary>
+		/// Play this audio track.
+		/// </summary>
 		public abstract void Play();
+
+		/// <summary>
+		/// Stop this audio track.
+		/// </summary>
 		public abstract void Stop();
+
+		/// <summary>
+		/// Pause this audio track.
+		/// </summary>
 		public abstract void Pause();
+
+		/// <summary>
+		/// Resume this audio track.
+		/// </summary>
 		public abstract void Resume();
+
+		/// <summary>
+		/// Releases all resource used by the <see cref="T:Semi.Audio"/> object.
+		/// </summary>
+		/// <remarks>Call <see cref="Dispose"/> when you are finished using the <see cref="T:Semi.Audio"/>. The <see cref="Dispose"/>
+		/// method leaves the <see cref="T:Semi.Audio"/> in an unusable state. After calling <see cref="Dispose"/>, you must
+		/// release all references to the <see cref="T:Semi.Audio"/> so the garbage collector can reclaim the memory that the
+		/// <see cref="T:Semi.Audio"/> was occupying.</remarks>
 		public abstract void Dispose();
 
+		/// <summary>
+		/// Gets or sets the volume of this track.
+		/// </summary>
+		/// <value>The volume.</value>
 		public abstract float Volume { get; set; }
+
+		/// <summary>
+		/// Gets or sets the pitch of this track.
+		/// </summary>
+		/// <value>The pitch.</value>
 		public abstract float Pitch { get; set; }
+
+		/// <summary>
+		/// Whether this audio track is currently playing.
+		/// </summary>
+		/// <value><c>true</c> if it is playing; otherwise, <c>false</c>.</value>
 		public abstract bool IsPlaying { get; }
 
+		/// <summary>
+		/// Used to facilitate compatibility with the category-separated ingame volume settings.
+		/// </summary>
 		internal abstract void UpdateVolume();
 	}
 
@@ -142,7 +210,16 @@ namespace Semi {
 			}
 		}
 
+		/// <summary>
+		/// Gets the total length of this music track.
+		/// </summary>
+		/// <value>The length.</value>
 		public float Length { get { return RayMusic.Length; } }
+
+		/// <summary>
+		/// Gets the time that this music track has been played for.
+		/// </summary>
+		/// <value>The time played.</value>
 		public float TimePlayed { get { return RayMusic.TimePlayed; } }
 
 		public override void Dispose() {

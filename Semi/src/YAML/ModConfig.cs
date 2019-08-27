@@ -12,6 +12,9 @@ namespace Semi {
         [YamlMember(Alias = "author")]
         public string Author { get; set; } = "Unknown";
 
+		[YamlMember(Alias = "api_version")]
+		public int? APIVersion { get; set; }
+
 		[YamlMember(Alias = "dll")]
 		public string DLL { get; set; } = "mod.dll";
 

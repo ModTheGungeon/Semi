@@ -92,6 +92,11 @@ namespace Semi {
 		/// <value>ID pool of mod sounds.</value>
 		public static IDPool<Audio> ModAudioTracks { get; internal set; }
 
+		/// <summary>
+		/// Registers a delegate to be ran when the synergy becomes active.
+		/// </summary>
+		/// <param name="id">ID of the synergy.</param>
+		/// <param name="action">Action to invoke.</param>
 		public static void OnSynergyActivated(string id, SynergyStateChangeAction action) {
 			id = IDPool<AdvancedSynergyEntry>.Resolve(id);
 			SynergyStateChangeAction existing_action = null;
@@ -102,6 +107,11 @@ namespace Semi {
 			}
 		}
 
+		/// <summary>
+		/// Registers a delegate to be ran when the synergy becomes inactive.
+		/// </summary>
+		/// <param name="id">ID of the synergy.</param>
+		/// <param name="action">Action to invoke.</param>
 		public static void OnSynergyDeactivated(string id, SynergyStateChangeAction action) {
 			id = IDPool<AdvancedSynergyEntry>.Resolve(id);
 			SynergyStateChangeAction existing_action = null;
@@ -112,6 +122,11 @@ namespace Semi {
 			}
 		}
 
+		/// <summary>
+		/// Checks whether a synergy is currently actiive.
+		/// </summary>
+		/// <returns><c>true</c>, if synergy is active, <c>false</c> otherwise.</returns>
+		/// <param name="id">ID of the synergy.</param>
 		public static bool IsSynergyActive(string id) {
 			id = IDPool<AdvancedSynergyEntry>.Resolve(id);
 			return SemiLoader.ActiveSynergyIDs.Contains(id);

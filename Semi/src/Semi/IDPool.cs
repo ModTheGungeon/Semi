@@ -107,6 +107,13 @@ namespace Semi {
             public BadlyFormattedIDException(string id) : base($"ID was improperly formatted: {id}") { }
         }
 
+		/// <summary>
+		/// Thrown when an attempt is made to get an unexpanded contextual ID (@:name).
+		/// </summary>
+		public class MissingContextIDException : IDPoolException {
+			public MissingContextIDException(string id) : base($"Object with ID {id} doesn't exist") { }
+		}
+
         //Methods
 
 		/// <summary>
@@ -261,8 +268,9 @@ namespace Semi {
 		/// </summary>
 		/// <returns>The object assigned to this ID.</returns>
 		/// <param name="id">ID of the entry.</param>
-        public T Get(string id) {
-            id = Resolve(id);
+		/// <param name="context_namespace">Namespace to expand context IDs to (or null if context IDs aren't supported by the call site).</param>
+        public T Get(string id, string context_namespace = null) {
+            id = Resolve(id, context_namespace);
             if (!_Storage.ContainsKey(id)) throw new NonExistantIDException(id);
             return _Storage[id];
         }
@@ -338,20 +346,31 @@ namespace Semi {
 		}
 
 		/// <summary>
-		/// Resolves an ID. This means adding the default namespace (<c>gungeon:</c>) if the ID doesn't have one.
+		/// Resolves an ID. This means adding the default namespace (<c>gungeon:</c>) if the ID doesn't have one, and expanding the context namespace if supported.
 		/// This method will throw if the ID has more than one colon character in it.
 		/// </summary>
 		/// <returns>The resolved ID.</returns>
 		/// <param name="id">ID of the entry. Note that this method does not check whether an entry with this ID actually exists in this pool.</param>
-        public static string Resolve(string id) {
+		/// <param name="context_namespace">Namespace for context IDs (@:name) - if null, context IDs cannot be used </param>
+        public static string Resolve(string id, string context_namespace = null) {
             id = id.Trim();
             if (id.Contains(":")) {
-                VerifyID(id);
-                return id;
+				id = ExpandContextID(id, context_namespace);
+				VerifyID(id);
+				return id;
             } else {
                 return $"gungeon:{id}";
             }
         }
+
+		public static string ExpandContextID(string id, string context_namespace) {
+			if (id.StartsWithInvariant("@:")) {
+				if (context_namespace == null) throw new MissingContextIDException(id);
+				return $"{context_namespace}:{Split(id).Name}";
+			} else {
+				return id;
+			}
+		}
 
 		/// <summary>
 		/// Resolves a list of IDs (<c>IList</c> interface). See <see cref="Resolve"/>.

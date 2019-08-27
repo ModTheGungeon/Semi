@@ -10,10 +10,10 @@ using Logger = ModTheGungeon.Logger;
 
 namespace Semi {
 	/// <summary>
-	/// Thrown when a mod metadata is invalid or points to files that don't exist.
+	/// Thrown when Semi encounters an issue with the setup of order.txt and blacklist.txt files.
 	/// </summary>
-	public class InvalidConfigException : Exception {
-		public InvalidConfigException(string message) : base($"Invalid config: {message}") { }
+	public class ModPreloadException : Exception {
+		public ModPreloadException(string message) : base($"Failed loading mods: {message}") { }
 	}
 
 	/// <summary>
@@ -23,8 +23,25 @@ namespace Semi {
 		public ModLoadException(string mod_id, string message) : base($"Failed loading mod '{mod_id}': {message}") { }
 	}
 
+	/// <summary>
+	/// Thrown when a mod fails the checksum validation.
+	/// </summary>
 	public class ChecksumMismatchException : ModLoadException {
 		public ChecksumMismatchException(string mod_id) : base(mod_id, "Checksum mismatch. The mod has been edited, likely by someone other than its author. For your safety, it's been disabled.") { }
+	}
+
+	/// <summary>
+	/// Thrown when a mod metadata is invalid or points to files that don't exist.
+	/// </summary>
+	public class InvalidConfigException : ModLoadException {
+		public InvalidConfigException(string mod_id, string message) : base(mod_id, $"Invalid config: {message}") { }
+	}
+
+	/// <summary>
+	/// Thrown when a mod is outdated (targets an old api_version).
+	/// </summary>
+	public class OutdatedModException : ModLoadException {
+		public OutdatedModException(string mod_id, int target_api_version) : base(mod_id, $"Mod is outdated - targets API version {target_api_version}, but you are running API version {SemiLoader.API_VERSION}") { }
 	}
 
 	/// <summary>
@@ -77,43 +94,127 @@ namespace Semi {
 		/// <summary>
 		/// String version of the mod loader.
 		/// </summary>
-		public const string VERSION = "cont-dev";
+#if DEBUG
+		public const string VERSION = "0.1-dev";
+#else
+		public const string VERSION = "0.1";
+#endif
 
+		/// <summary>
+		/// Version of the API (increased when breaking changes are made)
+		/// </summary>
+		public const int API_VERSION = 1;
+
+		/// <summary>
+		/// Set to true once Semi is loaded.
+		/// </summary>
 		internal static bool Loaded = false;
-		internal static bool ValidateMods = true;
-		internal static bool SaveModChecksums = true;
 
+		/// <summary>
+		/// Determines whether mods should undergo checksum validation.
+		/// </summary>
+		internal static bool ValidateMods = true;
+
+		/// <summary>
+		/// Determines whether .sum files should be written containing checksums of mods.
+		/// </summary>
+		internal static bool SaveModChecksums = false;
+
+		/// <summary>
+		/// Dictionary containing loaded mods.
+		/// </summary>
         internal static Dictionary<string, ModInfo> Mods;
+
+		/// <summary>
+		/// GameObject containing MonoBehaviours of loaded mods.
+		/// </summary>
         internal static UnityEngine.GameObject ModsStorageObject;
 
+		/// <summary>
+		/// GameObject containing StreamBufferUpdateBehaviour to update buffers on music streams (to let them play correctly).
+		/// </summary>
 		internal static UnityEngine.GameObject MusicStreamBufferUpdateObject;
 
+		/// <summary>
+		/// GameObject containing mod-registered sprite collections.
+		/// </summary>
 		internal static UnityEngine.GameObject SpriteCollectionStorageObject;
+
+		/// <summary>
+		/// GameObject containing mod-registered sprite templates.
+		/// </summary>
 		internal static UnityEngine.GameObject SpriteTemplateStorageObject;
+
+		/// <summary>
+		/// GameObject containing mod-registered animation templates.
+		/// </summary>
 		internal static UnityEngine.GameObject AnimationTemplateStorageObject;
+
+		/// <summary>
+		/// Semi Logger.
+		/// </summary>
         internal static Logger Logger = new Logger("Semi");
 
+		/// <summary>
+		/// Debug console.
+		/// </summary>
 		internal static DebugConsole.Console Console;
+
+		/// <summary>
+		/// MonoBehaviour for handling the debug console.
+		/// </summary>
 		internal static DebugConsole.ConsoleController ConsoleController;
 
+		/// <summary>
+		/// SGUI GUI root reference, used for the debug console.
+		/// </summary>
 		internal static SGUI.SGUIRoot GUIRoot;
 
+		/// <summary>
+		/// Name of the mod currently being loaded (null if not loading any).
+		/// </summary>
 		internal static string CurrentLoadingModName;
+
+		/// <summary>
+		/// ID of the mod currently being loaded (null if not loading any).
+		/// </summary>
 		internal static string CurrentLoadingModID;
+
+		/// <summary>
+		/// A list of errors thrown by mods while loading them to show on the error screen page on startup.
+		/// </summary>
 		internal static List<ModError> ModLoadErrors;
 
+		/// <summary>
+		/// Reference to the sprite collection holding Ammonomicon icons.
+		/// </summary>
 		internal static SpriteCollection EncounterIconCollection;
 
+		/// <summary>
+		/// Set of currently active synergies.
+		/// </summary>
 		internal static HashSet<string> ActiveSynergyIDs = new HashSet<string>();
 
+		/// <summary>
+		/// Dictionary of delegates registered to run on synergy activation.
+		/// </summary>
 		internal static Dictionary<string, Gungeon.SynergyStateChangeAction> SynergyActivatedActions = new Dictionary<string, Gungeon.SynergyStateChangeAction>();
+
+		/// <summary>
+		/// Dictionary of delegates registered to run on synergy deactivation.
+		/// </summary>
 		internal static Dictionary<string, Gungeon.SynergyStateChangeAction> SynergyDeactivatedActions = new Dictionary<string, Gungeon.SynergyStateChangeAction>();
 
+		/// <summary>
+		/// Executed right before GameManager.Awake. Primary entry point.
+		/// </summary>
+		/// <param name="mgr">The GameManager instance.</param>
 		internal static void OnGameManagerAlive(GameManager mgr) {
-            Logger.Debug("GameManager alive");
+            Logger.Debug("ENTRYPOINT: GameManager alive");
 
 			ModLoadErrors = new List<ModError>();
 
+			Logger.Debug($"Initializing Semi storage GameObjects");
             ModsStorageObject = new UnityEngine.GameObject("Semi Mod Loader");
 			SpriteCollectionStorageObject = new UnityEngine.GameObject("Semi Mod Sprite Collections");
 			SpriteTemplateStorageObject = new UnityEngine.GameObject("Semi Mod Sprite Templates");
@@ -131,6 +232,8 @@ namespace Semi {
             Mods = new Dictionary<string, ModInfo>();
 
 			if (DEBUG_MODE) {
+				Logger.Debug($"Initializing debug mode");
+
 				var args = Environment.GetCommandLineArgs();
 				for (int i = 0; i < args.Length; i++) {
 					var arg = args[i];
@@ -156,21 +259,29 @@ namespace Semi {
 			Gungeon.Localizations = new IDPool<I18N.LocalizationSource>();
 
 			FileHierarchy.Verify();
+
+			Logger.Debug($"Loading mods");
 			LoadMods();
         }
 
+		/// <summary>
+		/// Executed right after GameManager.Awake. Secondary entry point.
+		/// (Coroutine)
+		/// </summary>
+		/// <param name="mgr">The GameManager instance.</param>
 		internal static IEnumerator OnGameManagerReady(GameManager mgr) {
+			Logger.Debug("ENTRYPOINT: GameManager ready");
+
 			InitializeAudio();
 
-			InitializeUIHelpers();
 			InitializeTreeBuilders();
 			Logger.Debug($"Waiting frame to delete tree builder base objects");
 			yield return null;
 
-			LoadBuiltinLanguages();
+			InitializeBuiltinLanguages();
 			yield return null;
 
-			LoadBuiltinLocalizations();
+			InitializeBuiltinLocalizations();
 			yield return null;
 
 			I18N.ChangeLanguage(GameManager.Options.CurrentLanguage);
@@ -180,11 +291,9 @@ namespace Semi {
 			Gungeon.SpriteCollections = new IDPool<SpriteCollection>();
 			Gungeon.SpriteTemplates = new IDPool<Sprite>();
 			Gungeon.AnimationTemplates = new IDPool<SpriteAnimation>();
-			yield return mgr.StartCoroutine(LoadIDMaps());
+			yield return mgr.StartCoroutine(InitializeIDMaps());
 
 			EncounterIconCollection = AmmonomiconController.ForceInstance.EncounterIconCollection.Wrap();
-			//SimpleSpriteLoader.BaseSprite = Gungeon.Items["gungeon:singularity"].GetComponent<tk2dSprite>();
-			//ItemCollectionManager = new GlobalSpriteCollectionManager(SimpleSpriteLoader.BaseSprite.Collection);
 
 			BeginRegisteringContent();
 			RegisterContentInMods();
@@ -193,16 +302,28 @@ namespace Semi {
 			InitializeContentInMods();
 		}
 
+		/// <summary>
+		/// Sets registries and other objects to expect rapid modification.
+		/// This is used for performance reasons so that certain objects can create fast-access caches but also
+		/// allow mods to use the various available abstractions.
+		/// </summary>
 		internal static void BeginRegisteringContent() {
 			EncounterIconCollection.BeginModifyingDefinitionList();
 		}
 
+		/// <summary>
+		/// Sets registries and other objects to stop expecting rapid modification.
+		/// This allows them to create the necessary internal caches.
+		/// </summary>
 		internal static void CommitContent() {
 			EncounterIconCollection.CommitDefinitionList();
 			I18N.ReloadLocalizations();
 			InitializeStreamBufferUpdateBehaviourCache();
 		}
 
+		/// <summary>
+		/// Runs RegisterContent() in every loaded mod, allowing it to call the Register* set of methods while inside.
+		/// </summary>
 		internal static void RegisterContentInMods() {
 			Logger.Info("Running RegisterContent()");
 
@@ -214,6 +335,9 @@ namespace Semi {
 			}
 		}
 
+		/// <summary>
+		/// Runs InitializeContent() in every loaded mod.
+		/// </summary>
 		internal static void InitializeContentInMods() {
 			Logger.Info("Running InitializeContent()");
 
@@ -223,6 +347,9 @@ namespace Semi {
 			}
 		}
 
+		/// <summary>
+		/// Loads mods from the SemiMods folder, respecting order.txt, blacklist.txt and MySemiMods.txt.
+		/// </summary>
         internal static void LoadMods() {
             Logger.Info("Loading mods");
 
@@ -248,7 +375,7 @@ namespace Semi {
                     if (ignore_ary != null && ignore_ary.Contains(filename)) continue;
 
                     if (File.Exists(mod_file)) throw new Exception("mod archives not supported yet");
-                    if (!Directory.Exists(mod_file)) throw new InvalidConfigException($"The load order file specifies a '{filename}' mod but neither a file nor a directory exists with that name in the mods folder.");
+					if (!Directory.Exists(mod_file)) throw new ModPreloadException($"The load order file specifies a '{filename}' mod but neither a file nor a directory exists with that name in the mods folder.");
 
                     loaded_mods_list.Add(filename);
 
@@ -295,11 +422,21 @@ namespace Semi {
             }
         }
 
+		/// <summary>
+		/// Makes sure that a mod's ID is alphanumeric and contains no spaces. Throws if this is violated.
+		/// </summary>
+		/// <param name="mod_file">Path to the mod.</param>
+		/// <param name="id">The mod's ID.</param>
         internal static void ValidateModID(string mod_file, string id) {
             if (id.ToLowerInvariant() == id && !id.Contains(" ") && id.IsPureASCII()) return;
-            throw new InvalidConfigException($"Tried loading mod '{mod_file}', but its ID specified in the config file is invalid. Make sure that it's all lowercase, with no spaces and only ASCII characters.");
+            throw new InvalidConfigException(id, $"Tried loading mod '{mod_file}', but its ID specified in the config file is invalid. Make sure that it's all lowercase, with no spaces and only ASCII characters.");
         }
 
+		/// <summary>
+		/// Generates an assembly resolver event based on the mod's path to allow for loading DLLs inside the mod's folder.
+		/// </summary>
+		/// <returns>The mod assembly resolver.</returns>
+		/// <param name="dir_path">Path to the mod's directory.</param>
         internal static ResolveEventHandler GenerateModAssemblyResolver(string dir_path) {
             return delegate (object sender, ResolveEventArgs args) {
                 string asm_path = Path.Combine(dir_path, new AssemblyName(args.Name).Name + ".dll");
@@ -310,15 +447,25 @@ namespace Semi {
             };
         }
 
+		/// <summary>
+		/// Loads a mod from a directory.
+		/// </summary>
+		/// <param name="dir_name">Name of the directory.</param>
+		/// <param name="dir_path">Path to the directory.</param>
+		/// <param name="trusted_mod_ids">An array of mod IDs that are trusted and don't need to have their checksum verified.</param>
         internal static void LoadModDir(string dir_name, string dir_path, string[] trusted_mod_ids = null) {
 			CurrentLoadingModID = null;
 			CurrentLoadingModName = null;
 
             var config_path = Path.Combine(dir_path, FileHierarchy.MOD_INFO_FILE_NAME);
-            if (!File.Exists(config_path)) throw new InvalidConfigException($"Tried loading mod '{dir_name}' but it has no {FileHierarchy.MOD_INFO_FILE_NAME} file.");
+            if (!File.Exists(config_path)) throw new InvalidConfigException("???", $"Tried loading mod '{dir_name}' but it has no {FileHierarchy.MOD_INFO_FILE_NAME} file.");
 
             var mod_config = SerializationHelper.DeserializeFile<ModConfig>(config_path);
-            if (mod_config.ID == null) throw new InvalidConfigException($"Tried loading mod '{dir_name}', but the config file does not specify an ID");
+            if (mod_config.ID == null) throw new InvalidConfigException("???", $"Tried loading mod '{dir_name}', but the config file does not specify an ID");
+			if (mod_config.APIVersion == null) throw new InvalidConfigException(mod_config.ID, $"Mod does not specify an api_version, and therefore cannot be loaded");
+
+			if (mod_config.APIVersion.Value != API_VERSION) throw new OutdatedModException(mod_config.ID, mod_config.APIVersion.Value);
+
 			CurrentLoadingModID = mod_config.ID;
 			CurrentLoadingModName = mod_config.Name;
 
@@ -342,7 +489,7 @@ namespace Semi {
 
             var dll_name = mod_config.DLL ?? "mod.dll";
             var dll_path = Path.Combine(dir_path, dll_name);
-            if (!File.Exists(config_path)) throw new InvalidConfigException($"Tried loading mod '{dir_name}' but it doesn't have the specified DLL file {dll_name}.");
+            if (!File.Exists(config_path)) throw new InvalidConfigException(mod_config.ID, $"Tried loading mod '{dir_name}' but it doesn't have the specified DLL file {dll_name}.");
 
             AppDomain.CurrentDomain.AssemblyResolve += GenerateModAssemblyResolver(dir_path);
                 
@@ -375,6 +522,7 @@ namespace Semi {
                 if (!typeof(Mod).IsAssignableFrom(type) || type.IsAbstract) continue;
 
                 Mod mod_instance = (Mod)ModsStorageObject.AddComponent(type);
+				mod_instance.Logger = new Logger(mod_config.Name ?? mod_config.ID);
                 mod_config.Instance = mod_instance;
 
 				var mod_info = Mods[mod_config.ID] = new ModInfo(
@@ -389,6 +537,9 @@ namespace Semi {
             }
         }
 
+		/// <summary>
+		/// Opens the load error screen if ModLoadErrors has at least one entry.
+		/// </summary>
 		internal static void OpenLoadErrorScreenIfNecessary() {
 			Logger.Debug($"Checking if error screen needs to be opened: {ModLoadErrors.Count} error(s)");
 			if (ModLoadErrors.Count > 0) {
@@ -397,6 +548,11 @@ namespace Semi {
 			}
 		}
 
+		/// <summary>
+		/// Converts any list or array of integer item IDs into an array of pooled string IDs.
+		/// </summary>
+		/// <returns>The string ID list.</returns>
+		/// <param name="ids">The numeric ID list.</param>
 		internal static string[] ConvertItemIDList(IList<int> ids) {
 			var ary = new string[ids.Count];
 			for (int i = 0; i < ids.Count; i++) {
@@ -407,10 +563,15 @@ namespace Semi {
 			return ary;
 		}
 
-        internal static IEnumerator LoadIDMaps() {
+		/// <summary>
+		/// Loads ID maps (mappings of the game's internal numeric IDs to the string ID system) from the assembly's resources.
+		/// (Coroutine)
+		/// </summary>
+        internal static IEnumerator InitializeIDMaps() {
+			Logger.Debug($"INITIALIZING: ID MAPS");
             var asm = Assembly.GetExecutingAssembly();
-            Logger.Debug("Loading IDMaps");
-
+            
+			Logger.Debug("IDMap: items.txt");
             using (StreamReader stream = new StreamReader(asm.GetManifestResourceStream("idmaps:items.txt"))) {
                 Logger.Debug($"IDMap items.txt: stream = {stream}");
                 Gungeon.Items = IDMapParser<PickupObject, Gungeon.ItemTag>.Parse(
@@ -423,6 +584,7 @@ namespace Semi {
                 );
             }
 
+			Logger.Debug("IDMap: enemies.txt");
             using (StreamReader stream = new StreamReader(asm.GetManifestResourceStream("idmaps:enemies.txt"))) {
                 Logger.Debug($"IDMap enemies.txt: stream = {stream}");
                 Gungeon.Enemies = IDMapParser<AIActor, Gungeon.EnemyTag>.Parse(
@@ -432,7 +594,7 @@ namespace Semi {
                 );
             }
 
-
+			Logger.Debug("IDMap: synergies.txt");
 			using (StreamReader stream = new StreamReader(asm.GetManifestResourceStream("idmaps:synergies.txt"))) {
 				Logger.Debug($"IDMap synergies.txt: stream = {stream}");
 				Gungeon.Synergies = IDMapParser<AdvancedSynergyEntry, SynergyEntry.SynergyActivation>.Parse(
@@ -456,7 +618,11 @@ namespace Semi {
 			yield return null;
         }
 
-		internal static void LoadBuiltinLanguages() {
+		/// <summary>
+		/// Initializes Gungeon.Languages with IDs corresponding to the languages that Gungeon provides out of the box.
+		/// </summary>
+		internal static void InitializeBuiltinLanguages() {
+			Logger.Debug($"INITIALIZING: BUILTIN LANGUAGES");
 			Gungeon.Languages["gungeon:english"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.ENGLISH);
 			Gungeon.Languages["gungeon:rubel_test"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.RUBEL_TEST);
 			Gungeon.Languages["gungeon:french"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.FRENCH);
@@ -471,7 +637,11 @@ namespace Semi {
 			Gungeon.Languages["gungeon:chinese"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.CHINESE);
 		}
 
-		internal static void LoadBuiltinLocalizations() {
+		/// <summary>
+		/// Initializes Gungeon.Localizations with IDs corresponding to the languages that Gungeon provides out of the box.
+		/// </summary>
+		internal static void InitializeBuiltinLocalizations() {
+			Logger.Debug($"INITIALIZING: BUILTIN LOCALIZATIONS");
 			for (int i = 0; i <= (int)StringTableManager.GungeonSupportedLanguages.CHINESE; i++) {
 				var lang = (StringTableManager.GungeonSupportedLanguages)i;
 
@@ -494,7 +664,13 @@ namespace Semi {
 			}
 		}
 
+		/// <summary>
+		/// Invokes the delegates registered to run when this synergy is activated, passing the player to them.
+		/// </summary>
+		/// <param name="id">ID of the synergy.</param>
+		/// <param name="p">PlayerController to pass on.</param>
 		internal static void InvokeSynergyActivated(string id, PlayerController p) {
+			Logger.Debug($"Synergy activated: '{id}'");
 			id = IDPool<AdvancedSynergyEntry>.Resolve(id);
 			Gungeon.SynergyStateChangeAction action = null;
 			if (SynergyActivatedActions.TryGetValue(id, out action)) {
@@ -502,7 +678,13 @@ namespace Semi {
 			}
 		}
 
+		/// <summary>
+		/// Invokes the delegates registered to run when this synergy is deactivated, passing the player to them.
+		/// </summary>
+		/// <param name="id">ID of the synergy.</param>
+		/// <param name="p">PlayerController to pass on.</param>
 		internal static void InvokeSynergyDeactivated(string id, PlayerController p) {
+			Logger.Debug($"Synergy deactivated: '{id}'");
 			id = IDPool<AdvancedSynergyEntry>.Resolve(id);
 			Gungeon.SynergyStateChangeAction action = null;
 			if (SynergyDeactivatedActions.TryGetValue(id, out action)) {
@@ -510,22 +692,34 @@ namespace Semi {
 			}
 		}
 
+		/// <summary>
+		/// Initializes the modded audio subsystem (RayAudio).
+		/// </summary>
 		internal static void InitializeAudio() {
+			Logger.Debug($"INITIALIZING: AUDIO");
 			Gungeon.ModAudioTracks = new IDPool<Audio>();
 
-			Logger.Debug($"Initializing audio device");
+			Logger.Debug($"Starting audio device");
 			RayAudio.AudioDevice.Initialize();
 
-			Logger.Debug($"Initializing stream buffer refresh");
 			InitializeStreamBufferUpdateBehaviour();
 		}
 
+		/// <summary>
+		/// Initializes the stream buffer update object, which makes sure to refresh music stream buffers every frame.
+		/// </summary>
 		internal static void InitializeStreamBufferUpdateBehaviour() {
+			Logger.Debug($"INITIALIZING: AUDIO STREAM BUFFER UPDATE");
 			MusicStreamBufferUpdateObject = new GameObject("SEMI: Music Stream Buffer Update Behaviour");
 			MusicStreamBufferUpdateObject.AddComponent<StreamBufferUpdateBehaviour>();
 		}
 
+		/// <summary>
+		/// Initializes the stream buffer update object's cache of Audio tracks.
+		/// </summary>
 		internal static void InitializeStreamBufferUpdateBehaviourCache() {
+			Logger.Debug($"INITIALIZING: AUDIO STREAM BUFFER UPDATE CACHE");
+
 			var len = Gungeon.ModAudioTracks.Count;
 
 			StreamBufferUpdateBehaviour.Paused = true;
@@ -538,7 +732,12 @@ namespace Semi {
 			StreamBufferUpdateBehaviour.Paused = false;
 		}
 
+		/// <summary>
+		/// Initializes the pickup object tree builder static class to facilitate internal creation of items.
+		/// </summary>
 		internal static void InitializePickupObjectTreeBuilder() {
+			Logger.Debug($"INITIALIZING: PICKUP OBJECT TREE BUILDER");
+
 			var magic_lamp = PickupObjectDatabase.GetById(0);
 
 			magic_lamp.gameObject.SetActive(false);
@@ -557,7 +756,12 @@ namespace Semi {
 			PickupObjectTreeBuilder.StoredBarrel = ((Gun)magic_lamp).barrelOffset.gameObject;
 		}
 
+		/// <summary>
+		/// Initializes the entity tree builder static class to facilitate internal creation of entities (enemies).
+		/// </summary>
 		internal static void InitializeEntityTreeBuilder() {
+			Logger.Debug($"INITIALIZING: ENTITY TREE BUILDER");
+
 			var bullet_kin = (UnityEngine.GameObject)EnemyDatabase.AssetBundle.LoadAsset("BulletMan");
 			bullet_kin.SetActive(false);
 			var new_go = UnityEngine.Object.Instantiate(bullet_kin);
@@ -600,11 +804,19 @@ namespace Semi {
 
 		}
 
+		/// <summary>
+		/// Initializes static tree builder classes, that facilitate the internal creation of various ingame elements like items.
+		/// </summary>
 		internal static void InitializeTreeBuilders() {
+			Logger.Debug($"INITIALIZING: TREE BUILDERS");
 			InitializePickupObjectTreeBuilder();
 		}
 
+		/// <summary>
+		/// Initializes fields and objects depending on the presence of the main menu, such as acquiring the current font or the UI manager responsible for the main menu.
+		/// </summary>
 		internal static void InitializeMainMenuUIHelpers() {
+			Logger.Debug($"INITIALIZING: MAIN MENU UI HELPERS");
 			UI.MainMenuGUIManager = dfGUIManager.ActiveManagers.ElementAt(2);
 
 			UI.GungeonFont = Patches.MainMenuFoyerController.Instance.VersionLabel.Font;
@@ -612,7 +824,11 @@ namespace Semi {
 			InitializeLoadErrorScreen();
 		}
 
+		/// <summary>
+		/// Initializes the load error screen that displays exceptions thrown while loading mods.
+		/// </summary>
 		internal static void InitializeLoadErrorScreen() {
+			Logger.Debug($"INITIALIZING: LOAD ERROR SCREEN");
 			var title = GameUIRoot.Instance.Manager.AddControl<dfLabel>();
 			title.zindex = 3;
 			title.AutoSize = true;
@@ -653,10 +869,6 @@ namespace Semi {
 				UI.CloseLoadErrorScreen();
 			};
 			UI.LoadErrorOKButton = ok_button;
-		}
-
-		internal static void InitializeUIHelpers() {
-			
 		}
     }
 }

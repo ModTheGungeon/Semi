@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -103,7 +102,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="src\Patches\GameManager.cs" />
     <Compile Include="src\YAML\ModConfig.cs" />
     <Compile Include="src\YAML\SerializationHelper.cs" />
     <Compile Include="src\Semi\FileHierarchy.cs" />
@@ -114,9 +112,6 @@
     <Compile Include="src\Semi\IDPool.cs" />
     <Compile Include="src\Semi\Gungeon.cs" />
     <Compile Include="src\Parsers\IDMapParser.cs" />
-    <Compile Include="src\Patches\SaveManager.cs" />
-    <Compile Include="src\Patches\MidGameSaveData.cs" />
-    <Compile Include="src\Patches\PickupObject.cs" />
     <Compile Include="src\Debug\Console\AutoCompletor.cs" />
     <Compile Include="src\Debug\Console\Console.cs" />
     <Compile Include="src\Debug\Console\Command.cs" />
@@ -160,41 +155,42 @@
     <Compile Include="src\Debug\SGUI\src\Modifiers\SInGameModifier.cs" />
     <Compile Include="src\Debug\SGUI\src\Modifiers\SRandomLabelModifier.cs" />
     <Compile Include="src\Debug\Console\ConsoleController.cs" />
-    <Compile Include="src\Patches\MainMenuFoyerController.cs" />
     <Compile Include="src\Extensions\Texture2D.cs" />
     <Compile Include="src\Extensions\BinaryReader.cs" />
     <Compile Include="src\TK0D\MeshColliderSettings.cs" />
     <Compile Include="src\Loaders\Texture2DLoader.cs" />
-    <Compile Include="src\Patches\AmmonomiconPageRenderer.cs" />
     <Compile Include="src\Semi\ProxyList.cs" />
-    <Compile Include="src\Patches\tk2dSpriteCollectionData.cs" />
     <Compile Include="src\Extensions\Tk2d.cs" />
     <Compile Include="src\TK0D\Sprite.cs" />
     <Compile Include="src\Semi\I18N.cs" />
-    <Compile Include="src\Patches\GungeonSupportedLanguages.cs" />
-    <Compile Include="src\Patches\StringTableManager.cs" />
     <Compile Include="src\Mod\Mod.cs" />
     <Compile Include="src\Mod\Content.cs" />
     <Compile Include="src\TreeBuilders\PickupObjectTreeBuilder.cs" />
     <Compile Include="src\Parsers\Tk0dConfigParser.cs" />
     <Compile Include="src\Semi\SemiLoader.cs" />
-    <Compile Include="src\Patches\AdvancedSynergyEntry.cs" />
-    <Compile Include="src\Patches\RewardManager.cs" />
-    <Compile Include="src\Patches\AmmonomiconPokedexEntry.cs" />
-    <Compile Include="src\Patches\MinimapUIController.cs" />
-    <Compile Include="src\Patches\UINotificationController.cs" />
-    <Compile Include="src\Patches\PlayerStats.cs" />
     <Compile Include="src\TreeBuilders\EntityTreeBuilder.cs" />
     <Compile Include="src\Extensions\GameObject.cs" />
     <Compile Include="src\UI\UI.cs" />
     <Compile Include="src\Semi\ModVerification.cs" />
-    <Compile Include="src\Patches\GameUIRoot.cs" />
-    <Compile Include="src\Patches\dfLanguageManager.cs" />
-    <Compile Include="src\Patches\GameStatsManager.cs" />
-    <Compile Include="src\Patches\AkSoundEngine.cs" />
     <Compile Include="src\Semi\Audio.cs" />
     <Compile Include="src\Semi\WWiseAudioBridge.cs" />
     <Compile Include="src\Semi\StreamBufferUpdateBehaviour.cs" />
+    <Compile Include="src\Mod\IDPools.cs" />
+    <Compile Include="src\Patches\Audio\AkSoundEngine.cs" />
+    <Compile Include="src\Patches\EntryPoint\GameManager.cs" />
+    <Compile Include="src\Patches\EntryPoint\GameUIRoot.cs" />
+    <Compile Include="src\Patches\EntryPoint\MainMenuFoyerController.cs" />
+    <Compile Include="src\Patches\I18N\StringTableManager.cs" />
+    <Compile Include="src\Patches\I18N\dfLanguageManager.cs" />
+    <Compile Include="src\Patches\SaveData\GameStatsManager.cs" />
+    <Compile Include="src\Patches\SaveData\MidGameSaveData.cs" />
+    <Compile Include="src\Patches\I18N\GungeonSupportedLanguages.cs" />
+    <Compile Include="src\Patches\SaveData\SaveManager.cs" />
+    <Compile Include="src\Patches\API\AdvancedSynergyEntry.cs" />
+    <Compile Include="src\Patches\API\PickupObject.cs" />
+    <Compile Include="src\Patches\API\PlayerStats.cs" />
+    <Compile Include="src\Patches\TK0D\tk2dSpriteCollectionData.cs" />
+    <Compile Include="src\Mod\Misc.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="src\" />
@@ -206,11 +202,16 @@
     <Folder Include="src\Debug\" />
     <Folder Include="src\Loaders\" />
     <Folder Include="src\TK0D\" />
-    <Folder Include="src\Items\" />
     <Folder Include="src\Mod\" />
     <Folder Include="src\TreeBuilders\" />
     <Folder Include="src\UI\" />
     <Folder Include="res\loc\" />
+    <Folder Include="src\Patches\Audio\" />
+    <Folder Include="src\Patches\EntryPoint\" />
+    <Folder Include="src\Patches\I18N\" />
+    <Folder Include="src\Patches\SaveData\" />
+    <Folder Include="src\Patches\API\" />
+    <Folder Include="src\Patches\TK0D\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\Debug\SGUI\.gitignore" />
