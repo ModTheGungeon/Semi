@@ -24,7 +24,7 @@ namespace Semi.Patches {
 				Instance = this;
 			}
 			CustomFadingControls = new List<dfControl>();
-			VersionLabel.Text = $"SEMI | {VersionLabel.Text}";
+			VersionLabel.Text = $"SEMI {SemiLoader.VERSION}";
 		}
 
 		public extern void orig_InitializeMainMenu();
