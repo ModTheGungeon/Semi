@@ -272,6 +272,13 @@ namespace Semi {
 			if (WorkingDefinitionList == null) throw new Exception("Cannot register new definitions while not working on definition list");
 
 			var id = SpritePool.ValidateNewEntry(sprite_def.Name);
+			if (id.StartsWithInvariant("gungeon:")) {
+				id = IDPool<bool>.Split(id).Name;
+				sprite_def.Name = id;
+
+				// for gungeon compat - collection entries with gungeon: namespace must be saved with their name
+				// missing the namespace
+			}
 
 			var def_idx = WorkingDefinitionList.Count;
 			WorkingDefinitionList.Add(sprite_def);
@@ -382,6 +389,148 @@ namespace Semi {
 		}
 
 		/// <summary>
+		/// Patches the specified collection with this collection's data.
+		/// </summary>
+		/// <param name="coll">Target collection.</param>
+		public void Patch(tk2dSpriteCollectionData coll) {
+			Logger.Debug($"Patching collection '{coll.spriteCollectionName}' with collection '{Name}'");
+			Logger.Debug($"Target has {coll.materials?.Length.ToString() ?? "no"} materials, {coll.materialInsts?.Length.ToString() ?? "no"} material insts, {coll.textures?.Length.ToString() ?? "no"} textures, {coll.textureInsts?.Length.ToString() ?? "no"} texture insts");
+			Logger.Debug($"Source has {Wrap.materials?.Length.ToString() ?? "no"} materials, {Wrap.materialInsts?.Length.ToString() ?? "no"} material insts, {Wrap.textures?.Length.ToString() ?? "no"} textures, {Wrap.textureInsts?.Length.ToString() ?? "no"} texture insts");
+
+			var tk0d_coll = new SpriteCollection(coll);
+
+			// The code below merges the 'materials' and 'materialInsts' fields of the two collections,
+			// later making sure that the new definitions coming in get the right material ID.
+			var last_material_idx = 0;
+			var material_idx_diff = 0;
+			var materials = coll.materialInsts;
+			if (materials == null) materials = coll.materials;
+			if (materials != null) {
+				last_material_idx = materials.Length - 1;
+				material_idx_diff = materials.Length;
+			}
+
+			if (coll.materials != null && Wrap.materials != null) {
+				var new_materials_ary = new Material[coll.materials.Length + Wrap.materials.Length];
+
+				for (var i = 0; i < coll.materials.Length; i++) {
+					new_materials_ary[i] = coll.materials[i];
+				}
+
+				for (var i = 0; i < Wrap.materials.Length; i++) {
+					var dest_idx = i + coll.materials.Length;
+					new_materials_ary[dest_idx] = Wrap.materials[i];
+				}
+
+				coll.materials = new_materials_ary;
+			}
+			if (coll.materialInsts != null && Wrap.materialInsts != null) {
+				var new_materialinsts_ary = new Material[coll.materialInsts.Length + Wrap.materialInsts.Length];
+
+				for (var i = 0; i < coll.materialInsts.Length; i++) {
+					new_materialinsts_ary[i] = coll.materialInsts[i];
+				}
+
+				for (var i = 0; i < Wrap.materialInsts.Length; i++) {
+					var dest_idx = i + coll.materialInsts.Length;
+					new_materialinsts_ary[dest_idx] = Wrap.materialInsts[i];
+				}
+
+				coll.materialInsts = new_materialinsts_ary;
+			}
+			if (coll.textures != null && Wrap.textures != null) {
+				var new_textures_ary = new Texture[coll.textures.Length + Wrap.textures.Length];
+
+				for (var i = 0; i < coll.textures.Length; i++) {
+					new_textures_ary[i] = coll.textures[i];
+				}
+
+				for (var i = 0; i < Wrap.textures.Length; i++) {
+					var dest_idx = i + coll.textures.Length;
+					new_textures_ary[dest_idx] = Wrap.textures[i];
+				}
+
+				coll.textures = new_textures_ary;
+			}
+			if (coll.textureInsts != null && Wrap.textureInsts != null) {
+				var new_textureinsts_ary = new Texture2D[coll.textureInsts.Length + Wrap.textureInsts.Length];
+
+				for (var i = 0; i < coll.textureInsts.Length; i++) {
+					new_textureinsts_ary[i] = coll.textureInsts[i];
+				}
+
+				for (var i = 0; i < Wrap.textureInsts.Length; i++) {
+					var dest_idx = i + coll.textureInsts.Length;
+					new_textureinsts_ary[dest_idx] = Wrap.textureInsts[i];
+				}
+
+				coll.textureInsts = new_textureinsts_ary;
+			}
+
+			var ids_replaced_inplace = new HashSet<string>();
+			for (var i = 0; i < coll.spriteDefinitions.Length; i++) {
+				var def = new SpriteDefinition(coll.spriteDefinitions[i]);
+				var id = def.ID;
+
+				if (SpritePool.ContainsID(id)) {
+					var this_def = GetDefinition(id).Value; // can't be null
+					var new_material_id = this_def.Wrap.materialId + material_idx_diff;
+					Logger.Debug($"Replacing in-place: def ID '{id}', source ID '{this_def.ID}', prev material ID '{this_def.Wrap.materialId}', new material ID '{new_material_id}'");
+					this_def.Patch(def);
+					def.Wrap.materialId = new_material_id;
+					ids_replaced_inplace.Add(id);
+				}
+			}
+
+			tk0d_coll.BeginModifyingDefinitionList();
+			for (var i = 0; i < SpriteDefinitions.Count; i++) {
+				var def = SpriteDefinitions[i];
+				if (ids_replaced_inplace.Contains(def.ID)) continue;
+
+				def = def.Copy();
+
+				var new_material_id = def.Wrap.materialId + material_idx_diff;
+				Logger.Debug($"Adding: def ID '{def.ID}', prev material ID '{def.Wrap.materialId}', new material ID '{new_material_id}'");
+				def.Wrap.materialId = new_material_id;
+
+				tk0d_coll.AddDefinition(def);
+			}
+			tk0d_coll.CommitDefinitionList();
+
+			coll.allowMultipleAtlases = true;
+			coll.assetName = Wrap.assetName;
+			coll.buildKey = Wrap.buildKey;
+			coll.dataGuid = Wrap.dataGuid;
+			coll.halfTargetHeight = Wrap.halfTargetHeight;
+			coll.hasPlatformData = Wrap.hasPlatformData;
+			coll.invOrthoSize = Wrap.invOrthoSize;
+			coll.loadable = Wrap.loadable;
+			coll.managedSpriteCollection = Wrap.managedSpriteCollection;
+			//coll.material = Wrap.material;
+			coll.materialIdsValid = Wrap.materialIdsValid;
+			coll.materialPngTextureId = Wrap.materialPngTextureId;
+			coll.needMaterialInstance = Wrap.needMaterialInstance;
+			coll.pngTextures = Wrap.pngTextures;
+			coll.premultipliedAlpha = Wrap.premultipliedAlpha;
+			coll.shouldGenerateTilemapReflectionData = Wrap.shouldGenerateTilemapReflectionData;
+			coll.spriteCollectionGUID = Wrap.spriteCollectionGUID;
+			coll.spriteCollectionName = Wrap.spriteCollectionName;
+			coll.spriteCollectionPlatforms = Wrap.spriteCollectionPlatforms;
+			coll.spriteCollectionPlatformGUIDs = Wrap.spriteCollectionPlatformGUIDs;
+			coll.SpriteDefinedAnimationSequences = Wrap.SpriteDefinedAnimationSequences;
+			coll.SpriteDefinedAttachPoints = Wrap.SpriteDefinedAttachPoints;
+			coll.SpriteDefinedBagelColliders = Wrap.SpriteDefinedBagelColliders;
+			coll.SpriteDefinedIndexNeighborDependencies = Wrap.SpriteDefinedIndexNeighborDependencies;
+			coll.SpriteIDsWithAnimationSequences = Wrap.SpriteIDsWithAnimationSequences;
+			coll.SpriteIDsWithAttachPoints = Wrap.SpriteIDsWithAttachPoints;
+			coll.SpriteIDsWithBagelColliders = Wrap.SpriteIDsWithBagelColliders;
+			coll.SpriteIDsWithNeighborDependencies = Wrap.SpriteIDsWithNeighborDependencies;
+			coll.textureFilterMode = Wrap.textureFilterMode;
+			coll.textureMipMaps = Wrap.textureMipMaps;
+			coll.version = Wrap.version;
+		}
+
+		/// <summary>
 		/// Constructs a new sprite collection.
 		/// </summary>
 		/// <returns>The new sprite collection.</returns>
@@ -445,7 +594,8 @@ namespace Semi {
 				foreach (var def in parsed.Definitions) {
 					var w = def.Value.W < 1 ? parsed.SizeW : def.Value.W;
 					var h = def.Value.H < 1 ? parsed.SizeH : def.Value.H;
-					var def_id = $"{coll_namespace}:{def.Value.ID}";
+
+					var def_id = IDPool<bool>.Resolve(def.Value.ID, coll_namespace);
 
 					var tk0d_def = SpriteDefinition.Construct(
 						mat,
@@ -460,7 +610,7 @@ namespace Semi {
 
 					Logger.Debug($"Registered definition {def_id} as {def_index}");
 
-					if (parsed.AttachPoints.ContainsKey(def.Value.ID)) {
+					if (parsed.AttachPoints != null && parsed.AttachPoints.ContainsKey(def.Value.ID)) {
 						var attach_data_list = parsed.AttachPoints[def.Value.ID];
 						Logger.Debug($"Definition contains {attach_data_list.Count} attach point(s)");
 						var tk2d_attach_list = new tk2dSpriteDefinition.AttachPoint[attach_data_list.Count];
@@ -500,6 +650,8 @@ namespace Semi {
 	/// Wrapper struct for <c>tk2dSpriteDefinition</c> that provides a cleaner interface and works transparently with anything that expects <c>tk2dSpriteDefinition</c>s.
 	/// </summary>
 	public struct SpriteDefinition {
+		internal static Logger Logger = new Logger("SpriteDefinition");
+
 		/// <summary>
 		/// Real tk2d object.
 		/// </summary>
@@ -551,10 +703,21 @@ namespace Semi {
 			set { Wrap.materialInst.mainTexture = value; }
 		}
 
-		/// <value>The sprite definition name (ID).</value>
+		/// <value>The sprite definition's name.</value>
 		public string Name {
 			get { return Wrap.name; }
 			set { Wrap.name = value; }
+		}
+
+		/// <value>The sprite definition's ID.</value>
+		public string ID {
+			get {
+				if (Wrap.name.Contains(":")) return Wrap.name;
+				else return $"gungeon:{Wrap.name}";
+			}
+			set {
+				Wrap.name = value.Replace("gungeon:", "");
+			}
 		}
 
 		/// <value>First position (sprite geometry).</value>
@@ -603,6 +766,61 @@ namespace Semi {
 		public Vector2 UntrimmedBoundsExtents {
 			get { return Wrap.untrimmedBoundsDataExtents; }
 			set { Wrap.untrimmedBoundsDataExtents = value; }
+		}
+
+		/// <summary>
+		/// Patch the specified sprite definition with this definition.
+		/// </summary>
+		/// <param name="target">Target sprite definition.</param>
+		/// <param name="use_target_collision_data">If set to <c>true</c>, collision data on the target will remain unchanged. If <c>false</c>, it will be copied over as well.</param>
+		public void Patch(tk2dSpriteDefinition target, bool use_target_collision_data = true, bool suppress_debug = false) {
+			if (!suppress_debug) Logger.Debug($"Patching definition '{target.name}' with definition '{Name}'");
+
+			target.name = Wrap.name;
+			target.boundsDataCenter = Wrap.boundsDataCenter;
+			target.boundsDataExtents = Wrap.boundsDataExtents;
+			target.untrimmedBoundsDataCenter = Wrap.untrimmedBoundsDataCenter;
+			target.untrimmedBoundsDataExtents = Wrap.untrimmedBoundsDataExtents;
+
+			if (!use_target_collision_data) {
+				target.colliderConvex = Wrap.colliderConvex;
+				target.colliderSmoothSphereCollisions = Wrap.colliderSmoothSphereCollisions;
+				target.colliderType = Wrap.colliderType;
+				target.colliderVertices = Wrap.colliderVertices;
+				target.collisionLayer = Wrap.collisionLayer;
+				target.complexGeometry = Wrap.complexGeometry;
+				target.physicsEngine = Wrap.physicsEngine;
+			}
+
+			target.extractRegion = Wrap.extractRegion;
+			target.flipped = Wrap.flipped;
+			target.indices = Wrap.indices;
+			target.material = Wrap.material;
+			target.materialId = Wrap.materialId;
+			target.materialInst = Wrap.materialInst;
+			target.metadata = Wrap.metadata;
+			target.normals = Wrap.normals;
+			target.position0 = Wrap.position0;
+			target.position1 = Wrap.position1;
+			target.position2 = Wrap.position2;
+			target.position3 = Wrap.position3;
+			target.regionH = Wrap.regionH;
+			target.regionW = Wrap.regionW;
+			target.regionX = Wrap.regionX;
+			target.regionY = Wrap.regionY;
+			target.tangents = Wrap.tangents;
+			target.texelSize = Wrap.texelSize;
+			target.uvs = Wrap.uvs;
+		}
+
+		/// <summary>
+		/// Creates a copy of the sprite definition.
+		/// </summary>
+		/// <returns>The new copy.</returns>
+		public SpriteDefinition Copy() {
+			var new_def = new SpriteDefinition(new tk2dSpriteDefinition());
+			Patch(new_def, false, true);
+			return new_def;
 		}
 
 		/// <summary>

@@ -42,6 +42,7 @@ namespace Semi {
 
 			public string ID;
 			public string Name;
+			public bool Patch;
 			public int UnitW;
 			public int UnitH;
 			public int SizeW;
@@ -72,6 +73,7 @@ namespace Semi {
 
 			public string ID;
 			public string Name;
+			public bool Patch;
 			public string Collection;
 			public int DefaultFPS;
 			public Dictionary<string, Clip> Clips;
@@ -90,6 +92,8 @@ namespace Semi {
 		// coll+anim
 		internal bool IDParsed = false;
 		internal bool NameParsed = false;
+		internal bool Patch = false;
+		internal string PatchNamespace;
 
 		// coll
 		internal bool SizeParsed = false;
@@ -186,9 +190,9 @@ namespace Semi {
 
 		internal bool VerifyPropName(string name) {
 			if (ParserMode == Mode.Collection) {
-				return name == "id" || name == "name" || name == "unit" || name == "size" || name == "spritesheet" || name == "attachpoint";
+				return name == "id" || name == "name" || name == "unit" || name == "size" || name == "spritesheet" || name == "attachpoint" || name == "patch" || name == "namespace";
 			} else {
-				return name == "id" || name == "name" || name == "collection" || name == "defaultfps";
+				return name == "id" || name == "name" || name == "collection" || name == "defaultfps" || name == "patch" || name == "namespace";
 			}
 		}
 
@@ -198,6 +202,10 @@ namespace Semi {
 
 		internal bool IsIntProperty(string name) {
 			return name == "defaultfps";
+		}
+
+		internal bool IsBoolProperty(string name) {
+			return name == "patch";
 		}
 
 		internal void Throw(string reason, int? line = null, int? character = null) {
@@ -255,6 +263,7 @@ namespace Semi {
 			else if (propname == "spritesheet" && SpritesheetParsed) Throw("Duplicate spritesheet property", prop_line, prop_char);
 			else if (propname == "collection" && CollectionParsed) Throw("Duplicate collection property", prop_line, prop_char);
 			else if (propname == "defaultfps" && DefaultFPSParsed) Throw("Duplicate defaultfps property", prop_line, prop_char);
+			else if (propname == "patch" && Patch) Throw("Duplicate patch property", prop_line, prop_char);
 
 			if (propname == "attachpoint") {
 				if (AttachPointAliasMap == null) AttachPointAliasMap = new Dictionary<string, string>();
@@ -285,6 +294,12 @@ namespace Semi {
 					Collection.UnitH = size.y;
 					UnitParsed = true;
 				}
+			} else if (IsBoolProperty(propname)) {
+				if (propname == "patch") {
+					Patch = true;
+					if (ParserMode == Mode.Collection) Collection.Patch = true;
+					else Animation.Patch = true;
+				}
 			} else {
 				var value = ReadUntil('\n');
 				if (value.Length == 0) Throw("Expected string value");
@@ -302,6 +317,9 @@ namespace Semi {
 				} else if (propname == "collection") {
 					CollectionParsed = true;
 					Animation.Collection = value;
+				} else if (propname == "namespace") {
+					if (!Patch) Throw("@namespace can only be used after a @patch property");
+					PatchNamespace = value;
 				}
 			}
 		}
@@ -309,9 +327,11 @@ namespace Semi {
 		internal ParsedCollection.Definition ReadDefinition() {
 			var def = new ParsedCollection.Definition();
 
-			var def_id = ReadUntilWhitespace();
-			if (def_id.Length == 0) Throw("Expected definition ID");
-			def.ID = def_id;
+			def.ID = ReadUntilWhitespace();
+			if (def.ID.Length == 0) Throw("Expected definition ID");
+			if (def.ID.Contains(":") && !Patch) Throw("Cannot specify the definition's namespace outside of @patch mode");
+			if (PatchNamespace != null && !def.ID.Contains(":")) def.ID = $"{PatchNamespace}:{def.ID}";
+			else def.ID = $"@:{def.ID}";
 			if (Collection.Definitions.ContainsKey(def.ID)) {
 				Throw("Duplicate definition");
 			}
