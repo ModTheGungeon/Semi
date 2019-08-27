@@ -402,3 +402,6 @@ ASALocalRun/
 
 # Semi
 /build/
+
+# Doxygen
+/html

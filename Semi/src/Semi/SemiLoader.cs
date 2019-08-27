@@ -69,7 +69,7 @@ namespace Semi {
 			public string Path { get; internal set; }
 
 			/// <summary>
-			/// Initializes a new instance of the <see cref="T:Semi.SemiLoader.ModInfo"/> class.
+			/// Initializes a new instance of the <see cref="Semi.SemiLoader.ModInfo"/> class.
 			/// </summary>
 			/// <param name="instance">Mod instance.</param>
 			/// <param name="config">Metadata.</param>

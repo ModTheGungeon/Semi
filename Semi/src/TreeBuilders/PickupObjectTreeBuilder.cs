@@ -7,7 +7,7 @@ namespace Semi {
 		internal static GameObject StoredBarrel;
 
 		/// <summary>
-		/// Creates a new <see cref="T:Semi.FakePrefab"/> already containing certain components that need to be cloned from another item prefab.
+		/// Creates a new <see cref="Semi.FakePrefab"/> already containing certain components that need to be cloned from another item prefab.
 		/// </summary>
 		/// <returns>The new game object.</returns>
 		/// <param name="name">Name of the new object.</param>
@@ -19,7 +19,7 @@ namespace Semi {
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:Semi.FakePrefab"/> of a barrel offset object.
+		/// Creates a new <see cref="Semi.FakePrefab"/> of a barrel offset object.
 		/// </summary>
 		/// <returns>The new barrel offset object.</returns>
 		public static GameObject GetNewBarrel() {

@@ -165,7 +165,7 @@ namespace Semi {
 			/// </summary>
 			public string Path;
 			/// <summary>
-			/// <see cref="T:Semi.ModInfo"/> of the mod that added this localization.
+			/// <see cref="Semi.ModInfo"/> of the mod that added this localization.
 			/// </summary>
 			public SemiLoader.ModInfo Owner;
 			/// <summary>

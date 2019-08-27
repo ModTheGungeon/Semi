@@ -153,7 +153,7 @@ namespace SGUI {
         public object Font;
 
         /// <summary>
-        /// Gets a value indicating whether this <see cref="T:SGUI.SElement"/> is interactive.
+        /// Gets a value indicating whether this <see cref="SGUI.SElement"/> is interactive.
         /// </summary>
         /// <value><c>true</c> if is interactive; otherwise, <c>false</c>.</value>
         public virtual bool IsInteractive {

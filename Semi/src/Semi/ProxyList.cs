@@ -21,7 +21,7 @@ namespace Semi {
 		}
 
 		/// <summary>
-		/// Converts a list of one type into a <see cref="T:Semi.ProxyList`2"/> providing a proxy of the same type into an array of a target type.
+		/// Converts a list of one type into a <see cref="Semi.ProxyList`2"/> providing a proxy of the same type into an array of a target type.
 		/// </summary>
 		/// <returns>The <c>ProxyList</c> backed by the converted array.</returns>
 		/// <param name="list">The source list to convert.</param>
@@ -39,7 +39,7 @@ namespace Semi {
 	}
 
 	/// <summary>
-	/// Provides a generic and a non-generic <c>IEnumerator</c> implementation for <see cref="T:Semi.ProxyList`2"/>.
+	/// Provides a generic and a non-generic <c>IEnumerator</c> implementation for <see cref="Semi.ProxyList`2"/>.
 	/// </summary>
 	public class ProxyListEnumerator<TSource, TTarget> : IEnumerator, IEnumerator<TSource> {
 		internal ProxyList<TSource, TTarget> ProxyList;

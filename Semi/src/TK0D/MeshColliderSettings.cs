@@ -11,7 +11,7 @@ namespace Semi {
 		public Vector3[] Positions;
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="T:Semi.MeshColliderSettings"/> struct.
+		/// Initializes a new instance of the <see cref="Semi.MeshColliderSettings"/> struct.
 		/// </summary>
 		/// <param name="collider">Mesh collider.</param>
 		/// <param name="mesh">Mesh collider mesh.</param>

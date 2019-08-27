@@ -109,10 +109,6 @@ namespace Semi.DebugConsole {
             });
 
             AddGroup("debug")
-				.WithSubCommand("test-pirate", (args) => {
-					Semi.Patches.UINotificationController.ExecuteCommand(null, null);
-					return $"Done. Contains gun?: {Gungeon.Items.ContainsID("fun_times:gun")}";
-				})
                 .WithSubCommand("spawn-rand-chest", (args) => {
                     var chest = GameManager.Instance.RewardManager.SpawnTotallyRandomChest(GameManager.Instance.PrimaryPlayer.CurrentRoom.GetRandomAvailableCellDumb());
                     return chest.name;

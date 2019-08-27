@@ -59,7 +59,7 @@ namespace Semi {
         }
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="T:Semi.IDPool`2"/> class.
+		/// Initializes a new instance of the <see cref="Semi.IDPool`2"/> class.
 		/// </summary>
 		public IDPool() {}
 
@@ -403,7 +403,7 @@ namespace Semi {
         }
 
 		/// <summary>
-		/// Splits an ID into an <see cref="T:Semi.IDPool.Entry"/>.
+		/// Splits an ID into an <see cref="Semi.IDPool.Entry"/>.
 		/// </summary>
 		/// <returns>The split entry.</returns>
 		/// <param name="id">The ID to split. Note that this method does not check for whether this ID exists in this pool.</param>

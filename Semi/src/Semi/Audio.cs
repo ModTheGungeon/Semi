@@ -95,12 +95,12 @@ namespace Semi {
 		public abstract void Resume();
 
 		/// <summary>
-		/// Releases all resource used by the <see cref="T:Semi.Audio"/> object.
+		/// Releases all resource used by the <see cref="Semi.Audio"/> object.
 		/// </summary>
-		/// <remarks>Call <see cref="Dispose"/> when you are finished using the <see cref="T:Semi.Audio"/>. The <see cref="Dispose"/>
-		/// method leaves the <see cref="T:Semi.Audio"/> in an unusable state. After calling <see cref="Dispose"/>, you must
-		/// release all references to the <see cref="T:Semi.Audio"/> so the garbage collector can reclaim the memory that the
-		/// <see cref="T:Semi.Audio"/> was occupying.</remarks>
+		/// <remarks>Call <see cref="Dispose"/> when you are finished using the <see cref="Semi.Audio"/>. The <see cref="Dispose"/>
+		/// method leaves the <see cref="Semi.Audio"/> in an unusable state. After calling <see cref="Dispose"/>, you must
+		/// release all references to the <see cref="Semi.Audio"/> so the garbage collector can reclaim the memory that the
+		/// <see cref="Semi.Audio"/> was occupying.</remarks>
 		public abstract void Dispose();
 
 		/// <summary>
