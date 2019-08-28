@@ -26,14 +26,17 @@ namespace Semi {
 		/// <param name="id">ID of the audio track.</param>
 		/// <param name="source">Source GameObject.</param>
 		internal static string PostEventOrReturnWWiseEventName(string id, GameObject source) {
+			if (!Audio.Ready) return null;
+
+			id = id.ToLowerInvariant(); // all wwise audio event IDs are just the original names in all lowercase
 			id = IDPool<Audio>.Resolve(id);
 			IDPool<Audio>.VerifyID(id);
 
-			if (Audio.AudioOverrides.ContainsKey(id)) {
-				return PostEventOrReturnWWiseEventName(Audio.AudioOverrides[id], source);
+			if (AudioEvent.AudioEventOverrides.ContainsKey(id)) {
+				return PostEventOrReturnWWiseEventName(AudioEvent.AudioEventOverrides[id], source);
 			}
 
-			if (!Gungeon.ModAudioTracks.ContainsID(id)) {
+			if (!Gungeon.AudioEvents.ContainsID(id)) {
 				var event_name = GetWWiseEventNameFromID(id);
 				if (event_name != null) {
 					return event_name;
@@ -42,12 +45,7 @@ namespace Semi {
 					return null;
 				}
 			} else {
-				var track = Gungeon.ModAudioTracks[id];
-
-				if (track is Sound) ((Sound)track).FireAndForget(); // to allow sound overlap
-				else track.Play();
-
-				return null;
+				return Gungeon.AudioEvents[id].FirePostEvent(source);
 			}
 		}
 	}

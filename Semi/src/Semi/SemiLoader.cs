@@ -622,6 +622,19 @@ namespace Semi {
 					}
 				);
 			}
+
+			Logger.Debug($"IDMap: wwise_events.txt");
+			using (StreamReader stream = new StreamReader(asm.GetManifestResourceStream("idmaps:wwise_events.txt"))) {
+				Logger.Debug($"IDMap wwise_events.txt: stream = {stream}");
+				Gungeon.AudioEvents = IDMapParser<AudioEvent, Gungeon.AudioEventTag>.Parse(
+					stream,
+					"gungeon",
+					(id) => new WWiseAudioEvent(id),
+					do_after: (id, ev) => {
+						WWiseAudioEvent.ReverseIDMap[((WWiseAudioEvent)ev).WWiseEventName] = id;
+					}
+				);
+			}
 			yield return null;
         }
 
@@ -719,6 +732,7 @@ namespace Semi {
 			Logger.Debug($"INITIALIZING: AUDIO STREAM BUFFER UPDATE");
 			MusicStreamBufferUpdateObject = new GameObject("SEMI: Music Stream Buffer Update Behaviour");
 			MusicStreamBufferUpdateObject.AddComponent<StreamBufferUpdateBehaviour>();
+			UnityEngine.Object.DontDestroyOnLoad(MusicStreamBufferUpdateObject);
 		}
 
 		/// <summary>

@@ -6,6 +6,10 @@ using Logger = ModTheGungeon.Logger;
 namespace Semi {
 
 	public abstract class Audio : IDisposable {
+		internal static bool Ready {
+			get { return Gungeon.AudioEvents != null; }
+		}
+
 		/// <summary>
 		/// Volume category, one value for each bar in settings.
 		/// </summary>
@@ -14,11 +18,6 @@ namespace Semi {
 			Music,
 			UI
 		}
-
-		/// <summary>
-		/// A dictionary of audio overrides, for replacing audio tracks with other audio tracks.
-		/// </summary>
-		internal static Dictionary<string, string> AudioOverrides = new Dictionary<string, string>();
 
 		/// <summary>
 		/// The volume category of this audio track.

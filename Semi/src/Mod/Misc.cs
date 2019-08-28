@@ -33,12 +33,12 @@ namespace Semi {
 		}
 
 		/// <summary>
-		/// Registers an audio override (any attempt to play <code>old_id</code> ends up playing <code>new_id</code>).
+		/// Registers an audio event override (any attempt to fire <code>old_id</code> ends up firing <code>new_id</code>).
 		/// </summary>
 		/// <param name="old_id">Audio event ID to replace.</param>
 		/// <param name="new_id">Audio event ID to replace with.</param>
-		public void OverrideAudio(string old_id, string new_id) {
-			Audio.AudioOverrides[GetFullID(old_id, false)] = GetFullID(new_id, false);
+		public void OverrideAudioEvent(string old_id, string new_id) {
+			AudioEvent.AudioEventOverrides[GetFullID(old_id, false)] = GetFullID(new_id, false);
 		}
 	}
 }

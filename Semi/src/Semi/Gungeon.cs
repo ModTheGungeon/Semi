@@ -29,6 +29,15 @@ namespace Semi {
         }
 
 		/// <summary>
+		/// All the possible tag specifications for the AudioEvents IDPool.
+		/// </summary>
+		[Flags]
+		public enum AudioEventTag {
+			WWise = 1,
+			Semi = 2
+		}
+
+		/// <summary>
 		/// Delegate used for synergy activation/synergy deactivation events.
 		/// </summary>
 		public delegate void SynergyStateChangeAction(PlayerController p);
@@ -91,6 +100,8 @@ namespace Semi {
 		/// </summary>
 		/// <value>ID pool of mod sounds.</value>
 		public static IDPool<Audio> ModAudioTracks { get; internal set; }
+
+		public static IDPool<AudioEvent, AudioEventTag> AudioEvents { get; internal set; }
 
 		/// <summary>
 		/// Registers a delegate to be ran when the synergy becomes active.

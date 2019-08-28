@@ -358,6 +358,20 @@ namespace Semi {
 			return music;
 		}
 
+		public AudioEvent RegisterAudioEvent(string id, AudioEvent ev) {
+			CheckMode();
+			id = GetFullID(id, true);
+			Gungeon.AudioEvents.Add(id, ev);
+			return ev;
+		}
 
+		public AudioEvent AddAudioEventConsequence(string target_ev, string consequence_ev) {
+			CheckMode();
+			target_ev = GetFullID(target_ev, false);
+			consequence_ev = GetFullID(consequence_ev, false);
+			var consequence = Gungeon.AudioEvents[consequence_ev];
+			Gungeon.AudioEvents[target_ev].AddConsequence(consequence);
+			return consequence;
+		}
 	}
 }
