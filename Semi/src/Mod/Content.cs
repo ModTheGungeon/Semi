@@ -223,8 +223,8 @@ namespace Semi {
 			enc_icon_id = GetFullID(enc_icon_id, false);
 			sprite_template_id = GetFullID(sprite_template_id, false);
 			name_key = GetFullID(name_key, false);
-			short_desc_key = GetFullID(name_key, false);
-			long_desc_key = GetFullID(name_key, false);
+			short_desc_key = GetFullID(short_desc_key, false);
+			long_desc_key = GetFullID(long_desc_key, false);
 
 			var sprite_def = SemiLoader.EncounterIconCollection.GetDefinition(enc_icon_id);
 			if (sprite_def == null) throw new ArgumentException($"There is no sprite definition '{sprite_def}' in the encounter icon collection");

@@ -57,36 +57,7 @@ namespace Semi {
 			public Dictionary<string, string> AttachPointAliases;
 
 			public void Write(StreamWriter writer) {
-				writer.WriteLine($"@id {ID}");
-				writer.WriteLine($"@name {Name}");
-				if (UnitW > 1 || UnitH > 1) writer.WriteLine($"@unit {UnitW}x{UnitH}");
-				if (SizeW > 1 || SizeH > 1) writer.WriteLine($"@size {SizeW}x{SizeH}");
-				writer.WriteLine($"@spritesheet {SpritesheetPath}");
-				if (Patch) writer.WriteLine($"@patch");
-				if (AttachPointAliases != null) {
-					foreach (var alias in AttachPointAliases) {
-						writer.WriteLine($"@attachpoint {alias.Key} {alias.Value}");
-					}
-				}
-
-				writer.WriteLine();
-
-				foreach (var def in Definitions) {
-					writer.Write($"{def.Key} {def.Value.X},{def.Value.Y} {def.Value.W}x{def.Value.H}");
-					if (AttachPoints.ContainsKey(def.Key)) {
-						for (var i = 0; i < AttachPoints[def.Key].Count; i++) {
-							var at = AttachPoints[def.Key][i];
-							writer.Write($" at {at.Alias} {at.X} {at.Y} {at.Z} {at.Angle}");
-						}
-					}
-					if (def.Value.FlipH) writer.Write(" fliph");
-					if (def.Value.FlipV) writer.Write(" flipv");
-					if (def.Value.SpritesheetOverride != null) {
-						writer.Write(" override ");
-						writer.Write(def.Value.SpritesheetOverride);
-					}
-					writer.WriteLine();
-				}
+				
 			}
 		}
 
@@ -287,7 +258,7 @@ namespace Semi {
 		internal IntVector2 ReadPosition() => ReadPair(',');
 
 		internal void ReadProperty() {
-			Advance(); // skip @
+			Advance(); // skip $
 			var prop_line = CurLine;
 			var prop_char = CurChar;
 			var propname = ReadUntilWhitespace();
@@ -356,7 +327,7 @@ namespace Semi {
 					CollectionParsed = true;
 					Animation.Collection = value;
 				} else if (propname == "namespace") {
-					if (!Patch) Throw("@namespace can only be used after a @patch property");
+					if (!Patch) Throw("$namespace can only be used after a $patch property");
 					PatchNamespace = value;
 				}
 			}
@@ -367,7 +338,7 @@ namespace Semi {
 
 			def.ID = ReadUntilWhitespace();
 			if (def.ID.Length == 0) Throw("Expected definition ID");
-			if (def.ID.Contains(":") && !def.ID.StartsWithInvariant($"{default_namespace}:") && !Patch) Throw("Cannot specify a different namespace outside of @patch mode");
+			if (def.ID.Contains(":") && !def.ID.StartsWithInvariant($"{default_namespace}:") && !Patch) Throw("Cannot specify a different namespace outside of $patch mode");
 			if (PatchNamespace != null && !def.ID.Contains(":")) def.ID = $"{PatchNamespace}:{def.ID}";
 			else if (!def.ID.Contains(":")) def.ID = $"@:{def.ID}";
 			if (Collection.Definitions.ContainsKey(def.ID)) {
@@ -403,10 +374,11 @@ namespace Semi {
 						Throw($"Attach point alias {attachpoint} doesn't exist");
 					}
 					EatWhitespace();
-					var x = ReadUntilWhitespace();
+
+					var x = ReadUntil(',');
 					if (x.Length == 0) Throw("Expected X attach point coordinate");
 					var x_float = float.Parse(x);
-					EatWhitespace();
+					Advance();
 					var y = ReadUntilWhitespace();
 					if (y.Length == 0) Throw("Expected Y attach point coordinate");
 					var y_float = float.Parse(y);
@@ -564,7 +536,7 @@ namespace Semi {
 			EatWhitespace();
 			if (Peek() == '\n') { Advance(); return; }
 
-			if (Peek() == '@') {
+			if (Peek() == '$') {
 				ReadProperty();
 			} else if (ParserMode == Mode.Collection) {
 				var def = ReadDefinition(default_namespace);

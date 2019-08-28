@@ -531,80 +531,62 @@ namespace Semi {
 		}
 
 		/// <summary>
-		/// Exports this collection to a file.
+		/// Exports this collection to the SemiCollection format.
 		/// </summary>
 		public void Export(string id, bool as_patch, string output_dir_path) {
 			var coll_path = Path.Combine(output_dir_path, $"{id}.semi.coll");
 			var spritesheet_path = Path.Combine(output_dir_path, $"{id}.png");
 
-			var coll = new Tk0dConfigParser.ParsedCollection {
-				ID = id,
-				Name = Name,
-				Patch = as_patch,
-				SizeW = 1,
-				SizeH = 1,
-				UnitW = 1,
-				UnitH = 1,
-				SpritesheetPath = "spritesheet.png"
-			};
+			using (var writer = new StreamWriter(File.OpenWrite(coll_path))) {
 
-			if (Wrap.textures.Length > 1) throw new NotSupportedException("Can't export collections with more than one texture yet");
+				writer.WriteLine($"@id {id}");
+				writer.WriteLine($"@name {Name}");
+				writer.WriteLine($"@unit 1x1");
+				writer.WriteLine($"@size 1x1");
+				writer.WriteLine($"@spritesheet {id}.png");
+				if (as_patch) writer.WriteLine($"@patch");
 
-			File.WriteAllBytes(spritesheet_path, ((Texture2D)Wrap.textures[0]).GetRW().EncodeToPNG());
+				if (Wrap.textures.Length > 1) throw new NotSupportedException("Can't export collections with more than one texture yet");
 
-			coll.Definitions = new Dictionary<string, Tk0dConfigParser.ParsedCollection.Definition>();
+				File.WriteAllBytes(spritesheet_path, ((Texture2D)Wrap.textures[0]).GetRW().EncodeToPNG());
 
-			for (var i = 0; i < SpriteDefinitions.Count; i++) {
-				var def = SpriteDefinitions[i];
+				var attach_points = new Dictionary<string, List<Tk0dConfigParser.ParsedCollection.AttachPointData>>();
+				var attach_point_names_encountered = new HashSet<string>();
+				var reverse_alias_map = new Dictionary<string, string>();
 
-				var exported = def.Export(null); // no overrides yet
-				coll.Definitions[exported.ID] = exported;
-			}
+				if (Wrap.SpriteDefinedAttachPoints != null) {
+					for (var i = 0; i < Wrap.SpriteDefinedAttachPoints.Count; i++) {
+						var ats = Wrap.SpriteDefinedAttachPoints[i];
+						for (var j = 0; j < ats.attachPoints.Length; j++) {
+							var at = ats.attachPoints[j];
+							if (!attach_point_names_encountered.Contains(at.name)) {
+								var alias = at.name.ToLowerInvariant().Replace(" ", "_");
+								reverse_alias_map[at.name] = alias;
+								attach_point_names_encountered.Add(at.name);
 
-			coll.AttachPoints = new Dictionary<string, List<Tk0dConfigParser.ParsedCollection.AttachPointData>>();
-			var attach_point_names_encountered = new HashSet<string>();
-			var reverse_alias_map = new Dictionary<string, string>();
-			coll.AttachPointAliases = new Dictionary<string, string>();
-
-			if (Wrap.SpriteDefinedAttachPoints != null) {
-				for (var i = 0; i < Wrap.SpriteDefinedAttachPoints.Count; i++) {
-					var ats = Wrap.SpriteDefinedAttachPoints[i];
-					for (var j = 0; j < ats.attachPoints.Length; j++) {
-						var at = ats.attachPoints[j];
-						if (!attach_point_names_encountered.Contains(at.name)) {
-							var alias = at.name.ToLowerInvariant().Replace(" ", "_");
-							coll.AttachPointAliases[alias] = at.name;
-							reverse_alias_map[at.name] = alias;
-							attach_point_names_encountered.Add(at.name);
+								writer.WriteLine($"@attachpoint {alias} {at.name}");
+							}
 						}
 					}
 				}
-			}
 
-			for (var i = 0; i < SpriteDefinitions.Count; i++) {
-				var def = SpriteDefinitions[i];
-				if (i >= Wrap.SpriteDefinedAttachPoints.Count) break; //optimization
-				if (Wrap.SpriteDefinedAttachPoints[i] == null) continue;
-				var ats = Wrap.SpriteDefinedAttachPoints[i];
+				writer.WriteLine();
 
-				var list = coll.AttachPoints[def.ID] = new List<Tk0dConfigParser.ParsedCollection.AttachPointData>();
+				for (var i = 0; i < SpriteDefinitions.Count; i++) {
+					var def = SpriteDefinitions[i];
 
-				for (var j = 0; j < ats.attachPoints.Length; j++) {
-					var at = ats.attachPoints[j];
-					list.Add(new Tk0dConfigParser.ParsedCollection.AttachPointData {
-						Angle = at.angle,
-						X = at.position.x,
-						Y = at.position.y,
-						Z = at.position.z,
-						Alias = reverse_alias_map[at.name],
-						AttachPoint = at.name,
-						DefinitionID = def.ID
-					});
+					writer.Write($"{def.ID} {def.X},{def.Y} {def.Width}x{def.Height}");
+					if (Wrap.SpriteDefinedAttachPoints != null && Wrap.SpriteDefinedAttachPoints.Count > i && Wrap.SpriteDefinedAttachPoints[i] != null) {
+						var ats = Wrap.SpriteDefinedAttachPoints[i];
+						for (var j = 0; i < ats.attachPoints.Length; i++) {
+							var at = ats.attachPoints[j];
+							writer.Write($" at {reverse_alias_map[at.name]} {at.position.x},{at.position.y} angle {at.angle}");
+						}
+					}
+					if (def.FlipH) writer.Write(" fliph");
+					if (def.FlipV) writer.Write(" flipv");
+					writer.WriteLine();
 				}
-			}
-
-			using (var f = new StreamWriter(File.OpenWrite(coll_path))) {
-				coll.Write(f);
 			}
 		}
 
@@ -700,7 +682,11 @@ namespace Semi {
 
 							var tk2d_attach_data = new tk2dSpriteDefinition.AttachPoint {
 								name = attach_data.AttachPoint,
-								position = new Vector3(attach_data.X, attach_data.Y, attach_data.Z),
+								position = new Vector3(
+									(float)attach_data.X / tk0d_def.Texture.width,
+									(float)attach_data.Y / tk0d_def.Texture.height,
+									attach_data.Z
+								),
 								angle = attach_data.Angle
 							};
 
@@ -846,20 +832,20 @@ namespace Semi {
 			set { Wrap.untrimmedBoundsDataExtents = value; }
 		}
 
-		public float X {
-			get { return Wrap.uvs[0].x * Texture.width; }
+		public int X {
+			get { return (int)Math.Round(Wrap.uvs[0].x * Texture.width); }
 		}
 
-		public float Y {
-			get { return Texture.height - (Wrap.uvs[0].y * Texture.height) - Height; }
+		public int Y {
+			get { return (int)Math.Round(Texture.height - (Wrap.uvs[0].y * Texture.height) - Height); }
 		}
 
-		public float Width {
-			get { return (Wrap.uvs[3].x * Texture.width) - X; }
+		public int Width {
+			get { return (int)Math.Round((Wrap.uvs[3].x * Texture.width) - X); }
 		}
 
-		public float Height {
-			get { return (Wrap.uvs[3].y * Texture.height) - (Wrap.uvs[0].y * Texture.height); }
+		public int Height {
+			get { return (int)Math.Round((Wrap.uvs[3].y * Texture.height) - (Wrap.uvs[0].y * Texture.height)); }
 		}
 
 		public bool FlipH {
@@ -959,10 +945,10 @@ namespace Semi {
 				FlipH = FlipH,
 				FlipV = FlipV,
 				SpritesheetOverride = spritesheet_path,
-				X = (int)Math.Round(X),
-				Y = (int)Math.Round(Y),
-				W = (int)Math.Round(Width),
-				H = (int)Math.Round(Height)
+				X = X,
+				Y = Y,
+				W = Width,
+				H = Height
 			};
 
 			return def;
