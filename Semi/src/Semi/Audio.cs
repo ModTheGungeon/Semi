@@ -166,6 +166,10 @@ namespace Semi {
 			RaySound.Play();
 		}
 
+		public void FireAndForget() {
+			RaySound.PlayMulti();
+		}
+
 		public override void Resume() {
 			RaySound.Resume();
 		}

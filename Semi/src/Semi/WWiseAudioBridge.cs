@@ -43,7 +43,10 @@ namespace Semi {
 				}
 			} else {
 				var track = Gungeon.ModAudioTracks[id];
-				track.Play();
+
+				if (track is Sound) ((Sound)track).FireAndForget(); // to allow sound overlap
+				else track.Play();
+
 				return null;
 			}
 		}

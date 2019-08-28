@@ -7,7 +7,6 @@ using System.Collections;
 using System.Linq;
 using UnityEngine;
 using Logger = ModTheGungeon.Logger;
-using System.Threading;
 
 namespace Semi {
 	/// <summary>
@@ -322,7 +321,7 @@ namespace Semi {
 		internal static void CommitContent() {
 			EncounterIconCollection.CommitDefinitionList();
 			I18N.ReloadLocalizations();
-			InitializeStreamBufferUpdateThread();
+			InitializeStreamBufferUpdateBehaviourCache();
 		}
 
 		/// <summary>
@@ -709,21 +708,35 @@ namespace Semi {
 
 			Logger.Debug($"Starting audio device");
 			RayAudio.AudioDevice.Initialize();
+
+			InitializeStreamBufferUpdateBehaviour();
 		}
 
 		/// <summary>
-		/// Starts the thread responsible for refreshing music stream buffers.
+		/// Initializes the stream buffer update object, which makes sure to refresh music stream buffers every frame.
 		/// </summary>
-		internal static void InitializeStreamBufferUpdateThread() {
-			Logger.Debug($"INITIALIZING: AUDIO STREAM BUFFER UPDATE THREAD");
+		internal static void InitializeStreamBufferUpdateBehaviour() {
+			Logger.Debug($"INITIALIZING: AUDIO STREAM BUFFER UPDATE");
+			MusicStreamBufferUpdateObject = new GameObject("SEMI: Music Stream Buffer Update Behaviour");
+			MusicStreamBufferUpdateObject.AddComponent<StreamBufferUpdateBehaviour>();
+		}
 
-			var tracks = new List<Audio>();
+		/// <summary>
+		/// Initializes the stream buffer update object's cache of Audio tracks.
+		/// </summary>
+		internal static void InitializeStreamBufferUpdateBehaviourCache() {
+			Logger.Debug($"INITIALIZING: AUDIO STREAM BUFFER UPDATE CACHE");
+
+			var len = Gungeon.ModAudioTracks.Count;
+
+			StreamBufferUpdateBehaviour.Paused = true;
+			StreamBufferUpdateBehaviour.Tracks = new List<Audio>();
+
 			foreach (var tr in Gungeon.ModAudioTracks.Entries) {
-				tracks.Add(tr);
+				StreamBufferUpdateBehaviour.Tracks.Add(tr);
 			}
 
-			var thread = StreamBufferUpdate.Thread = new Thread(StreamBufferUpdate.UpdateTracks);
-			thread.Start(tracks);
+			StreamBufferUpdateBehaviour.Paused = false;
 		}
 
 		/// <summary>
