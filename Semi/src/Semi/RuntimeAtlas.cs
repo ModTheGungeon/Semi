@@ -23,12 +23,16 @@ namespace Semi {
 		}
 
 		/// <summary>
-		/// Add the specified texture to the atlas.
+		/// Add a region of the specified texture to the atlas.
 		/// </summary>
 		/// <returns>The newly created segment.</returns>
 		/// <param name="tex">Texture to add.</param>
+		/// <param name="x">X origin.</param>
+		/// <param name="y">Y origin.</param>
+		/// <param name="width">Region width.</param>
+		/// <param name="height">Region height.</param>
 		/// <param name="apply">If set to <c>true</c>, will be applied after adding.</param>
-		public RuntimeAtlasSegment Pack(Texture2D tex, bool apply = false) {
+		public RuntimeAtlasSegment Pack(Texture2D tex, int x, int y, int width, int height, bool apply = false) {
 			RuntimeAtlasSegment segment;
 
 			for (int i = 0; i < Pages.Count; i++) {
@@ -110,7 +114,12 @@ namespace Semi {
 
 		private Rect texRect = new Rect();
 		private bool right = true;
+
 		public RuntimeAtlasSegment Pack(Texture2D tex, bool apply = false) {
+			return Pack(tex, 0, 0, tex.width, tex.height, apply);
+		}
+
+		public RuntimeAtlasSegment Pack(Texture2D tex, int x, int y, int width, int height, bool apply = false) {
 			texRect.Set(Padding, Padding, tex.width + Padding, tex.height + Padding);
 			bool fit = _Rects.Count == 0;
 
@@ -183,7 +192,7 @@ namespace Semi {
 			};
 			Segments.Add(segment);
 
-			Texture.SetPixels(segment.x, segment.y, segment.width, segment.height, tex.GetPixels());
+			Texture.SetPixels(segment.x, segment.y, segment.width, segment.height, tex.GetPixels(x, y, width, height));
 
 			++_Changes;
 			if (apply) {

@@ -322,7 +322,7 @@ namespace Semi {
 		public SpriteCollection LoadSpriteCollection(string path) {
 			CheckMode();
 			path = GetFullResourcePath(path);
-			var parsed = Tk0dConfigParser.ParseCollection(File.ReadAllText(path));
+			var parsed = Tk0dConfigParser.ParseCollection(File.ReadAllText(path), Config.ID);
 			var dir = Path.GetDirectoryName(path);
 			return SpriteCollection.Load(parsed, dir, Config.ID);
 		}
@@ -335,7 +335,7 @@ namespace Semi {
 		public SpriteAnimation LoadSpriteAnimation(string path) {
 			CheckMode();
 			path = GetFullResourcePath(path);
-			var parsed = Tk0dConfigParser.ParseAnimation(File.ReadAllText(path));
+			var parsed = Tk0dConfigParser.ParseAnimation(File.ReadAllText(path), Config.ID);
 			var dir = Path.GetDirectoryName(path);
 			return SpriteAnimation.Load(parsed, Config.ID);
 		}

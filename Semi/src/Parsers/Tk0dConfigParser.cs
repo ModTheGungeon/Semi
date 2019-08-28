@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace Semi {
@@ -23,6 +24,7 @@ namespace Semi {
 			public struct AttachPointData {
 				public string DefinitionID;
 				public string AttachPoint;
+				public string Alias;
 				public float X;
 				public float Y;
 				public float Z;
@@ -50,6 +52,42 @@ namespace Semi {
 			public string SpritesheetPath;
 			public Dictionary<string, Definition> Definitions;
 			public Dictionary<string, List<AttachPointData>> AttachPoints;
+
+			// for export usage
+			public Dictionary<string, string> AttachPointAliases;
+
+			public void Write(StreamWriter writer) {
+				writer.WriteLine($"@id {ID}");
+				writer.WriteLine($"@name {Name}");
+				if (UnitW > 1 || UnitH > 1) writer.WriteLine($"@unit {UnitW}x{UnitH}");
+				if (SizeW > 1 || SizeH > 1) writer.WriteLine($"@size {SizeW}x{SizeH}");
+				writer.WriteLine($"@spritesheet {SpritesheetPath}");
+				if (Patch) writer.WriteLine($"@patch");
+				if (AttachPointAliases != null) {
+					foreach (var alias in AttachPointAliases) {
+						writer.WriteLine($"@attachpoint {alias.Key} {alias.Value}");
+					}
+				}
+
+				writer.WriteLine();
+
+				foreach (var def in Definitions) {
+					writer.Write($"{def.Key} {def.Value.X},{def.Value.Y} {def.Value.W}x{def.Value.H}");
+					if (AttachPoints.ContainsKey(def.Key)) {
+						for (var i = 0; i < AttachPoints[def.Key].Count; i++) {
+							var at = AttachPoints[def.Key][i];
+							writer.Write($" at {at.Alias} {at.X} {at.Y} {at.Z} {at.Angle}");
+						}
+					}
+					if (def.Value.FlipH) writer.Write(" fliph");
+					if (def.Value.FlipV) writer.Write(" flipv");
+					if (def.Value.SpritesheetOverride != null) {
+						writer.Write(" override ");
+						writer.Write(def.Value.SpritesheetOverride);
+					}
+					writer.WriteLine();
+				}
+			}
 		}
 
 		/// <summary>
@@ -324,14 +362,14 @@ namespace Semi {
 			}
 		}
 
-		internal ParsedCollection.Definition ReadDefinition() {
+		internal ParsedCollection.Definition ReadDefinition(string default_namespace) {
 			var def = new ParsedCollection.Definition();
 
 			def.ID = ReadUntilWhitespace();
 			if (def.ID.Length == 0) Throw("Expected definition ID");
-			if (def.ID.Contains(":") && !Patch) Throw("Cannot specify the definition's namespace outside of @patch mode");
+			if (def.ID.Contains(":") && !def.ID.StartsWithInvariant($"{default_namespace}:") && !Patch) Throw("Cannot specify a different namespace outside of @patch mode");
 			if (PatchNamespace != null && !def.ID.Contains(":")) def.ID = $"{PatchNamespace}:{def.ID}";
-			else def.ID = $"@:{def.ID}";
+			else if (!def.ID.Contains(":")) def.ID = $"@:{def.ID}";
 			if (Collection.Definitions.ContainsKey(def.ID)) {
 				Throw("Duplicate definition");
 			}
@@ -376,6 +414,7 @@ namespace Semi {
 					var attach_data = new ParsedCollection.AttachPointData {
 						DefinitionID = def.ID,
 						AttachPoint = real_attachpoint,
+						Alias = attachpoint,
 						X = x_float,
 						Y = y_float,
 						Z = 0f, // haven't seen a need for this but can be implemented like angle
@@ -521,14 +560,14 @@ namespace Semi {
 			return frame;
 		}
 
-		internal void ReadLine() {
+		internal void ReadLine(string default_namespace) {
 			EatWhitespace();
 			if (Peek() == '\n') { Advance(); return; }
 
 			if (Peek() == '@') {
 				ReadProperty();
 			} else if (ParserMode == Mode.Collection) {
-				var def = ReadDefinition();
+				var def = ReadDefinition(default_namespace);
 				Collection.Definitions[def.ID] = def;
 			} else {
 				if (CurrentClip == null) {
@@ -553,12 +592,12 @@ namespace Semi {
 			Advance(); // eat newline
 		}
 
-		internal void Parse() {
+		internal void Parse(string default_namespace) {
 			if (ParserMode == Mode.Animation) Animation.Clips = new Dictionary<string, ParsedAnimation.Clip>();
 			else Collection.Definitions = new Dictionary<string, ParsedCollection.Definition>();
 
 			while (Peek() != null) {
-				ReadLine();
+				ReadLine(default_namespace);
 			}
 		}
 
@@ -567,9 +606,9 @@ namespace Semi {
 		/// </summary>
 		/// <returns>The parsed collection representation.</returns>
 		/// <param name="data">Contents of the Semi Collection file.</param>
-		public static ParsedCollection ParseCollection(string data) {
+		public static ParsedCollection ParseCollection(string data, string default_namespace) {
 			var parser = new Tk0dConfigParser(Mode.Collection, data);
-			parser.Parse();
+			parser.Parse(default_namespace);
 			return parser.Collection;
 		}
 
@@ -578,9 +617,9 @@ namespace Semi {
 		/// </summary>
 		/// <returns>The parsed animation representation.</returns>
 		/// <param name="data">Contents of the Semi Animation file.</param>
-		public static ParsedAnimation ParseAnimation(string data) {
+		public static ParsedAnimation ParseAnimation(string data, string default_namespace) {
 			var parser = new Tk0dConfigParser(Mode.Animation, data);
-			parser.Parse();
+			parser.Parse(default_namespace);
 			return parser.Animation;
 		}
 	}

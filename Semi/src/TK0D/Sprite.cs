@@ -372,7 +372,7 @@ namespace Semi {
 
 		/// <value>Globally Unique ID of the sprite collection.</value>
 		public string GUID {
-			get { return Wrap.spriteCollectionGUID; } 
+			get { return Wrap.spriteCollectionGUID; }
 			set { Wrap.spriteCollectionGUID = value; }
 		}
 
@@ -528,6 +528,84 @@ namespace Semi {
 			coll.textureFilterMode = Wrap.textureFilterMode;
 			coll.textureMipMaps = Wrap.textureMipMaps;
 			coll.version = Wrap.version;
+		}
+
+		/// <summary>
+		/// Exports this collection to a file.
+		/// </summary>
+		public void Export(string id, bool as_patch, string output_dir_path) {
+			var coll_path = Path.Combine(output_dir_path, $"{id}.semi.coll");
+			var spritesheet_path = Path.Combine(output_dir_path, $"{id}.png");
+
+			var coll = new Tk0dConfigParser.ParsedCollection {
+				ID = id,
+				Name = Name,
+				Patch = as_patch,
+				SizeW = 1,
+				SizeH = 1,
+				UnitW = 1,
+				UnitH = 1,
+				SpritesheetPath = "spritesheet.png"
+			};
+
+			if (Wrap.textures.Length > 1) throw new NotSupportedException("Can't export collections with more than one texture yet");
+
+			File.WriteAllBytes(spritesheet_path, ((Texture2D)Wrap.textures[0]).GetRW().EncodeToPNG());
+
+			coll.Definitions = new Dictionary<string, Tk0dConfigParser.ParsedCollection.Definition>();
+
+			for (var i = 0; i < SpriteDefinitions.Count; i++) {
+				var def = SpriteDefinitions[i];
+
+				var exported = def.Export(null); // no overrides yet
+				coll.Definitions[exported.ID] = exported;
+			}
+
+			coll.AttachPoints = new Dictionary<string, List<Tk0dConfigParser.ParsedCollection.AttachPointData>>();
+			var attach_point_names_encountered = new HashSet<string>();
+			var reverse_alias_map = new Dictionary<string, string>();
+			coll.AttachPointAliases = new Dictionary<string, string>();
+
+			if (Wrap.SpriteDefinedAttachPoints != null) {
+				for (var i = 0; i < Wrap.SpriteDefinedAttachPoints.Count; i++) {
+					var ats = Wrap.SpriteDefinedAttachPoints[i];
+					for (var j = 0; j < ats.attachPoints.Length; j++) {
+						var at = ats.attachPoints[j];
+						if (!attach_point_names_encountered.Contains(at.name)) {
+							var alias = at.name.ToLowerInvariant().Replace(" ", "_");
+							coll.AttachPointAliases[alias] = at.name;
+							reverse_alias_map[at.name] = alias;
+							attach_point_names_encountered.Add(at.name);
+						}
+					}
+				}
+			}
+
+			for (var i = 0; i < SpriteDefinitions.Count; i++) {
+				var def = SpriteDefinitions[i];
+				if (i >= Wrap.SpriteDefinedAttachPoints.Count) break; //optimization
+				if (Wrap.SpriteDefinedAttachPoints[i] == null) continue;
+				var ats = Wrap.SpriteDefinedAttachPoints[i];
+
+				var list = coll.AttachPoints[def.ID] = new List<Tk0dConfigParser.ParsedCollection.AttachPointData>();
+
+				for (var j = 0; j < ats.attachPoints.Length; j++) {
+					var at = ats.attachPoints[j];
+					list.Add(new Tk0dConfigParser.ParsedCollection.AttachPointData {
+						Angle = at.angle,
+						X = at.position.x,
+						Y = at.position.y,
+						Z = at.position.z,
+						Alias = reverse_alias_map[at.name],
+						AttachPoint = at.name,
+						DefinitionID = def.ID
+					});
+				}
+			}
+
+			using (var f = new StreamWriter(File.OpenWrite(coll_path))) {
+				coll.Write(f);
+			}
 		}
 
 		/// <summary>
@@ -768,6 +846,30 @@ namespace Semi {
 			set { Wrap.untrimmedBoundsDataExtents = value; }
 		}
 
+		public float X {
+			get { return Wrap.uvs[0].x * Texture.width; }
+		}
+
+		public float Y {
+			get { return Texture.height - (Wrap.uvs[0].y * Texture.height) - Height; }
+		}
+
+		public float Width {
+			get { return (Wrap.uvs[3].x * Texture.width) - X; }
+		}
+
+		public float Height {
+			get { return (Wrap.uvs[3].y * Texture.height) - (Wrap.uvs[0].y * Texture.height); }
+		}
+
+		public bool FlipH {
+			get { return IsPlaneFlippedHorizontally(Wrap.uvs); }
+		}
+
+		public bool FlipV {
+			get { return IsPlaneFlippedVertically(Wrap.uvs); }
+		}
+
 		/// <summary>
 		/// Patch the specified sprite definition with this definition.
 		/// </summary>
@@ -821,6 +923,57 @@ namespace Semi {
 			var new_def = new SpriteDefinition(new tk2dSpriteDefinition());
 			Patch(new_def, false, true);
 			return new_def;
+		}
+
+		/// <summary>
+		/// Exports this definition into a ParsedCollection.Definition.
+		/// </summary>
+		public Tk0dConfigParser.ParsedCollection.Definition Export(string spritesheet_path) {
+			Logger.Debug($"ID: {ID} X: {X} Y: {Y} W: {Width} H: {Height}");
+			Logger.Debug($"UVS: {Wrap.uvs[0].x},{Wrap.uvs[0].y} {Wrap.uvs[1].x},{Wrap.uvs[1].y} {Wrap.uvs[2].x},{Wrap.uvs[2].y} {Wrap.uvs[3].x},{Wrap.uvs[3].y}");
+			var normalized_uvs = new Vector2[4];
+			float lx = 999;
+			float ly = 999;
+			for (var i = 0; i < Wrap.uvs.Length; i++) {
+				if (Wrap.uvs[i].x < lx) lx = Wrap.uvs[i].x;
+				if (Wrap.uvs[i].y < ly) ly = Wrap.uvs[i].y;
+			}
+
+			for (var i = 0; i < Wrap.uvs.Length; i++) {
+				float x = 0;
+				float y = 0;
+
+				if (Wrap.uvs[i].x > lx) x = 1;
+				else x = 0;
+
+				if (Wrap.uvs[i].y > ly) y = 1;
+				else y = 0;
+
+				normalized_uvs[i] = new Vector2(x, y);
+			}
+
+			Logger.Debug($"NUVS: {normalized_uvs[0].x},{normalized_uvs[0].y} {normalized_uvs[1].x},{normalized_uvs[1].y} {normalized_uvs[2].x},{normalized_uvs[2].y} {normalized_uvs[3].x},{normalized_uvs[3].y}");
+
+			var def = new Tk0dConfigParser.ParsedCollection.Definition {
+				ID = ID,
+				FlipH = FlipH,
+				FlipV = FlipV,
+				SpritesheetOverride = spritesheet_path,
+				X = (int)Math.Round(X),
+				Y = (int)Math.Round(Y),
+				W = (int)Math.Round(Width),
+				H = (int)Math.Round(Height)
+			};
+
+			return def;
+		}
+
+		public static bool IsPlaneFlippedVertically(Vector2[] uvs) {
+			return uvs[3].y < uvs[0].y;
+		}
+
+		public static bool IsPlaneFlippedHorizontally(Vector2[] uvs) {
+			return uvs[0].x > uvs[1].x;
 		}
 
 		/// <summary>
