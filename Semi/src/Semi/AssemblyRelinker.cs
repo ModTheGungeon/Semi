@@ -20,12 +20,12 @@ namespace Semi {
 
         public static DGetRelinkedTypeReference GetRelinkedTypeReference = GetTypeInETGModule;
 
-        public static Assembly GetRelinkedAssembly(string dll_name, string dll_path, Stream stream) {
+        public static Assembly GetRelinkedAssembly(string mod_id, string dll_name, string dll_path, Stream stream) {
             if (ETGModule == null) {
                 ETGModule = ModuleDefinition.ReadModule(Assembly.GetAssembly(typeof(AssemblyRelinker)).Location, new ReaderParameters(ReadingMode.Immediate));
             }
 
-            string cachedName = dll_name.Substring(0, dll_name.Length - 3) + "dat";
+            string cachedName = mod_id + "_" + dll_name.Substring(0, dll_name.Length - 3) + "dat";
             string cachedPath = Path.Combine(
                 FileHierarchy.ModsCacheRelinkFolder,
                 cachedName

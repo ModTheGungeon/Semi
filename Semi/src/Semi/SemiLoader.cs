@@ -7,6 +7,7 @@ using System.Collections;
 using System.Linq;
 using UnityEngine;
 using Logger = ModTheGungeon.Logger;
+using System.Threading;
 
 namespace Semi {
 	/// <summary>
@@ -112,8 +113,9 @@ namespace Semi {
 
 		/// <summary>
 		/// Determines whether mods should undergo checksum validation.
+		/// The mod approval system is deprecated.
 		/// </summary>
-		internal static bool ValidateMods = true;
+		internal static bool ValidateMods = false;
 
 		/// <summary>
 		/// Determines whether .sum files should be written containing checksums of mods.
@@ -126,9 +128,9 @@ namespace Semi {
         internal static Dictionary<string, ModInfo> Mods;
 
 		/// <summary>
-		/// GameObject containing MonoBehaviours of loaded mods.
+		/// GameObjects containing MonoBehaviours of loaded mods.
 		/// </summary>
-        internal static UnityEngine.GameObject ModsStorageObject;
+        internal static List<UnityEngine.GameObject> ModsStorageObjects;
 
 		/// <summary>
 		/// GameObject containing StreamBufferUpdateBehaviour to update buffers on music streams (to let them play correctly).
@@ -215,7 +217,7 @@ namespace Semi {
 			ModLoadErrors = new List<ModError>();
 
 			Logger.Debug($"Initializing Semi storage GameObjects");
-            ModsStorageObject = new UnityEngine.GameObject("Semi Mod Loader");
+			ModsStorageObjects = new List<GameObject>();
 			SpriteCollectionStorageObject = new UnityEngine.GameObject("Semi Mod Sprite Collections");
 			SpriteTemplateStorageObject = new UnityEngine.GameObject("Semi Mod Sprite Templates");
 			AnimationTemplateStorageObject = new UnityEngine.GameObject("Semi Mod Animation Templates");
@@ -224,7 +226,6 @@ namespace Semi {
 			SpriteTemplateStorageObject.SetActive(false);
 			AnimationTemplateStorageObject.SetActive(false);
 
-			UnityEngine.Object.DontDestroyOnLoad(ModsStorageObject);
 			UnityEngine.Object.DontDestroyOnLoad(SpriteCollectionStorageObject);
 			UnityEngine.Object.DontDestroyOnLoad(SpriteTemplateStorageObject);
 			UnityEngine.Object.DontDestroyOnLoad(AnimationTemplateStorageObject);
@@ -251,7 +252,10 @@ namespace Semi {
 				};
 
 				Console = new DebugConsole.Console();
-				ConsoleController = ModsStorageObject.AddComponent<DebugConsole.ConsoleController>();
+				var console_go = new GameObject("Debug Console");
+				UnityEngine.Object.DontDestroyOnLoad(console_go);
+				ModsStorageObjects.Add(console_go);
+				ConsoleController = console_go.AddComponent<DebugConsole.ConsoleController>();
 				UnityEngine.Object.DontDestroyOnLoad(ConsoleController);
 			}
 
@@ -318,7 +322,7 @@ namespace Semi {
 		internal static void CommitContent() {
 			EncounterIconCollection.CommitDefinitionList();
 			I18N.ReloadLocalizations();
-			InitializeStreamBufferUpdateBehaviourCache();
+			InitializeStreamBufferUpdateThread();
 		}
 
 		/// <summary>
@@ -495,7 +499,7 @@ namespace Semi {
                 
             Assembly asm;
             using (FileStream f = File.OpenRead(dll_path)) {
-                asm = AssemblyRelinker.GetRelinkedAssembly(dll_name, dll_path, f);
+                asm = AssemblyRelinker.GetRelinkedAssembly(mod_config.ID, dll_name, dll_path, f);
             }
 
             if (asm == null) throw new ModLoadException(mod_config.ID, "Failed loading/relinking assembly");
@@ -521,7 +525,11 @@ namespace Semi {
                 var type = types[i];
                 if (!typeof(Mod).IsAssignableFrom(type) || type.IsAbstract) continue;
 
-                Mod mod_instance = (Mod)ModsStorageObject.AddComponent(type);
+				var mod_go = new GameObject($"Semi Mod '{mod_config.ID}' GameObject");
+				UnityEngine.Object.DontDestroyOnLoad(mod_go);
+				ModsStorageObjects.Add(mod_go);
+                Mod mod_instance = (Mod)mod_go.AddComponent(type);
+				Logger.Debug($"Type name: {mod_instance.GetType().FullName}");
 				mod_instance.Logger = new Logger(mod_config.Name ?? mod_config.ID);
                 mod_config.Instance = mod_instance;
 
@@ -701,35 +709,21 @@ namespace Semi {
 
 			Logger.Debug($"Starting audio device");
 			RayAudio.AudioDevice.Initialize();
-
-			InitializeStreamBufferUpdateBehaviour();
 		}
 
 		/// <summary>
-		/// Initializes the stream buffer update object, which makes sure to refresh music stream buffers every frame.
+		/// Starts the thread responsible for refreshing music stream buffers.
 		/// </summary>
-		internal static void InitializeStreamBufferUpdateBehaviour() {
-			Logger.Debug($"INITIALIZING: AUDIO STREAM BUFFER UPDATE");
-			MusicStreamBufferUpdateObject = new GameObject("SEMI: Music Stream Buffer Update Behaviour");
-			MusicStreamBufferUpdateObject.AddComponent<StreamBufferUpdateBehaviour>();
-		}
+		internal static void InitializeStreamBufferUpdateThread() {
+			Logger.Debug($"INITIALIZING: AUDIO STREAM BUFFER UPDATE THREAD");
 
-		/// <summary>
-		/// Initializes the stream buffer update object's cache of Audio tracks.
-		/// </summary>
-		internal static void InitializeStreamBufferUpdateBehaviourCache() {
-			Logger.Debug($"INITIALIZING: AUDIO STREAM BUFFER UPDATE CACHE");
-
-			var len = Gungeon.ModAudioTracks.Count;
-
-			StreamBufferUpdateBehaviour.Paused = true;
-			StreamBufferUpdateBehaviour.Tracks = new List<Audio>();
-
+			var tracks = new List<Audio>();
 			foreach (var tr in Gungeon.ModAudioTracks.Entries) {
-				StreamBufferUpdateBehaviour.Tracks.Add(tr);
+				tracks.Add(tr);
 			}
 
-			StreamBufferUpdateBehaviour.Paused = false;
+			var thread = StreamBufferUpdate.Thread = new Thread(StreamBufferUpdate.UpdateTracks);
+			thread.Start(tracks);
 		}
 
 		/// <summary>

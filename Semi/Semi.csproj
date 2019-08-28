@@ -192,6 +192,7 @@
     <Compile Include="src\Patches\TK0D\tk2dSpriteCollectionData.cs" />
     <Compile Include="src\Mod\Misc.cs" />
     <Compile Include="src\Semi\RuntimeAtlas.cs" />
+    <Compile Include="src\Extensions\PickupObject.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="src\" />

@@ -15,6 +15,7 @@ namespace Semi.Patches {
 		public static MainMenuFoyerController Instance = null;
 		public List<dfControl> CustomFadingControls = null;
 		private static bool _OpenedLoadErrorScreen = false;
+		private static bool _InitializedMainMenuUIHelpers = false;
 
 		private extern void orig_Awake();
 
@@ -31,7 +32,10 @@ namespace Semi.Patches {
 
 		public new void InitializeMainMenu() {
 			orig_InitializeMainMenu();
-			SemiLoader.InitializeMainMenuUIHelpers();
+			if (!_InitializedMainMenuUIHelpers) {
+				SemiLoader.InitializeMainMenuUIHelpers();
+				_InitializedMainMenuUIHelpers = true;
+			}
 		}
 
 		[MonoModIgnore]
