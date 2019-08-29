@@ -45,6 +45,20 @@ namespace Semi {
 	}
 
 	/// <summary>
+	/// Thrown when a mod depends on a mod that isn't installed.
+	/// </summary>
+	public class MissingDependencyException : ModLoadException {
+		public MissingDependencyException(string mod_id, string dep_id) : base(mod_id, $"Missing dependency: mod '{dep_id}' is not installed") { }
+	}
+
+	/// <summary>
+	/// Thrown when two mods depend on eachother.
+	/// </summary>
+	public class CyclicDependencyException : ModLoadException {
+		public CyclicDependencyException(string mod_id, string dep_id) : base(mod_id, $"Cyclic dependency detected: '{dep_id}' caused '{mod_id}' to load, but now '{mod_id}' wants to cause '{dep_id}' to load") { }
+	}
+
+	/// <summary>
 	/// Main class of the Semi mod loader.
 	/// </summary>
 	public static class SemiLoader {
@@ -74,7 +88,7 @@ namespace Semi {
 			/// <param name="instance">Mod instance.</param>
 			/// <param name="config">Metadata.</param>
 			/// <param name="path">Path.</param>
-			public ModInfo(Mod instance, ModConfig config, string path) {
+			public ModInfo(ModConfig config, string path, Mod instance = null) {
 				Instance = instance;
 				Config = config;
 				Path = path;
@@ -120,6 +134,16 @@ namespace Semi {
 		/// Determines whether .sum files should be written containing checksums of mods.
 		/// </summary>
 		internal static bool SaveModChecksums = false;
+
+		/// <summary>
+		/// List determining the final order of loading mods.
+		/// </summary>
+		internal static List<ModConfig> ModLoadOrder;
+
+		/// <summary>
+		/// List containing all the mod infos for all the mods present in SemiMods.
+		/// </summary>
+		internal static Dictionary<string, ModInfo> FlatModInfos;
 
 		/// <summary>
 		/// Dictionary containing loaded mods.
@@ -354,40 +378,67 @@ namespace Semi {
 		/// Loads mods from the SemiMods folder, respecting order.txt, blacklist.txt and MySemiMods.txt.
 		/// </summary>
         internal static void LoadMods() {
-            Logger.Info("Loading mods");
+			FlatModInfos = new Dictionary<string, ModInfo>();
 
-            var mods_dir = FileHierarchy.ModsFolder;
-            var mod_files = Directory.GetFileSystemEntries(mods_dir);
+			var mods_dir = FileHierarchy.ModsFolder;
+			var mod_files = Directory.GetFileSystemEntries(mods_dir);
+			var ignore_ary = SimpleListFileParser.ParseFile(FileHierarchy.ModsBlacklistFile, trim: true);
+			var order_ary = SimpleListFileParser.ParseFile(FileHierarchy.ModsOrderFile, trim: true);
+			List<ModInfo> ordered_infos = null;
 
-            var order_ary = SimpleListFileParser.ParseFile(FileHierarchy.ModsOrderFile, trim: true);
-            var ignore_ary = SimpleListFileParser.ParseFile(FileHierarchy.ModsBlacklistFile, trim: true);
-			var my_mods_ary = SimpleListFileParser.ParseFile(FileHierarchy.MyModsFile, trim: true);
+			Logger.Debug($"Preloading mods.");
 
-            List<string> loaded_mods_list = null;
-            // we only need this list if there are mods with forced order
+			for (int i = 0; i < mod_files.Length; i++) {
+				var mod_file = mod_files[i];
+				Logger.Debug($"Entry: {mod_file}");
 
-            if (order_ary != null) {
-                Logger.Debug("Load order config exists");
-                loaded_mods_list = new List<string>();
+				var filename = Path.GetFileName(mod_file);
 
-                for (int i = 0; i < order_ary.Length; i++) {
-                    var filename = order_ary[i];
-                    var mod_file = Path.Combine(FileHierarchy.ModsFolder, filename);
-                    Logger.Debug($"Entry: '{mod_file}'");
+				if (filename == FileHierarchy.MODS_ORDER_FILE_NAME) continue;
+				if (filename == FileHierarchy.MODS_BLACKLIST_FILE_NAME) continue;
+				if (filename == FileHierarchy.MODS_CACHE_FOLDER_NAME) continue;
+				if (filename.EndsWithInvariant(".sum")) continue;
 
-                    if (ignore_ary != null && ignore_ary.Contains(filename)) continue;
+				if (ignore_ary != null && ignore_ary.Contains(filename)) continue;
 
-                    if (File.Exists(mod_file)) throw new Exception("mod archives not supported yet");
-					if (!Directory.Exists(mod_file)) throw new ModPreloadException($"The load order file specifies a '{filename}' mod but neither a file nor a directory exists with that name in the mods folder.");
+				if (File.Exists(mod_file)) throw new Exception("mod archives not supported yet");
+				try {
+					var is_ordered = order_ary != null && order_ary.Contains(filename);
+					
+					var info = PreloadModDir(filename, mod_file, order_ary != null && order_ary.Contains(filename));
 
-                    loaded_mods_list.Add(filename);
+					if (is_ordered) {
+						if (ordered_infos == null) ordered_infos = new List<ModInfo>();
+						ordered_infos.Add(info);
+					}
+				} catch (Exception e) {
+					ModLoadErrors.Add(new ModError {
+						Name = CurrentLoadingModName,
+						ID = CurrentLoadingModID ?? filename,
+						Exception = e
+					});
+					Logger.Error($"Failed preloading mod: [{e.GetType().Name}] {e.Message}");
+					Logger.ErrorPretty(e.StackTrace);
+				}
+			}
+
+			Logger.Debug($"{FlatModInfos.Count} mods found.");
+
+			ModLoadOrder = new List<ModConfig>();
+
+			if (ordered_infos != null) {
+				Logger.Debug($"Loading ordered mods first");
+
+				for (var i = 0; i < ordered_infos.Count; i++) {
+					var mod_info = ordered_infos[i];
+					Logger.Debug($"Forced order mod #{i + 1}: '{mod_info.Config.ID}'");
 
 					try {
-						LoadModDir(filename, mod_file, my_mods_ary);
+						LoadMod(mod_info);
 					} catch (Exception e) {
 						ModLoadErrors.Add(new ModError {
 							Name = CurrentLoadingModName,
-							ID = CurrentLoadingModID ?? filename,
+							ID = CurrentLoadingModID ?? "???",
 							Exception = e
 						});
 						Logger.Error($"Failed loading mod: [{e.GetType().Name}] {e.Message}");
@@ -396,33 +447,23 @@ namespace Semi {
                 }
             }
 
-            for (int i = 0; i < mod_files.Length; i++) {
-                var mod_file = mod_files[i];
-                Logger.Debug($"Entry: {mod_file}");
+            Logger.Debug($"Loading mods");
 
-                var filename = Path.GetFileName(mod_file);
+			foreach (var mod in FlatModInfos) {
+				Logger.Debug($"Mod: '{mod.Key}'");
 
-                if (filename == FileHierarchy.MODS_ORDER_FILE_NAME) continue;
-                if (filename == FileHierarchy.MODS_BLACKLIST_FILE_NAME) continue;
-                if (filename == FileHierarchy.MODS_CACHE_FOLDER_NAME) continue;
-				if (filename.EndsWithInvariant(".sum")) continue;
-
-                if (ignore_ary != null && ignore_ary.Contains(filename)) continue;
-                if (loaded_mods_list != null && loaded_mods_list.Contains(filename)) continue;
-
-                if (File.Exists(mod_file)) throw new Exception("mod archives not supported yet");
-                try {
-					LoadModDir(filename, mod_file, my_mods_ary);
+				try {
+					LoadMod(mod.Value);
 				} catch (Exception e) {
 					ModLoadErrors.Add(new ModError {
 						Name = CurrentLoadingModName,
-						ID = CurrentLoadingModID ?? filename,
+						ID = CurrentLoadingModID ?? "???",
 						Exception = e
 					});
 					Logger.Error($"Failed loading mod: [{e.GetType().Name}] {e.Message}");
 					Logger.ErrorPretty(e.StackTrace);
 				}
-            }
+			}
         }
 
 		/// <summary>
@@ -451,57 +492,86 @@ namespace Semi {
         }
 
 		/// <summary>
-		/// Loads a mod from a directory.
+		/// Preloads a mod into a flat dictionary to enable dependency resolution later.
 		/// </summary>
-		/// <param name="dir_name">Name of the directory.</param>
-		/// <param name="dir_path">Path to the directory.</param>
-		/// <param name="trusted_mod_ids">An array of mod IDs that are trusted and don't need to have their checksum verified.</param>
-        internal static void LoadModDir(string dir_name, string dir_path, string[] trusted_mod_ids = null) {
-			CurrentLoadingModID = null;
-			CurrentLoadingModName = null;
+		/// <param name="dir_name">Name of the extracted mod dir.</param>
+		/// <param name="dir_path">Path to the extracted mod dir.</param>
+		/// <param name="priority">If set to <c>true</c>, Priority will be set on the new ModInfo.</param>
+		internal static ModInfo PreloadModDir(string dir_name, string dir_path, bool priority = false) {
+			var config_path = Path.Combine(dir_path, FileHierarchy.MOD_INFO_FILE_NAME);
+			if (!File.Exists(config_path)) throw new InvalidConfigException("???", $"Tried loading mod '{dir_name}' but it has no {FileHierarchy.MOD_INFO_FILE_NAME} file.");
 
-            var config_path = Path.Combine(dir_path, FileHierarchy.MOD_INFO_FILE_NAME);
-            if (!File.Exists(config_path)) throw new InvalidConfigException("???", $"Tried loading mod '{dir_name}' but it has no {FileHierarchy.MOD_INFO_FILE_NAME} file.");
-
-            var mod_config = SerializationHelper.DeserializeFile<ModConfig>(config_path);
-            if (mod_config.ID == null) throw new InvalidConfigException("???", $"Tried loading mod '{dir_name}', but the config file does not specify an ID");
+			var mod_config = SerializationHelper.DeserializeFile<ModConfig>(config_path);
+			if (mod_config.ID == null) throw new InvalidConfigException("???", $"Tried loading mod '{dir_name}', but the config file does not specify an ID");
+			ValidateModID(dir_path, mod_config.ID);
 			if (mod_config.APIVersion == null) throw new InvalidConfigException(mod_config.ID, $"Mod does not specify an api_version, and therefore cannot be loaded");
 
 			if (mod_config.APIVersion.Value != API_VERSION) throw new OutdatedModException(mod_config.ID, mod_config.APIVersion.Value);
 
-			CurrentLoadingModID = mod_config.ID;
-			CurrentLoadingModName = mod_config.Name;
+			mod_config.Priority = priority;
 
-            ValidateModID(dir_name, mod_config.ID);
+			var mod_info = new ModInfo(mod_config, dir_path, null);
 
-			if (trusted_mod_ids != null && trusted_mod_ids.Contains(mod_config.ID)) {
-				Logger.Debug($"Is trusted mod - not verifying checksum");
-			} else if (ValidateMods) {
-				Logger.Debug($"Verifying mod checksum");
-				var hash = ModVerification.GetModHash(dir_path, mod_config);
-				if (SaveModChecksums) {
-					File.WriteAllBytes(Path.Combine(FileHierarchy.ModsFolder, $"{dir_name}.sum"), hash);
-				}
-				if (ModVerification.ValidateHashOnline(mod_config.ID, hash)) {
-					Logger.Info($"Valid mod checksum");
-				} else {
-					Logger.Error($"Invalid mod checksum");
-					throw new ChecksumMismatchException(mod_config.ID);
+			Logger.Debug($"Adding config for '{mod_config.ID}'");
+			FlatModInfos[mod_config.ID] = mod_info;
+
+			return mod_info;
+		}
+
+		/// <summary>
+		/// Loads a mod.
+		/// </summary>
+		/// <param name="info">Preloaded mod info.</param>
+		/// <param name="tree_history">Hash set of mod IDs in the dependency tree. This is used to detect cyclic dependencies.</param>
+		internal static void LoadMod(ModInfo info, HashSet<string> tree_history = null) {
+			Logger.Debug($"Loading: {info.Config.ID}");
+			CurrentLoadingModID = null;
+			CurrentLoadingModName = null;
+
+			var config = info.Config;
+
+			if (Mods.ContainsKey(config.ID)) return; // already loaded!
+
+			CurrentLoadingModID = config.ID;
+			CurrentLoadingModName = config.Name;
+
+            var dll_name = config.DLL ?? "mod.dll";
+			var dll_path = Path.Combine(info.Path, dll_name);
+            if (!File.Exists(dll_path)) throw new InvalidConfigException(config.ID, $"Tried loading mod '{config.ID}' but it doesn't have the specified DLL file {dll_name}.");
+
+			if (config.Depends != null) {
+				if (tree_history == null) tree_history = new HashSet<string>();
+				tree_history.Add(config.ID);
+				            
+				for (var i = 0; i < config.Depends.Length; i++) {
+					var dep = config.Depends[i].Trim();
+					Logger.Debug($"'{config.ID}' dependency: '{dep}'");
+					ModInfo dep_info = null;
+					if (!FlatModInfos.TryGetValue(dep, out dep_info)) {
+						throw new MissingDependencyException(config.ID, dep);
+					}
+
+					if (tree_history != null && tree_history.Contains(dep)) {
+						throw new CyclicDependencyException(config.ID, dep);
+					}
+
+					LoadMod(dep_info, tree_history);
 				}
 			}
 
-            var dll_name = mod_config.DLL ?? "mod.dll";
-            var dll_path = Path.Combine(dir_path, dll_name);
-            if (!File.Exists(config_path)) throw new InvalidConfigException(mod_config.ID, $"Tried loading mod '{dir_name}' but it doesn't have the specified DLL file {dll_name}.");
-
-            AppDomain.CurrentDomain.AssemblyResolve += GenerateModAssemblyResolver(dir_path);
+			AppDomain.CurrentDomain.AssemblyResolve += GenerateModAssemblyResolver(info.Path);
                 
             Assembly asm;
             using (FileStream f = File.OpenRead(dll_path)) {
-                asm = AssemblyRelinker.GetRelinkedAssembly(mod_config.ID, dll_name, dll_path, f);
+                asm = AssemblyRelinker.GetRelinkedAssembly(config.ID, dll_name, dll_path, f);
             }
 
-            if (asm == null) throw new ModLoadException(mod_config.ID, "Failed loading/relinking assembly");
+            if (asm == null) throw new ModLoadException(config.ID, "Failed loading/relinking assembly");
+
+			if (info.Config.ModType == ModConfig.Type.Library) {
+				Logger.Debug($"Mod is a library; not creating any Mod instances");
+				return;
+			}
 
             Logger.Debug($"Searching for Mod subclasses");
 			Type[] types = null;
@@ -524,21 +594,18 @@ namespace Semi {
                 var type = types[i];
                 if (!typeof(Mod).IsAssignableFrom(type) || type.IsAbstract) continue;
 
-				var mod_go = new GameObject($"Semi Mod '{mod_config.ID}' GameObject");
+				var mod_go = new GameObject($"Semi Mod '{config.ID}' GameObject");
 				UnityEngine.Object.DontDestroyOnLoad(mod_go);
 				ModsStorageObjects.Add(mod_go);
                 Mod mod_instance = (Mod)mod_go.AddComponent(type);
 				Logger.Debug($"Type name: {mod_instance.GetType().FullName}");
-				mod_instance.Logger = new Logger(mod_config.Name ?? mod_config.ID);
-                mod_config.Instance = mod_instance;
+				mod_instance.Logger = new Logger(config.Name ?? config.ID);
 
-				var mod_info = Mods[mod_config.ID] = new ModInfo(
-								mod_instance,
-								mod_config,
-								dir_path
-				);
+				info.Instance = mod_instance;
+				config.Instance = mod_instance;
+				Mods[config.ID] = info;
 
-				mod_instance.Info = mod_info;
+				mod_instance.Info = info;
 
                 mod_instance.Loaded();
             }

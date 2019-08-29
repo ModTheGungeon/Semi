@@ -3,6 +3,11 @@ using YamlDotNet.Serialization;
 
 namespace Semi {
     public class ModConfig {
+		public enum Type {
+			Mod,
+			Library
+		}
+
         [YamlMember(Alias = "id")]
         public string ID { get; set; }
 
@@ -23,6 +28,14 @@ namespace Semi {
 
         [YamlMember(Alias = "description")]
         public string Description { get; set; } = "Unknown";
+
+		[YamlMember(Alias = "depends")]
+		public string[] Depends { get; set; } = null;
+
+		[YamlMember(Alias = "type")]
+		public Type ModType { get; set; } = Type.Mod;
+
+		internal bool Priority = false;
 
 		[YamlMember(Alias = "If you see this, the MonoMod bug has been fixed.")]
 		private string _MonoModBugWorkaround { get; set; } = "Unknown";
