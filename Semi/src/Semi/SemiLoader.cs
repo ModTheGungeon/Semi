@@ -322,6 +322,8 @@ namespace Semi {
 
 			EncounterIconCollection = AmmonomiconController.ForceInstance.EncounterIconCollection.Wrap();
 
+			InitializeModOptions();
+
 			BeginRegisteringContent();
 			RegisterContentInMods();
 			CommitContent();
@@ -346,6 +348,15 @@ namespace Semi {
 			EncounterIconCollection.CommitDefinitionList();
 			I18N.ReloadLocalizations();
 			InitializeStreamBufferUpdateBehaviourCache();
+
+			foreach (var mod in Mods) {
+				var page = UI.CreateModOptionsPage(mod.Value);
+				mod.Value.Instance.OptionsPage = page;
+				for (var i = 0; i < mod.Value.Instance.MenuOptions.Count; i++) {
+					var opt = mod.Value.Instance.MenuOptions[i];
+					opt.Insert(page);
+				}
+			}
 		}
 
 		/// <summary>
@@ -637,6 +648,12 @@ namespace Semi {
 			return ary;
 		}
 
+		internal static void InitializeModOptions() {
+			Logger.Debug($"INITIALIZING: MOD OPTIONS");
+
+			Gungeon.ModMenuOptions = new IDPool<UI.MenuOption>();
+		}
+
 		/// <summary>
 		/// Loads ID maps (mappings of the game's internal numeric IDs to the string ID system) from the assembly's resources.
 		/// (Coroutine)
@@ -696,9 +713,9 @@ namespace Semi {
 				Gungeon.AudioEvents = IDMapParser<AudioEvent, Gungeon.AudioEventTag>.Parse(
 					stream,
 					"gungeon",
-					(id) => new WWiseAudioEvent(id),
+					(id) => new AudioEvent.WWise(id),
 					do_after: (id, ev) => {
-						WWiseAudioEvent.ReverseIDMap[((WWiseAudioEvent)ev).WWiseEventName] = id;
+						AudioEvent.WWise.ReverseIDMap[((AudioEvent.WWise)ev).WWiseEventName] = id;
 					}
 				);
 			}
@@ -745,7 +762,7 @@ namespace Semi {
 				if (stream != null) {
 					var text = new StreamReader(stream).ReadToEnd();
 					Logger.Debug($"Found Semi localization stream for {lang_id}");
-					Gungeon.Localizations[$"semi:{lang_name}_core"] = new I18N.RuntimeLocalization("semi", text, lang_id, I18N.StringTable.Core);
+					Gungeon.Localizations[$"semi:{lang_name}_core"] = new I18N.RuntimeLocalization("semi", text, lang_id, I18N.StringTable.UI);
 					stream.Close();
 				}
 			}
@@ -908,6 +925,12 @@ namespace Semi {
 			UI.MainMenuGUIManager = dfGUIManager.ActiveManagers.ElementAt(2);
 
 			UI.GungeonFont = Patches.MainMenuFoyerController.Instance.VersionLabel.Font;
+
+			// after i18n is done
+			var tab_mods_selector = Patches.PreOptionsMenuController.Instance.TabModsSelector;
+			tab_mods_selector.Text = "#semi:TAB_MODS";
+			tab_mods_selector.RelativePosition = new Vector2(Patches.PreOptionsMenuController.Instance.MainPanel.Width / 2 - tab_mods_selector.Width / 2, tab_mods_selector.RelativePosition.y);
+			tab_mods_selector.Localize();
 
 			InitializeLoadErrorScreen();
 		}

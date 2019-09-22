@@ -194,6 +194,12 @@
     <Compile Include="src\Audio\WWiseAudioBridge.cs" />
     <Compile Include="src\Audio\Audio.cs" />
     <Compile Include="src\Audio\AudioEvent.cs" />
+    <Compile Include="src\Patches\FullOptionsMenuController.cs" />
+    <Compile Include="src\Patches\PreOptionsMenuController.cs" />
+    <Compile Include="src\Patches\dfScrollPanel.cs" />
+    <Compile Include="src\Patches\dfButton.cs" />
+    <Compile Include="src\Patches\dfCheckbox.cs" />
+    <Compile Include="src\Patches\BraveOptionsMenuItem.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="src\" />

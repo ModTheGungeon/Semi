@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Logger = ModTheGungeon.Logger;
 
@@ -41,6 +42,20 @@ namespace Semi {
 				throw new InvalidOperationException("Cannot change mod config after the mod is loaded");
 			}
 		}
+
+		private dfScrollPanel _OptionsPage;
+		public dfScrollPanel OptionsPage {
+			get { return _OptionsPage; }
+			set {
+				if (_OptionsPage == null) {
+					_OptionsPage = value;
+					return;
+				}
+				throw new InvalidOperationException("Cannot change options page after the mod is loaded");
+			}
+		}
+
+		internal List<UI.MenuOption> MenuOptions = new List<UI.MenuOption>();
 
 		/// <summary>
 		/// Called after all <c>Loaded</c> methods are ran.

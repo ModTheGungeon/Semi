@@ -76,6 +76,14 @@ namespace Semi {
 			return id;
 		}
 
+		public string[] GetFullIDArray(string[] ids, bool require_local) {
+			var new_ary = new string[ids.Length];
+			for (var i = 0; i < ids.Length; i++) {
+				new_ary[i] = GetFullID(ids[i], require_local);
+			}
+			return new_ary;
+		}
+
 		internal void CheckMode() {
 			if (!RegisteringMode) throw new InvalidOperationException($"Content can only be registered in the RegisterContent method.");
 		}
@@ -372,6 +380,35 @@ namespace Semi {
 			var consequence = Gungeon.AudioEvents[consequence_ev];
 			Gungeon.AudioEvents[target_ev].AddConsequence(consequence);
 			return consequence;
+		}
+
+		public UI.CheckboxMenuOption AddCheckboxMenuOption(string id, string label_loc_id, Action<bool> on_changed) {
+			CheckMode();
+			id = GetFullID(id, true);
+			label_loc_id = GetFullID(label_loc_id, false);
+
+			var option = new UI.CheckboxMenuOption(label_loc_id);
+			option.Changed = on_changed;
+			Gungeon.ModMenuOptions.Add(id, option);
+
+			MenuOptions.Add(option);
+
+			return option;
+		}
+
+		public UI.ListMenuOption AddListMenuOption(string id, string label_loc_id, string[] options_loc_ids, Action<string> on_changed) {
+			CheckMode();
+			id = GetFullID(id, true);
+			label_loc_id = GetFullID(label_loc_id, false);
+			options_loc_ids = GetFullIDArray(options_loc_ids, false);
+
+			var option = new UI.ListMenuOption(label_loc_id, options_loc_ids);
+			Gungeon.ModMenuOptions.Add(id, option);
+			option.Changed = on_changed;
+
+			MenuOptions.Add(option);
+
+			return option;
 		}
 	}
 }

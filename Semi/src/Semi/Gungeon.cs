@@ -101,7 +101,16 @@ namespace Semi {
 		/// <value>ID pool of mod sounds.</value>
 		public static IDPool<Audio> ModAudioTracks { get; internal set; }
 
+		/// <summary>
+		/// ID pool containing audio events.
+		/// This ID pool includes Gunegon (WWise) audio events.
+		/// </summary>
+		/// <value>ID pool of audio events.</value>
 		public static IDPool<AudioEvent, AudioEventTag> AudioEvents { get; internal set; }
+
+		public static IDPool<UI.MenuOption> MenuOptionTypes { get; internal set; }
+
+		public static IDPool<UI.MenuOption> ModMenuOptions { get; internal set; }
 
 		/// <summary>
 		/// Registers a delegate to be ran when the synergy becomes active.

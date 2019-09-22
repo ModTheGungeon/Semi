@@ -11,6 +11,14 @@ namespace Semi.Patches {
 		[MonoModIgnore]
 		private Dictionary<string, string> strings = new Dictionary<string, string>();
 
+		public static dfLanguageManager Instance;
+
+		public extern void orig_Start();
+		public void Start() {
+			Instance = this;
+			orig_Start();
+		}
+
 		public extern void orig_LoadLanguage(dfLanguageCode language, bool forceReload = false);
 
 		public void LoadLanguage(dfLanguageCode language, bool forceReload = false) {
@@ -31,6 +39,12 @@ namespace Semi.Patches {
 					}
 				}
 			}
+		}
+
+		protected extern internal string orig_getLocalizedValue(string key);
+		protected internal string getLocalizedValue(string key) {
+			I18N.Logger.Debug($"DF: get '{key}'");
+			return orig_getLocalizedValue(key);
 		}
 	}
 }

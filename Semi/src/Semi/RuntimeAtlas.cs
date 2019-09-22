@@ -236,10 +236,10 @@ namespace Semi {
 
 		public Vector2[] uvs {
 			get {
-				var xo = x / texture.width;
-				var yo = y / texture.height;
-				var xl = width / texture.width;
-				var yl = height / texture.height;
+				var xo = (float)x / texture.width;
+				var yo = (float)y / texture.height;
+				var xl = (float)width / texture.width;
+				var yl = (float)height / texture.height;
 				var xe = xl + xo;
 				var ye = yl + yo;
 

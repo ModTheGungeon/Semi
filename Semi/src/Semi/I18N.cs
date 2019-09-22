@@ -500,6 +500,21 @@ namespace Semi {
 			dfLanguageManager.ChangeGungeonLanguage(); // just to trigger the UI locales update
 		}
 
+		public static string GetString(StringTable table, string key) {
+			if (key.StartsWithInvariant("#")) key = key.Substring(1);
+
+			switch (table) {
+			case StringTable.Core: return StringTableManager.GetString(key);
+			case StringTable.Enemies: return StringTableManager.GetEnemiesString(key);
+			case StringTable.Intro: return StringTableManager.GetIntroString(key);
+			case StringTable.Items: return StringTableManager.GetItemsString(key);
+			case StringTable.Synergies: return StringTableManager.GetSynergyString(key);
+			case StringTable.UI: return Patches.dfLanguageManager.Instance.GetValue("#" + key);
+			}
+
+			return key;
+		}
+
 	}
 }
 

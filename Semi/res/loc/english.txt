@@ -6,3 +6,15 @@ Error
 Semi failed to load certain installed mods.
 #ERROR_CHECKSUM
 Checksum mismatch. Either the mod has not been approved or it has been edited, likely by someone other than its author. For your safety, it's been disabled.
+#TAB_MODS
+Mods
+#NO_MOD_OPTIONS
+This mod has no options.
+#REGISTERED_UNDER
+Registered under: '{0}'.
+#TEST_A
+Test A
+#TEST_B
+Test B
+#TEST_C
+Test C

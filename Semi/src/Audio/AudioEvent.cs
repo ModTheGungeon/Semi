@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -26,105 +27,151 @@ namespace Semi {
 
 			return null;
 		}
-	}
 
-	public class WWiseAudioEvent : AudioEvent {
-		internal static Dictionary<string, string> ReverseIDMap = new Dictionary<string, string>();
-		public string WWiseEventName { get; private set; }
+		public class WWise : AudioEvent {
+			internal static Dictionary<string, string> ReverseIDMap = new Dictionary<string, string>();
+			public string WWiseEventName { get; private set; }
 
-		internal WWiseAudioEvent(string event_name) {
-			WWiseEventName = event_name;
+			internal WWise(string event_name) {
+				WWiseEventName = event_name;
+			}
+
+			internal override string FirePostEvent(GameObject source) {
+				base.FirePostEvent(source);
+
+				return WWiseEventName;
+			}
+
+			public override void Fire(GameObject source = null) {
+				AkSoundEngine.PostEvent(ReverseIDMap[WWiseEventName], source);
+			}
 		}
 
-		internal override string FirePostEvent(GameObject source) {
-			base.FirePostEvent(source);
+		public class SoundPlay : AudioEvent {
+			public string ID { get; private set; }
+			internal Sound CachedSound;
 
-			return WWiseEventName;
+			public SoundPlay(string sound_id) {
+				sound_id = Gungeon.ModAudioTracks.ValidateEntry(sound_id);
+				CachedSound = Gungeon.ModAudioTracks[sound_id] as Sound;
+				if (CachedSound == null) throw new InvalidOperationException("Cannot use SemiSoundPlayEvent with Music - use SemiAudioPlayEvent");
+			}
+
+			internal override string FirePostEvent(GameObject source) {
+				base.FirePostEvent(source);
+				CachedSound.FireAndForget();
+
+				return null;
+			}
+
+			public override void Fire(GameObject source = null) {
+				FirePostEvent(source);
+			}
 		}
 
-		public override void Fire(GameObject source = null) {
-			AkSoundEngine.PostEvent(ReverseIDMap[WWiseEventName], source);
-		}
-	}
-
-	public class SemiSoundPlayEvent : AudioEvent {
-		public string ID { get; private set; }
-		internal Sound CachedSound;
-
-		public SemiSoundPlayEvent(string sound_id) {
-			sound_id = Gungeon.ModAudioTracks.ValidateEntry(sound_id);
-			CachedSound = Gungeon.ModAudioTracks[sound_id] as Sound;
-			if (CachedSound == null) throw new InvalidOperationException("Cannot use SemiSoundPlayEvent with Music - use SemiAudioPlayEvent");
+		public class Stub : AudioEvent {
+			public override void Fire(GameObject source = null) { FirePostEvent(source); }
 		}
 
-		internal override string FirePostEvent(GameObject source) {
-			base.FirePostEvent(source);
-			CachedSound.FireAndForget();
+		public abstract class AudioState : AudioEvent {
+			public string ID { get; private set; }
+			internal Audio CachedAudio;
 
-			return null;
+			public AudioState(string audio_id) {
+				audio_id = Gungeon.ModAudioTracks.ValidateEntry(audio_id);
+				CachedAudio = Gungeon.ModAudioTracks[audio_id];
+			}
+
+			internal override string FirePostEvent(GameObject source) {
+				base.FirePostEvent(source);
+				DoStateChange();
+
+				return null;
+			}
+
+			public override void Fire(GameObject source = null) {
+				FirePostEvent(source);
+			}
+
+			internal abstract void DoStateChange();
 		}
 
-		public override void Fire(GameObject source = null) {
-			FirePostEvent(source);
-		}
-	}
+		public class AudioPlay : AudioState {
+			public AudioPlay(string audio_id) : base(audio_id) { }
 
-	public class StubAudioEvent : AudioEvent {
-		public override void Fire(GameObject source = null) { FirePostEvent(source); }
-	}
-
-	public abstract class SemiAudioStateEvent : AudioEvent {
-		public string ID { get; private set; }
-		internal Audio CachedAudio;
-
-		public SemiAudioStateEvent(string audio_id) {
-			audio_id = Gungeon.ModAudioTracks.ValidateEntry(audio_id);
-			CachedAudio = Gungeon.ModAudioTracks[audio_id];
+			internal override void DoStateChange() {
+				CachedAudio.Play();
+			}
 		}
 
-		internal override string FirePostEvent(GameObject source) {
-			base.FirePostEvent(source);
-			DoStateChange();
+		public class AudioStop : AudioState {
+			public AudioStop(string audio_id) : base(audio_id) { }
 
-			return null;
+			internal override void DoStateChange() {
+				CachedAudio.Stop();
+			}
 		}
 
-		public override void Fire(GameObject source = null) {
-			FirePostEvent(source);
+		public class AudioPause : AudioState {
+			public AudioPause(string audio_id) : base(audio_id) { }
+
+			internal override void DoStateChange() {
+				CachedAudio.Pause();
+			}
 		}
 
-		internal abstract void DoStateChange();
-	}
+		public class AudioResume : AudioState {
+			public AudioResume(string audio_id) : base(audio_id) { }
 
-	public class SemiAudioPlayEvent : SemiAudioStateEvent {
-		public SemiAudioPlayEvent(string audio_id) : base(audio_id) { }
-
-		internal override void DoStateChange() {
-			CachedAudio.Play();
+			internal override void DoStateChange() {
+				CachedAudio.Resume();
+			}
 		}
-	}
 
-	public class SemiAudioStopEvent : SemiAudioStateEvent {
-		public SemiAudioStopEvent(string audio_id) : base(audio_id) { }
+		public class AudioCrossfade : AudioEvent {
+			public string ID { get; private set; }
+			public int FadeDuration;
+			public float Step;
+			public float TargetVolume;
+			internal Audio CachedFromAudio;
+			internal Audio CachedToAudio;
 
-		internal override void DoStateChange() {
-			CachedAudio.Stop();
-		}
-	}
+			internal IEnumerator CrossfadeTracks() {
+				var from_vol = CachedFromAudio.Volume;
+				var to_vol = CachedToAudio.Volume;
 
-	public class SemiAudioPauseEvent : SemiAudioStateEvent {
-		public SemiAudioPauseEvent(string audio_id) : base(audio_id) { }
+				CachedToAudio.Volume = 0f;
 
-		internal override void DoStateChange() {
-			CachedAudio.Pause();
-		}
-	}
+				CachedToAudio.Play();
 
-	public class SemiAudioResumeEvent : SemiAudioStateEvent {
-		public SemiAudioResumeEvent(string audio_id) : base(audio_id) { }
+				for (var v = 0f; v <= TargetVolume; v += Step) {
+					CachedFromAudio.Volume = Math.Max(from_vol - v, 0f);
+					CachedToAudio.Volume = v;
 
-		internal override void DoStateChange() {
-			CachedAudio.Resume();
+					yield return null;
+				}
+
+				CachedFromAudio.Stop();
+				CachedFromAudio.Volume = from_vol;
+				yield return null;
+			}
+
+			public AudioCrossfade(string from_audio_id, string to_audio_id) {
+				CachedFromAudio = Gungeon.ModAudioTracks[Gungeon.ModAudioTracks.ValidateEntry(from_audio_id)];
+				CachedToAudio = Gungeon.ModAudioTracks[Gungeon.ModAudioTracks.ValidateEntry(to_audio_id)];
+			}
+
+			internal override string FirePostEvent(GameObject source) {
+				base.FirePostEvent(source);
+
+				StreamBufferUpdateBehaviour.Instance.StartCoroutine(CrossfadeTracks());
+
+				return null;
+			}
+
+			public override void Fire(GameObject source = null) {
+				FirePostEvent(source);
+			}
 		}
 	}
 }

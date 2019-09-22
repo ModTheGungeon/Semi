@@ -4,3 +4,9 @@ Błąd
 Podczas ładowania niektórych modów wystąpił błąd.
 #ERROR_CHECKSUM
 Suma kontrolna nie pasuje. Albo nie został on jeszcze zatwierdzony, albo został zedytowany (najprawdopodobniej przez kogoś innego niż autora). Dla Twojego bezpieczeństwa, nie będzie on załadowany.
+#TAB_MODS
+Mody
+#NO_MOD_OPTIONS
+Ten mod nie ma żadnych ustawień.
+#REGISTERED_UNDER
+Zarejestrowany jako: '{0}'.
