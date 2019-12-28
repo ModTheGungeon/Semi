@@ -159,7 +159,6 @@
     <Compile Include="src\Extensions\BinaryReader.cs" />
     <Compile Include="src\TK0D\MeshColliderSettings.cs" />
     <Compile Include="src\Loaders\Texture2DLoader.cs" />
-    <Compile Include="src\Semi\ProxyList.cs" />
     <Compile Include="src\Extensions\Tk2d.cs" />
     <Compile Include="src\TK0D\Sprite.cs" />
     <Compile Include="src\Semi\I18N.cs" />
@@ -200,6 +199,8 @@
     <Compile Include="src\Patches\dfButton.cs" />
     <Compile Include="src\Patches\dfCheckbox.cs" />
     <Compile Include="src\Patches\BraveOptionsMenuItem.cs" />
+    <Compile Include="src\Utility\ProxyList.cs" />
+    <Compile Include="src\Utility\StringView.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="src\" />
@@ -222,6 +223,7 @@
     <Folder Include="src\Patches\API\" />
     <Folder Include="src\Patches\TK0D\" />
     <Folder Include="src\Audio\" />
+    <Folder Include="src\Utility\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\Debug\SGUI\.gitignore" />

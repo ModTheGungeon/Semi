@@ -21,21 +21,21 @@ namespace Semi.Patches {
 		private extern void orig_ToggleCheckbox(dfControl control, dfMouseEventArgs args);
 
 		private void ToggleCheckbox(dfControl control, dfMouseEventArgs args) {
-			CheckboxChanged.Invoke(m_selectedIndex != 1);
+            if (CheckboxChanged != null) CheckboxChanged.Invoke(m_selectedIndex != 1);
 			orig_ToggleCheckbox(control, args);
 		}
 
 		private extern void orig_IncrementArrow(dfControl control, dfMouseEventArgs mouseEvent);
 
 		private void IncrementArrow(dfControl control, dfMouseEventArgs mouseEvent) {
-			SelectionChanged.Invoke(labelOptions[m_selectedIndex]);
+			if (SelectionChanged != null) SelectionChanged.Invoke(labelOptions[m_selectedIndex]);
 			orig_IncrementArrow(control, mouseEvent);
 		}
 
 		private extern void orig_DecrementArrow(dfControl control, dfMouseEventArgs mouseEvent);
 
 		private void DecrementArrow(dfControl control, dfMouseEventArgs mouseEvent) {
-			SelectionChanged.Invoke(labelOptions[m_selectedIndex]);
+            if (SelectionChanged != null) SelectionChanged.Invoke(labelOptions[m_selectedIndex]);
 			orig_DecrementArrow(control, mouseEvent);
 		}
 
