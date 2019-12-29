@@ -8,7 +8,7 @@ namespace Semi {
 		/// <summary>
 		/// A dictionary of audio event overrides, for replacing certain audio events with other audio events.
 		/// </summary>
-		internal static Dictionary<string, string> AudioEventOverrides = new Dictionary<string, string>();
+		internal static Dictionary<ID, ID> AudioEventOverrides = new Dictionary<ID, ID>();
 
 		public List<AudioEvent> Consequences;
 
@@ -51,9 +51,9 @@ namespace Semi {
 			public string ID { get; private set; }
 			internal Sound CachedSound;
 
-			public SoundPlay(string sound_id) {
-				sound_id = Gungeon.ModAudioTracks.ValidateEntry(sound_id);
-				CachedSound = Gungeon.ModAudioTracks[sound_id] as Sound;
+			public SoundPlay(ID sound_id) {
+				sound_id = Registry.ModAudioTracks.ValidateExisting(sound_id);
+				CachedSound = Registry.ModAudioTracks[sound_id] as Sound;
 				if (CachedSound == null) throw new InvalidOperationException("Cannot use SemiSoundPlayEvent with Music - use SemiAudioPlayEvent");
 			}
 
@@ -77,9 +77,9 @@ namespace Semi {
 			public string ID { get; private set; }
 			internal Audio CachedAudio;
 
-			public AudioState(string audio_id) {
-				audio_id = Gungeon.ModAudioTracks.ValidateEntry(audio_id);
-				CachedAudio = Gungeon.ModAudioTracks[audio_id];
+			public AudioState(ID audio_id) {
+				audio_id = Registry.ModAudioTracks.ValidateExisting(audio_id);
+				CachedAudio = Registry.ModAudioTracks[audio_id];
 			}
 
 			internal override string FirePostEvent(GameObject source) {
@@ -97,7 +97,7 @@ namespace Semi {
 		}
 
 		public class AudioPlay : AudioState {
-			public AudioPlay(string audio_id) : base(audio_id) { }
+			public AudioPlay(ID audio_id) : base(audio_id) { }
 
 			internal override void DoStateChange() {
 				CachedAudio.Play();
@@ -105,7 +105,7 @@ namespace Semi {
 		}
 
 		public class AudioStop : AudioState {
-			public AudioStop(string audio_id) : base(audio_id) { }
+			public AudioStop(ID audio_id) : base(audio_id) { }
 
 			internal override void DoStateChange() {
 				CachedAudio.Stop();
@@ -113,7 +113,7 @@ namespace Semi {
 		}
 
 		public class AudioPause : AudioState {
-			public AudioPause(string audio_id) : base(audio_id) { }
+			public AudioPause(ID audio_id) : base(audio_id) { }
 
 			internal override void DoStateChange() {
 				CachedAudio.Pause();
@@ -121,7 +121,7 @@ namespace Semi {
 		}
 
 		public class AudioResume : AudioState {
-			public AudioResume(string audio_id) : base(audio_id) { }
+			public AudioResume(ID audio_id) : base(audio_id) { }
 
 			internal override void DoStateChange() {
 				CachedAudio.Resume();
@@ -156,9 +156,9 @@ namespace Semi {
 				yield return null;
 			}
 
-			public AudioCrossfade(string from_audio_id, string to_audio_id) {
-				CachedFromAudio = Gungeon.ModAudioTracks[Gungeon.ModAudioTracks.ValidateEntry(from_audio_id)];
-				CachedToAudio = Gungeon.ModAudioTracks[Gungeon.ModAudioTracks.ValidateEntry(to_audio_id)];
+			public AudioCrossfade(ID from_audio_id, ID to_audio_id) {
+				CachedFromAudio = Registry.ModAudioTracks[Registry.ModAudioTracks.ValidateExisting(from_audio_id)];
+				CachedToAudio = Registry.ModAudioTracks[Registry.ModAudioTracks.ValidateExisting(to_audio_id)];
 			}
 
 			internal override string FirePostEvent(GameObject source) {

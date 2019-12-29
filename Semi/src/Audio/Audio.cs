@@ -7,7 +7,7 @@ namespace Semi {
 
 	public abstract class Audio : IDisposable {
 		internal static bool Ready {
-			get { return Gungeon.AudioEvents != null; }
+			get { return Registry.AudioEvents != null; }
 		}
 
 		/// <summary>

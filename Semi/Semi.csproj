@@ -109,8 +109,6 @@
     <Compile Include="src\Extensions\String.cs" />
     <Compile Include="src\Extensions\Array.cs" />
     <Compile Include="src\Semi\AssemblyRelinker.cs" />
-    <Compile Include="src\Semi\IDPool.cs" />
-    <Compile Include="src\Semi\Gungeon.cs" />
     <Compile Include="src\Parsers\IDMapParser.cs" />
     <Compile Include="src\Debug\Console\AutoCompletor.cs" />
     <Compile Include="src\Debug\Console\Console.cs" />
@@ -201,6 +199,10 @@
     <Compile Include="src\Patches\BraveOptionsMenuItem.cs" />
     <Compile Include="src\Utility\ProxyList.cs" />
     <Compile Include="src\Utility\StringView.cs" />
+    <Compile Include="src\Registry\IDPool.cs" />
+    <Compile Include="src\Registry\Gungeon.cs" />
+    <Compile Include="src\Registry\ID.cs" />
+    <Compile Include="src\Generated\GeneratedIDMaps.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="src\" />
@@ -224,6 +226,7 @@
     <Folder Include="src\Patches\TK0D\" />
     <Folder Include="src\Audio\" />
     <Folder Include="src\Utility\" />
+    <Folder Include="src\Registry\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\Debug\SGUI\.gitignore" />

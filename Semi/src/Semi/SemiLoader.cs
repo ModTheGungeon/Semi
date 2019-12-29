@@ -218,17 +218,17 @@ namespace Semi {
 		/// <summary>
 		/// Set of currently active synergies.
 		/// </summary>
-		internal static HashSet<string> ActiveSynergyIDs = new HashSet<string>();
+		internal static HashSet<ID> ActiveSynergyIDs = new HashSet<ID>();
 
 		/// <summary>
 		/// Dictionary of delegates registered to run on synergy activation.
 		/// </summary>
-		internal static Dictionary<string, Gungeon.SynergyStateChangeAction> SynergyActivatedActions = new Dictionary<string, Gungeon.SynergyStateChangeAction>();
+		internal static Dictionary<ID, Registry.SynergyStateChangeAction> SynergyActivatedActions = new Dictionary<ID, Registry.SynergyStateChangeAction>();
 
 		/// <summary>
 		/// Dictionary of delegates registered to run on synergy deactivation.
 		/// </summary>
-		internal static Dictionary<string, Gungeon.SynergyStateChangeAction> SynergyDeactivatedActions = new Dictionary<string, Gungeon.SynergyStateChangeAction>();
+		internal static Dictionary<ID, Registry.SynergyStateChangeAction> SynergyDeactivatedActions = new Dictionary<ID, Registry.SynergyStateChangeAction>();
 
 		/// <summary>
 		/// Executed right before GameManager.Awake. Primary entry point.
@@ -282,8 +282,8 @@ namespace Semi {
 				UnityEngine.Object.DontDestroyOnLoad(ConsoleController);
 			}
 
-			Gungeon.Languages = new IDPool<I18N.Language>();
-			Gungeon.Localizations = new IDPool<I18N.LocalizationSource>();
+			Registry.Languages = new IDPool<I18N.Language>();
+			Registry.Localizations = new IDPool<I18N.LocalizationSource>();
 
 			FileHierarchy.Verify();
 
@@ -315,9 +315,9 @@ namespace Semi {
 			// call this once at the start to initialize the dictionaries
 			// TODO @serialization Save language as ID in save file
 
-			Gungeon.SpriteCollections = new IDPool<SpriteCollection>();
-			Gungeon.SpriteTemplates = new IDPool<Sprite>();
-			Gungeon.AnimationTemplates = new IDPool<SpriteAnimation>();
+			Registry.SpriteCollections = new IDPool<SpriteCollection>();
+			Registry.SpriteTemplates = new IDPool<Sprite>();
+			Registry.AnimationTemplates = new IDPool<SpriteAnimation>();
 			yield return mgr.StartCoroutine(InitializeIDMaps());
 
 			EncounterIconCollection = AmmonomiconController.ForceInstance.EncounterIconCollection.Wrap();
@@ -634,24 +634,24 @@ namespace Semi {
 		}
 
 		/// <summary>
-		/// Converts any list or array of integer item IDs into an array of pooled string IDs.
+		/// Converts any list or array of integer item IDs into an array of pooled string IDs based on the pickup object database.
 		/// </summary>
 		/// <returns>The string ID list.</returns>
 		/// <param name="ids">The numeric ID list.</param>
-		internal static string[] ConvertItemIDList(IList<int> ids) {
-			var ary = new string[ids.Count];
+		internal static ID[] ConvertItemIDList(IList<int> ids) {
+			var ary = new ID[ids.Count];
 			for (int i = 0; i < ids.Count; i++) {
 				var id = ids[i];
-				var string_id = ((Patches.PickupObject)PickupObjectDatabase.Instance.Objects[id])?.UniqueItemID;
-				ary[i] = string_id;
+				var unique_id = ((Patches.PickupObject)PickupObjectDatabase.Instance.Objects[id])?.UniqueItemID;
+                if (unique_id == null) continue;
+				ary[i] = unique_id.Value;
 			}
 			return ary;
 		}
 
 		internal static void InitializeModOptions() {
 			Logger.Debug($"INITIALIZING: MOD OPTIONS");
-
-			Gungeon.ModMenuOptions = new IDPool<UI.MenuOption>();
+			Registry.ModMenuOptions = new IDPool<UI.MenuOption>();
 		}
 
 		/// <summary>
@@ -660,57 +660,63 @@ namespace Semi {
 		/// </summary>
         internal static IEnumerator InitializeIDMaps() {
 			Logger.Debug($"INITIALIZING: ID MAPS");
+
+            Registry.Items = new IDPool<PickupObject>();
+            Registry.Enemies = new IDPool<AIActor>();
+            Registry.Synergies = new IDPool<AdvancedSynergyEntry>();
+            Semi.Generated.GeneratedIDMaps.Apply();
+
             var asm = Assembly.GetExecutingAssembly();
             
-			Logger.Debug("IDMap: items.txt");
-            using (StreamReader stream = new StreamReader(asm.GetManifestResourceStream("idmaps:items.txt"))) {
-                Logger.Debug($"IDMap items.txt: stream = {stream}");
-                Gungeon.Items = IDMapParser<PickupObject, Gungeon.ItemTag>.Parse(
-                    stream,
-                    "gungeon",
-                    (id) => PickupObjectDatabase.GetById(int.Parse(id)),
-					do_after: (id, item) => {
-						((Semi.Patches.PickupObject)item).UniqueItemID = id;
-					}
-                );
-            }
+			//Logger.Debug("IDMap: items.txt");
+   //         using (StreamReader stream = new StreamReader(asm.GetManifestResourceStream("idmaps:items.txt"))) {
+   //             Logger.Debug($"IDMap items.txt: stream = {stream}");
+   //             Registry.Items = IDMapParser<PickupObject>.Parse(
+   //                 stream,
+   //                 "gungeon",
+   //                 (id) => PickupObjectDatabase.GetById(int.Parse(id)),
+			//		do_after: (id, item) => {
+			//			((Semi.Patches.PickupObject)item).UniqueItemID = id;
+			//		}
+   //             );
+   //         }
 
-			Logger.Debug("IDMap: enemies.txt");
-            using (StreamReader stream = new StreamReader(asm.GetManifestResourceStream("idmaps:enemies.txt"))) {
-                Logger.Debug($"IDMap enemies.txt: stream = {stream}");
-                Gungeon.Enemies = IDMapParser<AIActor, Gungeon.EnemyTag>.Parse(
-                    stream,
-                    "gungeon",
-					(id) => EnemyDatabase.Instance.Entries[int.Parse(id)].GetPrefab<AIActor>()
-                );
-            }
+			//Logger.Debug("IDMap: enemies.txt");
+   //         using (StreamReader stream = new StreamReader(asm.GetManifestResourceStream("idmaps:enemies.txt"))) {
+   //             Logger.Debug($"IDMap enemies.txt: stream = {stream}");
+   //             Registry.Enemies = IDMapParser<AIActor>.Parse(
+   //                 stream,
+   //                 "gungeon",
+			//		(id) => EnemyDatabase.Instance.Entries[int.Parse(id)].GetPrefab<AIActor>()
+   //             );
+   //         }
 
-			Logger.Debug("IDMap: synergies.txt");
-			using (StreamReader stream = new StreamReader(asm.GetManifestResourceStream("idmaps:synergies.txt"))) {
-				Logger.Debug($"IDMap synergies.txt: stream = {stream}");
-				Gungeon.Synergies = IDMapParser<AdvancedSynergyEntry, SynergyEntry.SynergyActivation>.Parse(
-					stream,
-					"gungeon",
-					(id) => GameManager.Instance.SynergyManager.synergies[int.Parse(id)],
-					do_after: (id, gungeon_syn) => {
-						var syn = (Semi.Patches.AdvancedSynergyEntry)gungeon_syn;
+			//Logger.Debug("IDMap: synergies.txt");
+			//using (StreamReader stream = new StreamReader(asm.GetManifestResourceStream("idmaps:synergies.txt"))) {
+			//	Logger.Debug($"IDMap synergies.txt: stream = {stream}");
+			//	Registry.Synergies = IDMapParser<AdvancedSynergyEntry>.Parse(
+			//		stream,
+			//		"gungeon",
+			//		(id) => GameManager.Instance.SynergyManager.synergies[int.Parse(id)],
+			//		do_after: (id, gungeon_syn) => {
+			//			var syn = (Semi.Patches.AdvancedSynergyEntry)gungeon_syn;
 
-						syn.OptionalGuns = ConvertItemIDList(syn.OptionalGunIDs);
-						syn.MandatoryGuns = ConvertItemIDList(syn.MandatoryGunIDs);
-						syn.OptionalItems = ConvertItemIDList(syn.OptionalItemIDs);
-						syn.MandatoryItems = ConvertItemIDList(syn.MandatoryItemIDs);
-						syn.UniqueID = id;
+			//			syn.OptionalGuns = ConvertItemIDList(syn.OptionalGunIDs);
+			//			syn.MandatoryGuns = ConvertItemIDList(syn.MandatoryGunIDs);
+			//			syn.OptionalItems = ConvertItemIDList(syn.OptionalItemIDs);
+			//			syn.MandatoryItems = ConvertItemIDList(syn.MandatoryItemIDs);
+			//			syn.UniqueID = id;
 
-						// null these out so that accessing these fields will error
-						syn.OptionalGunIDs = syn.MandatoryGunIDs = syn.OptionalItemIDs = syn.MandatoryItemIDs = null;
-					}
-				);
-			}
+			//			// null these out so that accessing these fields will error
+			//			syn.OptionalGunIDs = syn.MandatoryGunIDs = syn.OptionalItemIDs = syn.MandatoryItemIDs = null;
+			//		}
+			//	);
+			//}
 
 			Logger.Debug($"IDMap: wwise_events.txt");
 			using (StreamReader stream = new StreamReader(asm.GetManifestResourceStream("idmaps:wwise_events.txt"))) {
 				Logger.Debug($"IDMap wwise_events.txt: stream = {stream}");
-				Gungeon.AudioEvents = IDMapParser<AudioEvent, Gungeon.AudioEventTag>.Parse(
+				Registry.AudioEvents = IDMapParser<AudioEvent>.Parse(
 					stream,
 					"gungeon",
 					(id) => new AudioEvent.WWise(id),
@@ -723,46 +729,46 @@ namespace Semi {
         }
 
 		/// <summary>
-		/// Initializes Gungeon.Languages with IDs corresponding to the languages that Gungeon provides out of the box.
+		/// Initializes Registry.Languages with IDs corresponding to the languages that Gungeon provides out of the box.
 		/// </summary>
 		internal static void InitializeBuiltinLanguages() {
 			Logger.Debug($"INITIALIZING: BUILTIN LANGUAGES");
-			Gungeon.Languages["gungeon:english"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.ENGLISH);
-			Gungeon.Languages["gungeon:rubel_test"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.RUBEL_TEST);
-			Gungeon.Languages["gungeon:french"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.FRENCH);
-			Gungeon.Languages["gungeon:spanish"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.SPANISH);
-			Gungeon.Languages["gungeon:italian"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.ITALIAN);
-			Gungeon.Languages["gungeon:german"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.GERMAN);
-			Gungeon.Languages["gungeon:portuguese"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.BRAZILIANPORTUGUESE);
-			Gungeon.Languages["gungeon:japanese"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.JAPANESE);
-			Gungeon.Languages["gungeon:korean"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.KOREAN);
-			Gungeon.Languages["gungeon:russian"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.RUSSIAN);
-			Gungeon.Languages["gungeon:polish"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.POLISH);
-			Gungeon.Languages["gungeon:chinese"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.CHINESE);
+			Registry.Languages[(ID)(ID)"gungeon:english"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.ENGLISH);
+			Registry.Languages[(ID)"gungeon:rubel_test"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.RUBEL_TEST);
+			Registry.Languages[(ID)"gungeon:french"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.FRENCH);
+			Registry.Languages[(ID)"gungeon:spanish"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.SPANISH);
+			Registry.Languages[(ID)"gungeon:italian"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.ITALIAN);
+			Registry.Languages[(ID)"gungeon:german"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.GERMAN);
+			Registry.Languages[(ID)"gungeon:portuguese"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.BRAZILIANPORTUGUESE);
+			Registry.Languages[(ID)"gungeon:japanese"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.JAPANESE);
+			Registry.Languages[(ID)"gungeon:korean"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.KOREAN);
+			Registry.Languages[(ID)"gungeon:russian"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.RUSSIAN);
+			Registry.Languages[(ID)"gungeon:polish"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.POLISH);
+			Registry.Languages[(ID)"gungeon:chinese"] = new I18N.GungeonLanguage(StringTableManager.GungeonSupportedLanguages.CHINESE);
 		}
 
 		/// <summary>
-		/// Initializes Gungeon.Localizations with IDs corresponding to the languages that Gungeon provides out of the box.
+		/// Initializes Registry.Localizations with IDs corresponding to the languages that Gungeon provides out of the box.
 		/// </summary>
 		internal static void InitializeBuiltinLocalizations() {
 			Logger.Debug($"INITIALIZING: BUILTIN LOCALIZATIONS");
 			for (int i = 0; i <= (int)StringTableManager.GungeonSupportedLanguages.CHINESE; i++) {
 				var lang = (StringTableManager.GungeonSupportedLanguages)i;
 
-				Gungeon.Localizations[$"{I18N.GungeonLanguage.LanguageToID(lang)}_core"] = new I18N.PrefabLocalization(lang, I18N.StringTable.Core);
-				Gungeon.Localizations[$"{I18N.GungeonLanguage.LanguageToID(lang)}_enemies"] = new I18N.PrefabLocalization(lang, I18N.StringTable.Enemies);
-				Gungeon.Localizations[$"{I18N.GungeonLanguage.LanguageToID(lang)}_intro"] = new I18N.PrefabLocalization(lang, I18N.StringTable.Intro);
-				Gungeon.Localizations[$"{I18N.GungeonLanguage.LanguageToID(lang)}_items"] = new I18N.PrefabLocalization(lang, I18N.StringTable.Items);
-				Gungeon.Localizations[$"{I18N.GungeonLanguage.LanguageToID(lang)}_synergies"] = new I18N.PrefabLocalization(lang, I18N.StringTable.Synergies);
-				Gungeon.Localizations[$"{I18N.GungeonLanguage.LanguageToID(lang)}_ui"] = new I18N.PrefabLocalization(lang, I18N.StringTable.UI, format: I18N.LocalizationSource.FormatType.DF);
+				Registry.Localizations[(ID)$"{I18N.GungeonLanguage.LanguageToID(lang)}_core"] = new I18N.PrefabLocalization(lang, I18N.StringTable.Core);
+				Registry.Localizations[(ID)$"{I18N.GungeonLanguage.LanguageToID(lang)}_enemies"] = new I18N.PrefabLocalization(lang, I18N.StringTable.Enemies);
+				Registry.Localizations[(ID)$"{I18N.GungeonLanguage.LanguageToID(lang)}_intro"] = new I18N.PrefabLocalization(lang, I18N.StringTable.Intro);
+				Registry.Localizations[(ID)$"{I18N.GungeonLanguage.LanguageToID(lang)}_items"] = new I18N.PrefabLocalization(lang, I18N.StringTable.Items);
+				Registry.Localizations[(ID)$"{I18N.GungeonLanguage.LanguageToID(lang)}_synergies"] = new I18N.PrefabLocalization(lang, I18N.StringTable.Synergies);
+				Registry.Localizations[(ID)$"{I18N.GungeonLanguage.LanguageToID(lang)}_ui"] = new I18N.PrefabLocalization(lang, I18N.StringTable.UI, format: I18N.LocalizationSource.FormatType.DF);
 
 				var lang_id = I18N.GungeonLanguage.LanguageToID(lang);
-				var lang_name = IDPool<bool>.Split(lang_id).Name;
+                var lang_name = lang_id.Name;
 				var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"loc:{lang_name}.txt");
 				if (stream != null) {
 					var text = new StreamReader(stream).ReadToEnd();
 					Logger.Debug($"Found Semi localization stream for {lang_id}");
-					Gungeon.Localizations[$"semi:{lang_name}_core"] = new I18N.RuntimeLocalization("semi", text, lang_id, I18N.StringTable.UI);
+					Registry.Localizations[(ID)$"semi:{lang_name}_core"] = new I18N.RuntimeLocalization("semi", text, lang_id, I18N.StringTable.UI);
 					stream.Close();
 				}
 			}
@@ -773,10 +779,9 @@ namespace Semi {
 		/// </summary>
 		/// <param name="id">ID of the synergy.</param>
 		/// <param name="p">PlayerController to pass on.</param>
-		internal static void InvokeSynergyActivated(string id, PlayerController p) {
+		internal static void InvokeSynergyActivated(ID id, PlayerController p) {
 			Logger.Debug($"Synergy activated: '{id}'");
-			id = IDPool<AdvancedSynergyEntry>.Resolve(id);
-			Gungeon.SynergyStateChangeAction action = null;
+			Registry.SynergyStateChangeAction action = null;
 			if (SynergyActivatedActions.TryGetValue(id, out action)) {
 				action.Invoke(p);
 			}
@@ -787,10 +792,9 @@ namespace Semi {
 		/// </summary>
 		/// <param name="id">ID of the synergy.</param>
 		/// <param name="p">PlayerController to pass on.</param>
-		internal static void InvokeSynergyDeactivated(string id, PlayerController p) {
+		internal static void InvokeSynergyDeactivated(ID id, PlayerController p) {
 			Logger.Debug($"Synergy deactivated: '{id}'");
-			id = IDPool<AdvancedSynergyEntry>.Resolve(id);
-			Gungeon.SynergyStateChangeAction action = null;
+			Registry.SynergyStateChangeAction action = null;
 			if (SynergyDeactivatedActions.TryGetValue(id, out action)) {
 				action.Invoke(p);
 			}
@@ -801,7 +805,7 @@ namespace Semi {
 		/// </summary>
 		internal static void InitializeAudio() {
 			Logger.Debug($"INITIALIZING: AUDIO");
-			Gungeon.ModAudioTracks = new IDPool<Audio>();
+			Registry.ModAudioTracks = new IDPool<Audio>();
 
 			Logger.Debug($"Starting audio device");
 			RayAudio.AudioDevice.Initialize();
@@ -823,18 +827,18 @@ namespace Semi {
 		/// Initializes the stream buffer update object's cache of Audio tracks.
 		/// </summary>
 		internal static void InitializeStreamBufferUpdateBehaviourCache() {
-			Logger.Debug($"INITIALIZING: AUDIO STREAM BUFFER UPDATE CACHE");
+			Logger.Debug($"INITIALIZING: AUDIO STREAM BUFFER UPDATE CACHE (DEPRECATED)");
 
-			var len = Gungeon.ModAudioTracks.Count;
+			//var len = Registry.ModAudioTracks.Count;
 
-			StreamBufferUpdateBehaviour.Paused = true;
-			StreamBufferUpdateBehaviour.Tracks = new List<Audio>();
+			//StreamBufferUpdateBehaviour.Paused = true;
+			//StreamBufferUpdateBehaviour.Tracks = new List<Audio>();
 
-			foreach (var tr in Gungeon.ModAudioTracks.Entries) {
-				StreamBufferUpdateBehaviour.Tracks.Add(tr);
-			}
+			//foreach (var tr in Registry.ModAudioTracks.Entries) {
+			//	StreamBufferUpdateBehaviour.Tracks.Add(tr);
+			//}
 
-			StreamBufferUpdateBehaviour.Paused = false;
+			//StreamBufferUpdateBehaviour.Paused = false;
 		}
 
 		/// <summary>

@@ -32,7 +32,7 @@ namespace Semi {
 			}
 
 			public struct Definition {
-				public string ID;
+				public ID ID;
 				public int X;
 				public int Y;
 				public int W;
@@ -42,7 +42,7 @@ namespace Semi {
 				public string SpritesheetOverride;
 			}
 
-			public string ID;
+			public ID ID;
 			public string Name;
 			public bool Patch;
 			public int UnitW;
@@ -66,7 +66,7 @@ namespace Semi {
 		/// </summary>
 		public struct ParsedAnimation {
 			public struct Frame {
-				public string Definition;
+				public ID Definition;
 				public bool OffGround;
 				public bool Invulnerable;
 			}
@@ -80,10 +80,10 @@ namespace Semi {
 				public List<Frame> Frames;
 			}
 
-			public string ID;
+			public ID ID;
 			public string Name;
 			public bool Patch;
-			public string Collection;
+			public ID Collection;
 			public int DefaultFPS;
 			public Dictionary<string, Clip> Clips;
 		}
@@ -314,8 +314,8 @@ namespace Semi {
 				if (value.Length == 0) Throw("Expected string value");
 				if (propname == "id") {
 					IDParsed = true;
-					if (ParserMode == Mode.Collection) Collection.ID = value;
-					else Animation.ID = value;
+					if (ParserMode == Mode.Collection) Collection.ID = (ID)value;
+					else Animation.ID = (ID)value;
 				} else if (propname == "name") {
 					NameParsed = true;
 					if (ParserMode == Mode.Collection) Collection.Name = value;
@@ -325,7 +325,7 @@ namespace Semi {
 					Collection.SpritesheetPath = value;
 				} else if (propname == "collection") {
 					CollectionParsed = true;
-					Animation.Collection = value;
+					Animation.Collection = (ID)value;
 				} else if (propname == "namespace") {
 					if (!Patch) Throw("$namespace can only be used after a $patch property");
 					PatchNamespace = value;
@@ -336,11 +336,10 @@ namespace Semi {
 		internal ParsedCollection.Definition ReadDefinition(string default_namespace) {
 			var def = new ParsedCollection.Definition();
 
-			def.ID = ReadUntilWhitespace();
-			if (def.ID.Length == 0) Throw("Expected definition ID");
-			if (def.ID.Contains(":") && !def.ID.StartsWithInvariant($"{default_namespace}:") && !Patch) Throw("Cannot specify a different namespace outside of $patch mode");
-			if (PatchNamespace != null && !def.ID.Contains(":")) def.ID = $"{PatchNamespace}:{def.ID}";
-			else if (!def.ID.Contains(":")) def.ID = $"@:{def.ID}";
+			def.ID = (ID)ReadUntilWhitespace();
+			if (!def.ID.DefaultNamespace && def.ID.Namespace != default_namespace && !Patch) Throw("Cannot specify a different namespace outside of $patch mode");
+			if (PatchNamespace != null && def.ID.DefaultNamespace) def.ID = (ID)$"{PatchNamespace}:{def.ID.Name}";
+			else if (def.ID.DefaultNamespace) def.ID = (ID)$"@:{def.ID.Name}";
 			if (Collection.Definitions.ContainsKey(def.ID)) {
 				Throw("Duplicate definition");
 			}
@@ -515,7 +514,7 @@ namespace Semi {
 			LastLine = pre_char;
 			var def_id = def_id_builder.ToString();
 			if (def_id.Length == 0) Throw("Expected sprite definition ID");
-			frame.Definition = def_id;
+			frame.Definition = (ID)def_id;
 
 			p = Peek();
 			while (p != null && p != '\n') {

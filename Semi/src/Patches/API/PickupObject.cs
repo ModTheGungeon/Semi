@@ -8,7 +8,7 @@ namespace Semi.Patches {
 	/// </summary>
 	[MonoModPatch("global::PickupObject")]
 	public class PickupObject : global::PickupObject {
-		public string UniqueItemID;
+		public ID UniqueItemID;
 
 		[MonoModIgnore]
 		public override void Pickup(PlayerController player) {

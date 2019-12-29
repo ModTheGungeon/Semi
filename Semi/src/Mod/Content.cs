@@ -59,25 +59,16 @@ namespace Semi {
 		/// <returns>The full ID including the namespace.</returns>
 		/// <param name="id">The ID.</param>
 		/// <param name="require_local">Whether this ID must point to the mod's namespace.</param>
-		public string GetFullID(string id, bool require_local) {
-			var localization_key = false;
-			if (id.StartsWithInvariant("#")) {
-				localization_key = true;
-				id = id.Substring(1);
-			}
+		public ID GetFullID(ID id, bool require_local) {
+			if (require_local && id.Namespace != Config.ID) throw new Exception($"ID must point to the mod's namespace: '{id}'");
 
-			id = IDPool<bool>.Resolve(id, Config.ID);
-			if (require_local && IDPool<bool>.Split(id).Namespace != Config.ID) throw new Exception($"ID must point to the mod's namespace: '{id}'");
-
-			if (localization_key) {
-				id = $"#{id}";
-			}
+            id = id.WithContextNamespace(Config.ID);
 
 			return id;
 		}
 
-		public string[] GetFullIDArray(string[] ids, bool require_local) {
-			var new_ary = new string[ids.Length];
+		public ID[] GetFullIDArray(ID[] ids, bool require_local) {
+			var new_ary = new ID[ids.Length];
 			for (var i = 0; i < ids.Length; i++) {
 				new_ary[i] = GetFullID(ids[i], require_local);
 			}
@@ -94,7 +85,7 @@ namespace Semi {
 		/// <returns>The sprite definition.</returns>
 		/// <param name="id">ID (including the mod's namespace) for the new sprite definition.</param>
 		/// <param name="sprite_path">Relative resource path to the image.</param>
-		public SpriteDefinition CreateSpriteDefinition(string id, string sprite_path) {
+		public SpriteDefinition CreateSpriteDefinition(ID id, string sprite_path) {
 			CheckMode();
 			id = GetFullID(id, true);
 			var tex = Texture2DLoader.LoadTexture2D(GetFullResourcePath(sprite_path));
@@ -111,7 +102,7 @@ namespace Semi {
 		/// <returns>The sprite definition of the new encounter icon.</returns>
 		/// <param name="id">ID (including the mod's namespace) for the new encounter icon.</param>
 		/// <param name="sprite_path">Relative resource path to the image.</param>
-		public SpriteDefinition RegisterEncounterIcon(string id, string sprite_path) {
+		public SpriteDefinition RegisterEncounterIcon(ID id, string sprite_path) {
 			CheckMode();
 			id = GetFullID(id, true);
 
@@ -131,7 +122,7 @@ namespace Semi {
 		/// <returns>The new sprite collection.</returns>
 		/// <param name="id">ID (including the mod's namespace) for the new collection.</param>
 		/// <param name="defs">Optional array of sprite definitions to initialize the sprite collection with.</param>
-		public SpriteCollection RegisterSpriteCollection(string id, params SpriteDefinition[] defs) {
+		public SpriteCollection RegisterSpriteCollection(ID id, params SpriteDefinition[] defs) {
 			CheckMode();
 			id = GetFullID(id, true);
 
@@ -143,7 +134,7 @@ namespace Semi {
 				defs
 			);
 
-			Gungeon.SpriteCollections.Add(id, coll);
+			Registry.SpriteCollections.Add(id, coll);
 
 			return coll;
 		}
@@ -155,21 +146,21 @@ namespace Semi {
 		/// <param name="id">ID (including the mod's namespace) for the new sprite template.</param>
 		/// <param name="coll_id">Global ID of the sprite collection to uses.</param>
 		/// <param name="start_def_id">Optional global ID of the sprite definition from the sprite collection to use, the first definition will be used if not specified.</param>
-		public Sprite RegisterSpriteTemplate(string id, string coll_id, string start_def_id = null) {
+		public Sprite RegisterSpriteTemplate(ID id, ID coll_id, ID? start_def_id = null) {
 			CheckMode();
 			id = GetFullID(id, true);
 			coll_id = GetFullID(coll_id, false);
-			start_def_id = GetFullID(start_def_id, false);
 
-			var coll = Gungeon.SpriteCollections[coll_id];
+			var coll = Registry.SpriteCollections[coll_id];
 
 			if (start_def_id != null) {
-				start_def_id = coll.SpritePool.ValidateEntry(start_def_id);
+                start_def_id = GetFullID(start_def_id.Value, false);
+                start_def_id = coll.SpritePool.ValidateExisting(start_def_id.Value);
 			}
 			var starting_idx = 0;
 			if (coll.SpriteDefinitions.Count == 0) throw new ArgumentException($"The collection must have at least one sprite definition");
 
-			if (start_def_id != null) starting_idx = coll.GetIndex(start_def_id);
+			if (start_def_id != null) starting_idx = coll.GetIndex(start_def_id.Value);
 			if (starting_idx < 0) throw new ArgumentException($"Collection doesn't have a '{start_def_id}' definition.");
 
 			var sprite = Sprite.Construct(
@@ -178,7 +169,7 @@ namespace Semi {
 				starting_idx
 			);
 
-			Gungeon.SpriteTemplates.Add(id, sprite);
+			Registry.SpriteTemplates.Add(id, sprite);
 
 			return sprite;
 		}
@@ -194,12 +185,12 @@ namespace Semi {
 		/// <param name="lang_id">Global ID of the language to apply this localization for.</param>
 		/// <param name="table">Target string table to apply this localization for.</param>
 		/// <param name="allow_overwrite">If set to <c>true</c> allows this localization to overwrite others (note - depends on loading order!).</param>
-		public I18N.ModLocalization RegisterLocalization(string id, string path, string lang_id, I18N.StringTable table, bool allow_overwrite = false) {
+		public I18N.ModLocalization RegisterLocalization(ID id, string path, ID lang_id, I18N.StringTable table, bool allow_overwrite = false) {
 			CheckMode();
 			id = GetFullID(id, true);
 			lang_id = GetFullID(lang_id, false);
 
-			lang_id = Gungeon.Languages.ValidateEntry(lang_id);
+			lang_id = Registry.Languages.ValidateExisting(lang_id);
 
 			var mod_loc = new I18N.ModLocalization(
 				Info,
@@ -209,7 +200,7 @@ namespace Semi {
 				allow_overwrite
 			);
 
-			Gungeon.Localizations.Add(id, mod_loc);
+			Registry.Localizations.Add(id, mod_loc);
 
 			return mod_loc;
 		}
@@ -225,18 +216,18 @@ namespace Semi {
 		/// <param name="short_desc_key">Global ID of the localization string to use for the short description of this item.</param>
 		/// <param name="long_desc_key">Global ID of the localization string to use for the long description of this item.</param>
 		/// <typeparam name="T">Component type to initialize as the PickupObject.</typeparam>
-		public T RegisterItem<T>(string id, string enc_icon_id, string sprite_template_id, string name_key = "", string short_desc_key = "", string long_desc_key = "") where T : PickupObject {
+		public T RegisterItem<T>(ID id, ID enc_icon_id, ID sprite_template_id, ID? name_key = null, ID? short_desc_key = null, ID? long_desc_key = null) where T : PickupObject {
 			CheckMode();
 			id = GetFullID(id, true);
 			enc_icon_id = GetFullID(enc_icon_id, false);
 			sprite_template_id = GetFullID(sprite_template_id, false);
-			name_key = GetFullID(name_key, false);
-			short_desc_key = GetFullID(short_desc_key, false);
-			long_desc_key = GetFullID(long_desc_key, false);
+			if (name_key != null) name_key = GetFullID(name_key.Value, false);
+			if (short_desc_key != null) short_desc_key = GetFullID(short_desc_key.Value, false);
+			if (long_desc_key != null) long_desc_key = GetFullID(long_desc_key.Value, false);
 
 			var sprite_def = SemiLoader.EncounterIconCollection.GetDefinition(enc_icon_id);
 			if (sprite_def == null) throw new ArgumentException($"There is no sprite definition '{sprite_def}' in the encounter icon collection");
-			var sprite_template = Gungeon.SpriteTemplates[sprite_template_id];
+			var sprite_template = Registry.SpriteTemplates[sprite_template_id];
 
 			var new_inst = PickupObjectTreeBuilder.GetNewInactiveObject(id);
 			var pickup_object = PickupObjectTreeBuilder.AddPickupObject<T>(new_inst);
@@ -251,21 +242,13 @@ namespace Semi {
 				barrel.transform.parent = new_inst.transform;
 				gun.barrelOffset = barrel.transform;
 			}
-			var journal_entry = PickupObjectTreeBuilder.CreateJournalEntry(name_key, long_desc_key, short_desc_key, sprite_def.Value.Name);
+			var journal_entry = PickupObjectTreeBuilder.CreateJournalEntry(name_key?.ToLocalizationKey() ?? "", long_desc_key?.ToLocalizationKey() ?? "", short_desc_key?.ToLocalizationKey() ?? "", sprite_def.Value.Name);
 			var enc_track = PickupObjectTreeBuilder.AddEncounterTrackable(new_inst, journal_entry, $"SEMI/Items/{typeof(T).Name}/{id}");
 			var enc_db_entry = PickupObjectTreeBuilder.CreateEncounterDatabaseEntry(enc_track, $"SEMI/Items/{id}");
 			PickupObjectTreeBuilder.AddSprite(new_inst, sprite_template);
 
 			PickupObjectDatabase.Instance.Objects.Add(pickup_object);
-			Gungeon.Items.Add(id, pickup_object);
-			var id_tag = Gungeon.ItemTag.Unknown;
-			var t_type = typeof(T);
-			if (t_type.IsAssignableFrom(typeof(Gun)) || t_type.IsAssignableFrom(typeof(PassiveItem)) || t_type.IsAssignableFrom(typeof(PlayerItem))) {
-				id_tag = Gungeon.ItemTag.Item;
-			} else {
-				id_tag = Gungeon.ItemTag.Consumable;
-			}
-			Gungeon.Items.SetTag(id, id_tag);
+			Registry.Items.Add(id, pickup_object);
 			EncounterDatabase.Instance.Entries.Add(enc_db_entry);
 
 			return pickup_object;
@@ -289,17 +272,17 @@ namespace Semi {
 		/// <param name="suppress_vfx">Whether the synergy should avoid triggering the arrow visual effect.</param>
 		/// <param name="on_activated">Delegate executed when the synergy becomes active.</param>
 		/// <param name="on_deactivated">Delegate executed when the synergy stops being active.</param>
-		public AdvancedSynergyEntry RegisterSynergy(string id, string name_loc_id, int objects_required, string[] optional_gun_ids = null, string[] mandatory_gun_ids = null, string[] optional_item_ids = null, string[] mandatory_item_ids = null, List<StatModifier> stat_modifiers = null, bool active_when_gun_unequipped = false, bool ignore_lich_eye_bullets = false, bool require_at_least_one_gun_and_one_item = false, bool suppress_vfx = false, Gungeon.SynergyStateChangeAction on_activated = null, Gungeon.SynergyStateChangeAction on_deactivated = null) {
+		public AdvancedSynergyEntry RegisterSynergy(ID id, ID name_loc_id, int objects_required, ID[] optional_gun_ids = null, ID[] mandatory_gun_ids = null, ID[] optional_item_ids = null, ID[] mandatory_item_ids = null, List<StatModifier> stat_modifiers = null, bool active_when_gun_unequipped = false, bool ignore_lich_eye_bullets = false, bool require_at_least_one_gun_and_one_item = false, bool suppress_vfx = false, Registry.SynergyStateChangeAction on_activated = null, Registry.SynergyStateChangeAction on_deactivated = null) {
 			CheckMode();
 			id = GetFullID(id, true);
 			name_loc_id = GetFullID(name_loc_id, false);
 
 			var syn = new Patches.AdvancedSynergyEntry {
 				ActivationStatus = SynergyEntry.SynergyActivation.ACTIVE,
-				OptionalGuns = IDPool<PickupObject>.ResolveList(optional_gun_ids),
-				MandatoryGuns = IDPool<PickupObject>.ResolveList(mandatory_gun_ids),
-				OptionalItems = IDPool<PickupObject>.ResolveList(optional_item_ids),
-				MandatoryItems = IDPool<PickupObject>.ResolveList(mandatory_item_ids),
+				OptionalGuns = optional_gun_ids,
+				MandatoryGuns = mandatory_gun_ids,
+				OptionalItems = optional_item_ids,
+				MandatoryItems = mandatory_item_ids,
 				NameKey = name_loc_id,
 				statModifiers = stat_modifiers,
 				NumberObjectsRequired = objects_required,
@@ -316,8 +299,8 @@ namespace Semi {
 			synergies.Add(syn);
 			GameManager.Instance.SynergyManager.synergies = synergies.ToArray();
 
-			if (on_activated != null) Gungeon.OnSynergyActivated(id, on_activated);
-			if (on_deactivated != null) Gungeon.OnSynergyDeactivated(id, on_activated);
+			if (on_activated != null) Registry.OnSynergyActivated(id, on_activated);
+			if (on_deactivated != null) Registry.OnSynergyDeactivated(id, on_activated);
 
 			return syn;
 		}
@@ -348,62 +331,59 @@ namespace Semi {
 			return SpriteAnimation.Load(parsed, Config.ID);
 		}
 
-		public Sound RegisterSound(string id, string path) {
+		public Sound RegisterSound(ID id, string path) {
 			CheckMode();
 			id = GetFullID(id, true);
 			path = GetFullResourcePath(path);
 			var sound = new Sound(RayAudio.Sound.Load(path));
-			Gungeon.ModAudioTracks.Add(id, sound);
+			Registry.ModAudioTracks.Add(id, sound);
 			return sound;
 		}
 
-		public Music RegisterMusic(string id, string path) {
+		public Music RegisterMusic(ID id, string path) {
 			CheckMode();
 			id = GetFullID(id, true);
 			path = GetFullResourcePath(path);
 			var music = new Music(RayAudio.MusicStream.Load(path));
-			Gungeon.ModAudioTracks.Add(id, music);
+			Registry.ModAudioTracks.Add(id, music);
 			return music;
 		}
 
-		public AudioEvent RegisterAudioEvent(string id, AudioEvent ev) {
+		public AudioEvent RegisterAudioEvent(ID id, AudioEvent ev) {
 			CheckMode();
 			id = GetFullID(id, true);
-			Gungeon.AudioEvents.Add(id, ev);
+			Registry.AudioEvents.Add(id, ev);
 			return ev;
 		}
 
-		public AudioEvent AddAudioEventConsequence(string target_ev, string consequence_ev) {
+		public AudioEvent AddAudioEventConsequence(ID target_ev, ID consequence_ev) {
 			CheckMode();
 			target_ev = GetFullID(target_ev, false);
 			consequence_ev = GetFullID(consequence_ev, false);
-			var consequence = Gungeon.AudioEvents[consequence_ev];
-			Gungeon.AudioEvents[target_ev].AddConsequence(consequence);
+			var consequence = Registry.AudioEvents[consequence_ev];
+			Registry.AudioEvents[target_ev].AddConsequence(consequence);
 			return consequence;
 		}
 
-		public UI.CheckboxMenuOption AddCheckboxMenuOption(string id, string label_loc_id, Action<bool> on_changed) {
+		public UI.CheckboxMenuOption AddCheckboxMenuOption(ID id, string label_content, Action<bool> on_changed) {
 			CheckMode();
 			id = GetFullID(id, true);
-			label_loc_id = GetFullID(label_loc_id, false);
 
-			var option = new UI.CheckboxMenuOption(label_loc_id);
+            var option = new UI.CheckboxMenuOption(label_content);
 			option.Changed = on_changed;
-			Gungeon.ModMenuOptions.Add(id, option);
+			Registry.ModMenuOptions.Add(id, option);
 
 			MenuOptions.Add(option);
 
 			return option;
 		}
 
-		public UI.ListMenuOption AddListMenuOption(string id, string label_loc_id, string[] options_loc_ids, Action<string> on_changed) {
+		public UI.ListMenuOption AddListMenuOption(ID id, string label_content, string[] options, Action<string> on_changed) {
 			CheckMode();
 			id = GetFullID(id, true);
-			label_loc_id = GetFullID(label_loc_id, false);
-			options_loc_ids = GetFullIDArray(options_loc_ids, false);
 
-			var option = new UI.ListMenuOption(label_loc_id, options_loc_ids);
-			Gungeon.ModMenuOptions.Add(id, option);
+			var option = new UI.ListMenuOption(label_content, options);
+			Registry.ModMenuOptions.Add(id, option);
 			option.Changed = on_changed;
 
 			MenuOptions.Add(option);

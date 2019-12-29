@@ -1,3 +1,5 @@
+# IDMaps have to be precompiled with scripts/compile_idmaps.rb
+#
 active_unboosted 0 heavy_metal
 active_unboosted 1 blade_runner
 active_unboosted 2 diazepam

@@ -9,11 +9,11 @@ namespace Semi {
 		/// <returns>The new sprite instance parented to <c>target</c>.</returns>
 		/// <param name="target">Target object.</param>
 		/// <param name="id">Global ID of the sprite template.</param>
-		public Sprite AttachSpriteInstance(GameObject target, string id) {
+		public Sprite AttachSpriteInstance(GameObject target, ID id) {
 			id = GetFullID(id, true);
 
-			if (!Gungeon.SpriteTemplates.ContainsID(id)) throw new ArgumentException($"Invalid (nonexistant) ID: {id}");
-			var template = Gungeon.SpriteTemplates[id];
+			if (!Registry.SpriteTemplates.Contains(id)) throw new ArgumentException($"Invalid (nonexistant) ID: {id}");
+			var template = Registry.SpriteTemplates[id];
 			var new_sprite = target.AddComponent<tk2dSprite>().Wrap();
 
 			template.CopyTo(new_sprite);
@@ -26,7 +26,7 @@ namespace Semi {
 		/// <returns>The new sprite instance.</returns>
 		/// <param name="target">Sprite to replace.</param>
 		/// <param name="id">Global ID of the sprite template.</param>
-		public Sprite ReplaceSpriteInstance(Sprite target, string id) {
+		public Sprite ReplaceSpriteInstance(Sprite target, ID id) {
 			var go = target.GameObject;
 			UnityEngine.Object.Destroy(target.Wrap);
 			return AttachSpriteInstance(go, id);
@@ -37,7 +37,7 @@ namespace Semi {
 		/// </summary>
 		/// <param name="old_id">Audio event ID to replace.</param>
 		/// <param name="new_id">Audio event ID to replace with.</param>
-		public void OverrideAudioEvent(string old_id, string new_id) {
+		public void OverrideAudioEvent(ID old_id, ID new_id) {
 			AudioEvent.AudioEventOverrides[GetFullID(old_id, false)] = GetFullID(new_id, false);
 		}
 	}

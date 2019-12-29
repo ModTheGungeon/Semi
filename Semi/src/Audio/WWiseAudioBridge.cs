@@ -11,10 +11,9 @@ namespace Semi {
 		/// </summary>
 		/// <returns>The WWise event name, or null if the ID doesn't represent a WWise event.</returns>
 		/// <param name="id">Identifier.</param>
-		internal static string GetWWiseEventNameFromID(string id) {
-			if (id.StartsWithInvariant("gungeon:")) return id.Replace("gungeon:", "");;
-			if (!id.Contains(":")) return id;
-			return null;
+		internal static string GetWWiseEventNameFromID(ID id) {
+            if (id.DefaultNamespace) return id.Name.ToString();
+            return null;
 		}
 
 		/// <summary>
@@ -25,18 +24,14 @@ namespace Semi {
 		/// <returns>Null if the ID matched a RayAudio audio track (which also plays it), or the WWise event name if the ID points to a WWise event.</returns>
 		/// <param name="id">ID of the audio track.</param>
 		/// <param name="source">Source GameObject.</param>
-		internal static string PostEventOrReturnWWiseEventName(string id, GameObject source) {
+		internal static string PostEventOrReturnWWiseEventName(ID id, GameObject source) {
 			if (!Audio.Ready) return null;
-
-			id = id.ToLowerInvariant(); // all wwise audio event IDs are just the original names in all lowercase
-			id = IDPool<Audio>.Resolve(id);
-			IDPool<Audio>.VerifyID(id);
 
 			if (AudioEvent.AudioEventOverrides.ContainsKey(id)) {
 				return PostEventOrReturnWWiseEventName(AudioEvent.AudioEventOverrides[id], source);
 			}
 
-			if (!Gungeon.AudioEvents.ContainsID(id)) {
+			if (!Registry.AudioEvents.Contains(id)) {
 				var event_name = GetWWiseEventNameFromID(id);
 				if (event_name != null) {
 					return event_name;
@@ -45,7 +40,7 @@ namespace Semi {
 					return null;
 				}
 			} else {
-				return Gungeon.AudioEvents[id].FirePostEvent(source);
+				return Registry.AudioEvents[id].FirePostEvent(source);
 			}
 		}
 	}
