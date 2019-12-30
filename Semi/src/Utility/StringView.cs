@@ -27,95 +27,30 @@ namespace Semi {
             return hash;
         }
     }
-    //public class StringHashDictionary<T> {
-    //    private Dictionary<uint, StringView> _KeyStrings = new Dictionary<uint, StringView>();
-    //    private Dictionary<uint, T> _Dictionary = new Dictionary<uint, T>();
 
-    //    public T this[string key] {
-    //        get { return _Dictionary[FNVHash.Compute(key)]; }
-    //        set {
-    //            var hash = FNVHash.Compute(key);
-    //            _Dictionary[hash] = value;
-    //            _KeyStrings[hash] = new StringView(key, 0);
-    //        }
-    //    }
-
-    //    public T this[StringView key] {
-    //        get { return _Dictionary[key.GetHashCodeUint()]; }
-    //        set {
-    //            var hash = key.GetHashCodeUint();
-    //            _Dictionary[hash] = value;
-    //            _KeyStrings[hash] = key;
-    //        }
-    //    }
-
-    //    public bool TryGetValue(string key, out T field) {
-    //        return _Dictionary.TryGetValue(FNVHash.Compute(key), out field);
-    //    }
-
-    //    public bool TryGetValue(StringView key, out T field) {
-    //        return _Dictionary.TryGetValue(key.GetHashCodeUint(), out field);
-    //    }
-
-    //    public bool ContainsKey(string key) {
-    //        return _Dictionary.ContainsKey(FNVHash.Compute(key));
-    //    }
-
-    //    public bool ContainsKey(StringView key) {
-    //        return _Dictionary.ContainsKey(key.GetHashCodeUint());
-    //    }
-
-    //    public IEnumerable<KeyValuePair<StringView, T>> Entries {
-    //        get {
-    //            foreach (var kv in _Dictionary) {
-    //                yield return new KeyValuePair<StringView, T>(_KeyStrings[kv.Key], kv.Value);
-    //            }
-    //        }
-    //    }
-    //}
-
-    //public class StringHashSet {
-    //    // Note: no iteration since we only store hashes!
-
-    //    private HashSet<uint> _HashSet = new HashSet<uint>();
-
-    //    public void Add(string s) {
-    //        _HashSet.Add(FNVHash.Compute(s));
-    //    }
-
-    //    public void Add(StringView s) {
-    //        _HashSet.Add(s.GetHashCodeUint());
-    //    }
-
-    //    public bool Contains(string s) {
-    //        return _HashSet.Contains(FNVHash.Compute(s));
-    //    }
-
-    //    public bool Contains(StringView s) {
-    //        return _HashSet.Contains(s.GetHashCodeUint());
-    //    }
-
-    //    public void Remove(string s) {
-    //        _HashSet.Remove(FNVHash.Compute(s));
-    //    }
-
-    //    public void Remove(StringView s) {
-    //        _HashSet.Remove(s.GetHashCodeUint());
-    //    }
-    //}
-
+    /// <summary>
+    /// Provides a view into a section of a string, avoiding heap allocations
+    /// that would happen if operations such as `string.Substring` were used.
+    /// </summary>
     public struct StringView {
         private string _SourceString;
         public int SourceStringPosition;
         private int? _ForcedLength;
         private uint? _CachedHash;
 
+        /// <value>The length of this view.</value>
         public int Length {
             get {
                 return _ForcedLength ?? _SourceString.Length;
             }
         }
 
+        /// <summary>
+        /// Initializes a new StringView from the specified string.
+        /// </summary>
+        /// <param name="s">The backing string.</param>
+        /// <param name="pos">The position in the string that will be used as the origin of the string view.</param>
+        /// <param name="len">The optional length of the view within the provided string.</param>
         public StringView(string s, int pos, int? len = null) {
             _SourceString = s;
             var source_len = s.Length;
@@ -133,17 +68,24 @@ namespace Semi {
             _ForcedLength = len;
         }
 
+        /// <summary>
+        /// Calculates an FNV hash of the region specified by this string view
+        /// (no copying is done).
+        /// </summary>
+        /// <returns>The hash code.</returns>
         public uint GetHashCodeUint() {
             if (_CachedHash == null) _CachedHash = FNVHash.Compute(this);
             return _CachedHash.Value;
         }
 
+        /// <summary>
+        /// Hash function for the fragment of a string pointed to by this string
+        /// view. Equivalent to casting <see cref="GetHashCodeUint"/> to `int`.
+        /// </summary>
+        /// <returns>A hash code for this instance that is suitable for use in hashing algorithms and data structures such as a
+        /// hash table.</returns>
         public override int GetHashCode() {
             return (int)GetHashCodeUint();
-        }
-
-        public int RelativeToRealPosition(int pos) {
-            return SourceStringPosition + pos;
         }
 
         public char this[int index] {
@@ -176,14 +118,23 @@ namespace Semi {
             return true;
         }
 
-        public string CutRegion() {
+        /// <summary>
+        /// Returns the data pointed to by this string view as a new `string`.
+        /// This method will allocate the new string.
+        /// </summary>
+        /// <returns>A <see cref="T:System.String"/> that represents the current <see cref="T:Semi.StringView"/>.</returns>
+        public override string ToString() {
             return _SourceString.Substring(SourceStringPosition, Length);
         }
 
-        public override string ToString() {
-            return CutRegion();
-        }
-
+        /// <summary>
+        /// Returns the substring of the data pointed to by this string view
+        /// within the backing string. This method allocates memory for the new
+        /// string. See <see cref="Subview"/> for a `StringView`-based alternative.
+        /// </summary>
+        /// <returns>The substring.</returns>
+        /// <param name="pos">Position.</param>
+        /// <param name="len">Length.</param>
         public string Substring(int pos, int? len = null) {
             if (len != null && len > Length) {
                 throw new ArgumentOutOfRangeException(nameof(len), $"Length parameter ({len}) is greater than the length of this string view ({Length})");
@@ -208,10 +159,25 @@ namespace Semi {
             return GetHashCodeUint() == v.GetHashCodeUint();
         }
 
+        /// <summary>
+        /// Creates a new StringView that operates on a newly-allocated `string`
+        /// region of the backing data of this string view.
+        /// </summary>
+        /// <returns>The new StringView.</returns>
+        /// <param name="pos">Position.</param>
+        /// <param name="len">Length.</param>
         public StringView SubviewCopy(int pos, int? len = null) {
-            return new StringView(CutRegion(), pos, len);
+            return new StringView(ToString(), pos, len);
         }
 
+        /// <summary>
+        /// Creates a new StringView that operates on the same backing string
+        /// as this view, but a sub-fragment of it. As opposed to <see cref="SubviewCopy"/>,
+        /// this method does not allocate any memory.
+        /// </summary>
+        /// <returns>The subview.</returns>
+        /// <param name="pos">Position.</param>
+        /// <param name="len">Length.</param>
         public StringView Subview(int pos, int? len = null) {
             if (len != null && len > Length) {
                 throw new ArgumentOutOfRangeException(nameof(len), $"Length parameter ({len}) is greater than the length of this string view ({Length})");

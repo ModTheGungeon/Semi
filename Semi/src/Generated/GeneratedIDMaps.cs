@@ -3450,1031 +3450,1031 @@ namespace Semi.Generated {
 		public static void ApplyEnemies() {
 			ID id;
 			AIActor item;
-			id = (ID)"[AngryBook]";
+			id = (ID)"bookllett";
 			item = EnemyDatabase.Instance.Entries[0].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[AngryBook_Blue]";
+			id = (ID)"blue_bookllett";
 			item = EnemyDatabase.Instance.Entries[1].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[AngryBook_Green]";
+			id = (ID)"green_bookllett";
 			item = EnemyDatabase.Instance.Entries[2].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[ArrowheadMan]";
+			id = (ID)"arrowkin";
 			item = EnemyDatabase.Instance.Entries[3].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[AshBulletMan]";
+			id = (ID)"ashen_bullet_kin";
 			item = EnemyDatabase.Instance.Entries[4].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[AshBulletShotgunMan]";
+			id = (ID)"ashen_shotgun_kin";
 			item = EnemyDatabase.Instance.Entries[5].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Bird]";
+			id = (ID)"gigi";
 			item = EnemyDatabase.Instance.Entries[6].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Blizzbulon]";
+			id = (ID)"blizzbulon";
 			item = EnemyDatabase.Instance.Entries[7].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Blobulin]";
+			id = (ID)"blobulin";
 			item = EnemyDatabase.Instance.Entries[8].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Blobuloid]";
+			id = (ID)"blobuloid";
 			item = EnemyDatabase.Instance.Entries[9].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Blobulon]";
+			id = (ID)"blobulon";
 			item = EnemyDatabase.Instance.Entries[10].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Bloodbulon]";
+			id = (ID)"bloodbulon";
 			item = EnemyDatabase.Instance.Entries[11].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Bombshee]";
+			id = (ID)"bombshee";
 			item = EnemyDatabase.Instance.Entries[12].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BubbleLizard]";
+			id = (ID)"gunzookie";
 			item = EnemyDatabase.Instance.Entries[13].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BubbleLizard_Red]";
+			id = (ID)"gunzockie";
 			item = EnemyDatabase.Instance.Entries[14].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Bullat]";
+			id = (ID)"bullat";
 			item = EnemyDatabase.Instance.Entries[15].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Bullat_Ghost]";
+			id = (ID)"spirat";
 			item = EnemyDatabase.Instance.Entries[16].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Bullat_Giant]";
+			id = (ID)"king_bullat";
 			item = EnemyDatabase.Instance.Entries[17].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Bullat_Grenade]";
+			id = (ID)"grenat";
 			item = EnemyDatabase.Instance.Entries[18].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Bullat_Shotgun]";
+			id = (ID)"shotgat";
 			item = EnemyDatabase.Instance.Entries[19].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletCardinal]";
+			id = (ID)"cardinal";
 			item = EnemyDatabase.Instance.Entries[20].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletMachineGunMan]";
+			id = (ID)"ak47_bullet_kin";
 			item = EnemyDatabase.Instance.Entries[21].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletMan]";
+			id = (ID)"bullet_kin";
 			item = EnemyDatabase.Instance.Entries[22].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletManBandana]";
+			id = (ID)"bandana_bullet_kin";
 			item = EnemyDatabase.Instance.Entries[23].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletManDevil]";
+			id = (ID)"fallen_bullet_kin";
 			item = EnemyDatabase.Instance.Entries[24].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletManEyepatch]";
+			id = (ID)"veteran_bullet_kin";
 			item = EnemyDatabase.Instance.Entries[25].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletManMagic]";
+			id = (ID)"wizbang";
 			item = EnemyDatabase.Instance.Entries[26].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletManMiner]";
+			id = (ID)"minelet";
 			item = EnemyDatabase.Instance.Entries[27].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletManShroomed]";
+			id = (ID)"shroomer";
 			item = EnemyDatabase.Instance.Entries[28].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletManTank]";
+			id = (ID)"tanker";
 			item = EnemyDatabase.Instance.Entries[29].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletManTutorial]";
+			id = (ID)"tutorial_bullet_kin";
 			item = EnemyDatabase.Instance.Entries[30].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletMan_Mutant]";
+			id = (ID)"mutant_bullet_kin";
 			item = EnemyDatabase.Instance.Entries[31].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletML_Mule_For_Dave]";
+			id = (ID)"invisible_enemy";
 			item = EnemyDatabase.Instance.Entries[32].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletMummy]";
+			id = (ID)"gummy";
 			item = EnemyDatabase.Instance.Entries[33].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletRifleMan]";
+			id = (ID)"sniper_shell";
 			item = EnemyDatabase.Instance.Entries[34].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletRifleProfessional]";
+			id = (ID)"professional";
 			item = EnemyDatabase.Instance.Entries[35].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletShark]";
+			id = (ID)"bullet_shark";
 			item = EnemyDatabase.Instance.Entries[36].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletSharkBig]";
+			id = (ID)"great_bullet_shark";
 			item = EnemyDatabase.Instance.Entries[37].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletShotgrubMan]";
+			id = (ID)"shotgrub";
 			item = EnemyDatabase.Instance.Entries[38].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletShotgunExecutionerMan]";
+			id = (ID)"executioner";
 			item = EnemyDatabase.Instance.Entries[39].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletShotgunMan]";
+			id = (ID)"red_shotgun_kin";
 			item = EnemyDatabase.Instance.Entries[40].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletShotgunMan_Blue]";
+			id = (ID)"blue_shotgun_kin";
 			item = EnemyDatabase.Instance.Entries[41].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletShotgunMan_Mutant]";
+			id = (ID)"mutant_shotgun_kin";
 			item = EnemyDatabase.Instance.Entries[42].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletShotgunMan_SawedOff]";
+			id = (ID)"veteran_shotgun_kin";
 			item = EnemyDatabase.Instance.Entries[43].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletSkeleton]";
+			id = (ID)"skullet";
 			item = EnemyDatabase.Instance.Entries[44].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletSkeletonHelmet]";
+			id = (ID)"skullmet";
 			item = EnemyDatabase.Instance.Entries[45].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[ChanceBulletMan]";
+			id = (ID)"chance_kin";
 			item = EnemyDatabase.Instance.Entries[46].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Chancebulon]";
+			id = (ID)"chancebulon";
 			item = EnemyDatabase.Instance.Entries[47].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Chicken]";
+			id = (ID)"chicken";
 			item = EnemyDatabase.Instance.Entries[48].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[CoalGuy]";
+			id = (ID)"coaler";
 			item = EnemyDatabase.Instance.Entries[49].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Cubulead]";
+			id = (ID)"cubulead";
 			item = EnemyDatabase.Instance.Entries[50].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Cubulon]";
+			id = (ID)"cubulon";
 			item = EnemyDatabase.Instance.Entries[51].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Cultist]";
+			id = (ID)"gun_cultist";
 			item = EnemyDatabase.Instance.Entries[52].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Cultist_Kaliber]";
+			id = (ID)"confirmed";
 			item = EnemyDatabase.Instance.Entries[53].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[CursedReaper]";
+			id = (ID)"lord_of_the_jammed";
 			item = EnemyDatabase.Instance.Entries[54].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Detonator_Cross]";
+			id = (ID)"stationary_x_det";
 			item = EnemyDatabase.Instance.Entries[55].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Detonator_Cross_Diagonal]";
+			id = (ID)"diagonal_moving_x_det";
 			item = EnemyDatabase.Instance.Entries[56].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Detonator_Cross_Horizontal]";
+			id = (ID)"horizontal_moving_x_det";
 			item = EnemyDatabase.Instance.Entries[57].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Detonator_Cross_Vertical]";
+			id = (ID)"vertical_moving_x_det";
 			item = EnemyDatabase.Instance.Entries[58].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Detonator_Plus]";
+			id = (ID)"stationary_+_det";
 			item = EnemyDatabase.Instance.Entries[59].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Detonator_Plus_Diagonal]";
+			id = (ID)"diagonal_moving_+_det";
 			item = EnemyDatabase.Instance.Entries[60].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Detonator_Plus_Horizontal]";
+			id = (ID)"horizontal_moving_+_det";
 			item = EnemyDatabase.Instance.Entries[61].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Detonator_Plus_Vertical]";
+			id = (ID)"vertical_moving_+_det";
 			item = EnemyDatabase.Instance.Entries[62].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[DisplacerBeast]";
+			id = (ID)"misfire_beast";
 			item = EnemyDatabase.Instance.Entries[63].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[DraGun_Knife]";
+			id = (ID)"dragun_knife";
 			item = EnemyDatabase.Instance.Entries[64].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[DraGun_Knife_Advanced]";
+			id = (ID)"dragun_knife_advanced";
 			item = EnemyDatabase.Instance.Entries[65].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[DynamiteGuy]";
+			id = (ID)"nitra";
 			item = EnemyDatabase.Instance.Entries[66].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[FleshCubeGuy]";
+			id = (ID)"flesh_cube";
 			item = EnemyDatabase.Instance.Entries[67].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[FloatingEye]";
+			id = (ID)"beadie";
 			item = EnemyDatabase.Instance.Entries[68].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Ghost]";
+			id = (ID)"hollowpoint";
 			item = EnemyDatabase.Instance.Entries[69].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[GrenadeGuy]";
+			id = (ID)"pinhead";
 			item = EnemyDatabase.Instance.Entries[70].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[GrimReaper]";
+			id = (ID)"gunreaper";
 			item = EnemyDatabase.Instance.Entries[71].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[GripMaster]";
+			id = (ID)"gripmaster";
 			item = EnemyDatabase.Instance.Entries[72].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[GunNut]";
+			id = (ID)"gun_nut";
 			item = EnemyDatabase.Instance.Entries[73].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[GunNut_Chain]";
+			id = (ID)"chain_gunner";
 			item = EnemyDatabase.Instance.Entries[74].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[GunNut_Spectre]";
+			id = (ID)"spectral_gun_nut";
 			item = EnemyDatabase.Instance.Entries[75].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[HellFace]";
+			id = (ID)"agonizer";
 			item = EnemyDatabase.Instance.Entries[76].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[IceCubeGuy]";
+			id = (ID)"mountain_cube";
 			item = EnemyDatabase.Instance.Entries[77].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Jamerlengo]";
+			id = (ID)"jamerlengo";
 			item = EnemyDatabase.Instance.Entries[78].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Jamromancer]";
+			id = (ID)"jammomancer";
 			item = EnemyDatabase.Instance.Entries[79].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Kaliber]";
+			id = (ID)"shambling_round";
 			item = EnemyDatabase.Instance.Entries[80].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[KeybulletMan]";
+			id = (ID)"keybullet_kin";
 			item = EnemyDatabase.Instance.Entries[81].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Killithid]";
+			id = (ID)"killithid";
 			item = EnemyDatabase.Instance.Entries[82].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[LeadMaiden]";
+			id = (ID)"lead_maiden";
 			item = EnemyDatabase.Instance.Entries[83].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[LeadWizard]";
+			id = (ID)"gunsinger";
 			item = EnemyDatabase.Instance.Entries[84].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[LeadWizard_Blue]";
+			id = (ID)"aged_gunsinger";
 			item = EnemyDatabase.Instance.Entries[85].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Met]";
+			id = (ID)"gat";
 			item = EnemyDatabase.Instance.Entries[86].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[MetalCubeGuy]";
+			id = (ID)"lead_cube";
 			item = EnemyDatabase.Instance.Entries[87].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[MetalCubeGuy_TrapVersion]";
+			id = (ID)"stone_cube";
 			item = EnemyDatabase.Instance.Entries[88].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Mimic_Black]";
+			id = (ID)"black_mimic";
 			item = EnemyDatabase.Instance.Entries[89].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Mimic_Green]";
+			id = (ID)"green_mimic";
 			item = EnemyDatabase.Instance.Entries[90].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Mimic_Rat]";
+			id = (ID)"rat_mimic";
 			item = EnemyDatabase.Instance.Entries[91].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Mimic_Red]";
+			id = (ID)"red_mimic";
 			item = EnemyDatabase.Instance.Entries[92].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Mimic_Silver]";
+			id = (ID)"blue_mimic";
 			item = EnemyDatabase.Instance.Entries[93].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Mimic_Wood]";
+			id = (ID)"brown_mimic";
 			item = EnemyDatabase.Instance.Entries[94].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[MushroomGuy_Giant]";
+			id = (ID)"spogre";
 			item = EnemyDatabase.Instance.Entries[95].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[MushroomGuy_Small]";
+			id = (ID)"fungun";
 			item = EnemyDatabase.Instance.Entries[96].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Necromancer]";
+			id = (ID)"ammomancer";
 			item = EnemyDatabase.Instance.Entries[97].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[PedestalMimic]";
+			id = (ID)"pedestal_mimic";
 			item = EnemyDatabase.Instance.Entries[98].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[PhaseSpider]";
+			id = (ID)"phaser_spider";
 			item = EnemyDatabase.Instance.Entries[99].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Poisbulin]";
+			id = (ID)"poisbulin";
 			item = EnemyDatabase.Instance.Entries[100].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Poisbuloid]";
+			id = (ID)"poisbuloid";
 			item = EnemyDatabase.Instance.Entries[101].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Poisbulon]";
+			id = (ID)"poisbulon";
 			item = EnemyDatabase.Instance.Entries[102].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Poopulon]";
+			id = (ID)"poopulon";
 			item = EnemyDatabase.Instance.Entries[103].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[PotFairy]";
+			id = (ID)"gun_fairy";
 			item = EnemyDatabase.Instance.Entries[104].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[PowderSkull]";
+			id = (ID)"skusket";
 			item = EnemyDatabase.Instance.Entries[105].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[PowderSkull_Black]";
+			id = (ID)"black_skusket";
 			item = EnemyDatabase.Instance.Entries[106].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[PowderSkull_Head]";
+			id = (ID)"skusket_head";
 			item = EnemyDatabase.Instance.Entries[107].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Revolvenant]";
+			id = (ID)"revolvenant";
 			item = EnemyDatabase.Instance.Entries[108].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[RubberBulletMan]";
+			id = (ID)"rubber_kin";
 			item = EnemyDatabase.Instance.Entries[109].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Shelleton]";
+			id = (ID)"shelleton";
 			item = EnemyDatabase.Instance.Entries[110].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[ShotgunCreecher]";
+			id = (ID)"creech";
 			item = EnemyDatabase.Instance.Entries[111].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Snake]";
+			id = (ID)"snake";
 			item = EnemyDatabase.Instance.Entries[112].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Spectre]";
+			id = (ID)"spectre";
 			item = EnemyDatabase.Instance.Entries[113].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Sunburst]";
+			id = (ID)"muzzle_wisp";
 			item = EnemyDatabase.Instance.Entries[114].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Sunburst_Blue]";
+			id = (ID)"muzzle_flare";
 			item = EnemyDatabase.Instance.Entries[115].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[T-Bulon]";
+			id = (ID)"leadbulon";
 			item = EnemyDatabase.Instance.Entries[116].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Tarnisher]";
+			id = (ID)"tarnisher";
 			item = EnemyDatabase.Instance.Entries[117].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[TaserBulletMan]";
+			id = (ID)"tazie";
 			item = EnemyDatabase.Instance.Entries[118].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[TombstoneMan]";
+			id = (ID)"tombstoner";
 			item = EnemyDatabase.Instance.Entries[119].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[TutorialKnightBeastMode]";
+			id = (ID)"ser_manuel";
 			item = EnemyDatabase.Instance.Entries[120].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Tutorial_Gun_Turret]";
+			id = (ID)"tutorial_turret";
 			item = EnemyDatabase.Instance.Entries[121].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Tutorial_Gun_Turret_faster]";
+			id = (ID)"faster_tutorial_turret";
 			item = EnemyDatabase.Instance.Entries[122].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[WallMimic]";
+			id = (ID)"wall_mimic";
 			item = EnemyDatabase.Instance.Entries[123].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[WizardBlue]";
+			id = (ID)"high_gunjurer";
 			item = EnemyDatabase.Instance.Entries[124].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[WizardPurple]";
+			id = (ID)"lore_gunjurer";
 			item = EnemyDatabase.Instance.Entries[125].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[WizardRed]";
+			id = (ID)"gunjurer";
 			item = EnemyDatabase.Instance.Entries[126].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[WizardYellow]";
+			id = (ID)"apprentice_gunjurer";
 			item = EnemyDatabase.Instance.Entries[127].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Zombullet]";
+			id = (ID)"spent";
 			item = EnemyDatabase.Instance.Entries[128].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Zombullet_Summoned]";
+			id = (ID)"gummy_spent";
 			item = EnemyDatabase.Instance.Entries[129].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[AdvancedDraGun]";
+			id = (ID)"advanced_dragun";
 			item = EnemyDatabase.Instance.Entries[130].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Bashellisk]";
+			id = (ID)"ammoconda";
 			item = EnemyDatabase.Instance.Entries[131].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Beholster]";
+			id = (ID)"beholster";
 			item = EnemyDatabase.Instance.Entries[132].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Blobulord]";
+			id = (ID)"blobulord";
 			item = EnemyDatabase.Instance.Entries[133].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BossDoorMimic]";
+			id = (ID)"door_lord";
 			item = EnemyDatabase.Instance.Entries[134].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BossFinalBullet_Agunim]";
+			id = (ID)"agunim";
 			item = EnemyDatabase.Instance.Entries[135].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BossFinalBullet_Gunon]";
+			id = (ID)"cannon";
 			item = EnemyDatabase.Instance.Entries[136].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BossFinalConvict]";
+			id = (ID)"black_stache";
 			item = EnemyDatabase.Instance.Entries[137].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BossFinalGuide]";
+			id = (ID)"dr_wolfs_monster";
 			item = EnemyDatabase.Instance.Entries[138].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BossFinalMarine]";
+			id = (ID)"interdimensional_horror";
 			item = EnemyDatabase.Instance.Entries[139].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BossFinalRobot]";
+			id = (ID)"last_human";
 			item = EnemyDatabase.Instance.Entries[140].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BossFinalRogue]";
+			id = (ID)"hm_absolution";
 			item = EnemyDatabase.Instance.Entries[141].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BossStatuesDummy]";
+			id = (ID)"kill_pillars";
 			item = EnemyDatabase.Instance.Entries[142].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletBishop]";
+			id = (ID)"bullet_bishop";
 			item = EnemyDatabase.Instance.Entries[143].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletBrosShades]";
+			id = (ID)"shades";
 			item = EnemyDatabase.Instance.Entries[144].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletBrosSmiley]";
+			id = (ID)"smiley";
 			item = EnemyDatabase.Instance.Entries[145].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletKing]";
+			id = (ID)"bullet_king";
 			item = EnemyDatabase.Instance.Entries[146].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BunkerBoss]";
+			id = (ID)"bunker";
 			item = EnemyDatabase.Instance.Entries[147].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[DemonWall]";
+			id = (ID)"wallmonger";
 			item = EnemyDatabase.Instance.Entries[148].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[DraGun]";
+			id = (ID)"dragun";
 			item = EnemyDatabase.Instance.Entries[149].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[GatlingGull]";
+			id = (ID)"gatling_gull";
 			item = EnemyDatabase.Instance.Entries[150].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[GiantPowderskull]";
+			id = (ID)"cannonbalrog";
 			item = EnemyDatabase.Instance.Entries[151].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[HighPriest]";
+			id = (ID)"high_priest";
 			item = EnemyDatabase.Instance.Entries[152].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Infinilich]";
+			id = (ID)"infinilich";
 			item = EnemyDatabase.Instance.Entries[153].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Lich]";
+			id = (ID)"lich";
 			item = EnemyDatabase.Instance.Entries[154].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[ManfredsRival]";
+			id = (ID)"blockner";
 			item = EnemyDatabase.Instance.Entries[155].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Meduzi]";
+			id = (ID)"gorgun";
 			item = EnemyDatabase.Instance.Entries[156].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Megalich]";
+			id = (ID)"megalich";
 			item = EnemyDatabase.Instance.Entries[157].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[MetalGearRat]";
+			id = (ID)"resourceful_rat_mech";
 			item = EnemyDatabase.Instance.Entries[158].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[MineFlayer]";
+			id = (ID)"mine_flayer";
 			item = EnemyDatabase.Instance.Entries[159].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[OldBulletKing]";
+			id = (ID)"old_king";
 			item = EnemyDatabase.Instance.Entries[160].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Psychoman]";
+			id = (ID)"psychoman";
 			item = EnemyDatabase.Instance.Entries[161].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[ResourcefulRat_Boss]";
+			id = (ID)"resourceful_rat";
 			item = EnemyDatabase.Instance.Entries[162].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Shopkeep_Boss]";
+			id = (ID)"shopkeeper_boss";
 			item = EnemyDatabase.Instance.Entries[163].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[TankTreader]";
+			id = (ID)"treadnaught";
 			item = EnemyDatabase.Instance.Entries[164].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[_BossTemplate]";
+			id = (ID)"boss_template";
 			item = EnemyDatabase.Instance.Entries[165].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Bashellisk_Body_Pickup]";
+			id = (ID)"ammoconda_ball";
 			item = EnemyDatabase.Instance.Entries[166].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BlobulordCrawler]";
+			id = (ID)"tiny_blobulord";
 			item = EnemyDatabase.Instance.Entries[167].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BossFinalConvict_HegemonySoldier]";
+			id = (ID)"convicts_past_soldier";
 			item = EnemyDatabase.Instance.Entries[168].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BossFinalGuide_DrWolf]";
+			id = (ID)"dr_wolf";
 			item = EnemyDatabase.Instance.Entries[169].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BossFinalMarine_Imp]";
+			id = (ID)"marines_past_imp";
 			item = EnemyDatabase.Instance.Entries[170].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BossFinalRobot_Critter01]";
+			id = (ID)"robots_past_chick";
 			item = EnemyDatabase.Instance.Entries[171].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BossFinalRobot_Critter02]";
+			id = (ID)"robots_past_rabbit";
 			item = EnemyDatabase.Instance.Entries[172].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BossFinalRobot_Critter03]";
+			id = (ID)"robots_past_squirrel";
 			item = EnemyDatabase.Instance.Entries[173].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BossFinalRobot_Human01]";
+			id = (ID)"human_rebel_1";
 			item = EnemyDatabase.Instance.Entries[174].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BossFinalRobot_Human02]";
+			id = (ID)"human_rebel_rapidfire";
 			item = EnemyDatabase.Instance.Entries[175].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BossFinalRobot_Human03]";
+			id = (ID)"human_rebel_2";
 			item = EnemyDatabase.Instance.Entries[176].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BossFinalRobot_Human04]";
+			id = (ID)"human_rebel_sniper";
 			item = EnemyDatabase.Instance.Entries[177].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BossFinalRobot_Terminator]";
+			id = (ID)"human_rebel_terminator";
 			item = EnemyDatabase.Instance.Entries[178].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletKingToadie]";
+			id = (ID)"chancellor";
 			item = EnemyDatabase.Instance.Entries[179].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletKingToadie_Angry]";
+			id = (ID)"angry_chancellor";
 			item = EnemyDatabase.Instance.Entries[180].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletManTank_Spawned]";
+			id = (ID)"spawned_tanker";
 			item = EnemyDatabase.Instance.Entries[181].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Fusebomb_Bot]";
+			id = (ID)"fusebot";
 			item = EnemyDatabase.Instance.Entries[182].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[GudetamaCrawler]";
+			id = (ID)"gudetama_crawler";
 			item = EnemyDatabase.Instance.Entries[183].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[HighPriestCandleMan]";
+			id = (ID)"stationary_candle_kin";
 			item = EnemyDatabase.Instance.Entries[184].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[MineFlayer_Bell]";
+			id = (ID)"mine_flayer_bell";
 			item = EnemyDatabase.Instance.Entries[185].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[MineFlayer_Claymore]";
+			id = (ID)"mine_flayer_claymore";
 			item = EnemyDatabase.Instance.Entries[186].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Mouser]";
+			id = (ID)"mouser";
 			item = EnemyDatabase.Instance.Entries[187].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[OldBulletKingToadie]";
+			id = (ID)"old_chancellor";
 			item = EnemyDatabase.Instance.Entries[188].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BabyGoodMimic]";
+			id = (ID)"baby_good_mimic";
 			item = EnemyDatabase.Instance.Entries[189].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Blankford]";
+			id = (ID)"old_blank_companion";
 			item = EnemyDatabase.Instance.Entries[190].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Blanky]";
+			id = (ID)"blank_companion";
 			item = EnemyDatabase.Instance.Entries[191].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletMan_Friendly]";
+			id = (ID)"friendly_bullet_kin";
 			item = EnemyDatabase.Instance.Entries[192].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Cop]";
+			id = (ID)"cop";
 			item = EnemyDatabase.Instance.Entries[193].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Cop_Robo]";
+			id = (ID)"robot_cop";
 			item = EnemyDatabase.Instance.Entries[194].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Cucco]";
+			id = (ID)"chicken_flute_chicken";
 			item = EnemyDatabase.Instance.Entries[195].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Dog]";
+			id = (ID)"dog";
 			item = EnemyDatabase.Instance.Entries[196].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Dog_Past]";
+			id = (ID)"wolf";
 			item = EnemyDatabase.Instance.Entries[197].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[GatlingGull_Summon]";
+			id = (ID)"ticket_gatling_gull";
 			item = EnemyDatabase.Instance.Entries[198].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[HungryHungryCaterpillar]";
+			id = (ID)"caterpillar";
 			item = EnemyDatabase.Instance.Entries[199].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Payday_Block]";
+			id = (ID)"payday_clown_blank";
 			item = EnemyDatabase.Instance.Entries[200].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Payday_Shoot]";
+			id = (ID)"payday_clown_shoot";
 			item = EnemyDatabase.Instance.Entries[201].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Payday_Stun]";
+			id = (ID)"payday_clown_stun";
 			item = EnemyDatabase.Instance.Entries[202].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Phoenix]";
+			id = (ID)"phoenix";
 			item = EnemyDatabase.Instance.Entries[203].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Pig]";
+			id = (ID)"pig";
 			item = EnemyDatabase.Instance.Entries[204].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Pigunon]";
+			id = (ID)"pig_cannon";
 			item = EnemyDatabase.Instance.Entries[205].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[PlayableBulletManUnlockEnemy]";
+			id = (ID)"red_caped_bullet_kin";
 			item = EnemyDatabase.Instance.Entries[206].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[PortableTurret]";
+			id = (ID)"portable_turret";
 			item = EnemyDatabase.Instance.Entries[207].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Puppy]";
+			id = (ID)"puppy";
 			item = EnemyDatabase.Instance.Entries[208].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Puppy_Wolf]";
+			id = (ID)"puppy_wolf";
 			item = EnemyDatabase.Instance.Entries[209].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[R22]";
+			id = (ID)"r2g2";
 			item = EnemyDatabase.Instance.Entries[210].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Raccoon]";
+			id = (ID)"raccoon";
 			item = EnemyDatabase.Instance.Entries[211].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[SackKnight]";
+			id = (ID)"junkan";
 			item = EnemyDatabase.Instance.Entries[212].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[SimpleTurtle]";
+			id = (ID)"turtle_problem_turtle";
 			item = EnemyDatabase.Instance.Entries[213].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[SuperSpaceTurtle]";
+			id = (ID)"super_space_turtle";
 			item = EnemyDatabase.Instance.Entries[214].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[SuperSpaceTurtle_Xtreme_Synergy]";
+			id = (ID)"super_space_turtle_dx";
 			item = EnemyDatabase.Instance.Entries[215].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Turkey]";
+			id = (ID)"turkey";
 			item = EnemyDatabase.Instance.Entries[216].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletManBandanaFakery]";
+			id = (ID)"bandana_bullet_kin_fakery";
 			item = EnemyDatabase.Instance.Entries[217].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletManEyepatchFakery]";
+			id = (ID)"veteran_bullet_kin_fakery";
 			item = EnemyDatabase.Instance.Entries[218].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[TestDummy]";
+			id = (ID)"test_dummy";
 			item = EnemyDatabase.Instance.Entries[219].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BlocknerMiniboss]";
+			id = (ID)"ghost_blockner";
 			item = EnemyDatabase.Instance.Entries[220].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Fusebomb]";
+			id = (ID)"fuselier";
 			item = EnemyDatabase.Instance.Entries[221].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[PhantomAgunim]";
+			id = (ID)"shadow_magician";
 			item = EnemyDatabase.Instance.Entries[222].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[CandleRat]";
+			id = (ID)"candle_rat";
 			item = EnemyDatabase.Instance.Entries[223].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[NormalRat]";
+			id = (ID)"rat";
 			item = EnemyDatabase.Instance.Entries[224].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[PoopulonCorn]";
+			id = (ID)"poopulorn_corn";
 			item = EnemyDatabase.Instance.Entries[225].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletmanTitan_Boss]";
+			id = (ID)"titan_bullet_kin_boss";
 			item = EnemyDatabase.Instance.Entries[226].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletMan_Pirate]";
+			id = (ID)"pirate_bullet_kin";
 			item = EnemyDatabase.Instance.Entries[227].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletMan_Fish]";
+			id = (ID)"green_fish_bullet_kin";
 			item = EnemyDatabase.Instance.Entries[228].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[DynaM80_Guy]";
+			id = (ID)"m80_kin";
 			item = EnemyDatabase.Instance.Entries[229].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[SnakeGuy]";
+			id = (ID)"western_snake";
 			item = EnemyDatabase.Instance.Entries[230].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Helicopter]";
+			id = (ID)"helicopter_agunim";
 			item = EnemyDatabase.Instance.Entries[231].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletmanBroccoli]";
+			id = (ID)"kalibullet";
 			item = EnemyDatabase.Instance.Entries[232].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[CactusGuy]";
+			id = (ID)"western_cactus";
 			item = EnemyDatabase.Instance.Entries[233].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Cylinder]";
+			id = (ID)"grey_cylinder";
 			item = EnemyDatabase.Instance.Entries[234].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Bird_Parrot]";
+			id = (ID)"bird_parrot";
 			item = EnemyDatabase.Instance.Entries[235].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[AngryBook_Tablet]";
+			id = (ID)"tablet_bookllett";
 			item = EnemyDatabase.Instance.Entries[236].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletShotgunMan_West]";
+			id = (ID)"western_shotgun_kin";
 			item = EnemyDatabase.Instance.Entries[237].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletmanTitan]";
+			id = (ID)"titan_bullet_kin";
 			item = EnemyDatabase.Instance.Entries[238].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Chameleon]";
+			id = (ID)"chameleon";
 			item = EnemyDatabase.Instance.Entries[239].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BabyShelleton]";
+			id = (ID)"baby_good_shelleton";
 			item = EnemyDatabase.Instance.Entries[240].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[LeadMaiden_Fridge]";
+			id = (ID)"fridge_maiden";
 			item = EnemyDatabase.Instance.Entries[241].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Bullat_Gargoyle]";
+			id = (ID)"gargoyle";
 			item = EnemyDatabase.Instance.Entries[242].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletShotgunMan_Pirate]";
+			id = (ID)"pirate_shotgun_kin";
 			item = EnemyDatabase.Instance.Entries[243].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletMan_Knight]";
+			id = (ID)"armored_bullet_kin";
 			item = EnemyDatabase.Instance.Entries[244].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Cylinder_Red]";
+			id = (ID)"red_cylinder";
 			item = EnemyDatabase.Instance.Entries[245].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletMan_Fish_Blue]";
+			id = (ID)"blue_fish_bullet_kin";
 			item = EnemyDatabase.Instance.Entries[246].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Musketball_Man]";
+			id = (ID)"musketball";
 			item = EnemyDatabase.Instance.Entries[247].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletmanKaliber]";
+			id = (ID)"kbullet";
 			item = EnemyDatabase.Instance.Entries[248].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Candle_Bulletman]";
+			id = (ID)"candle_kin";
 			item = EnemyDatabase.Instance.Entries[249].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletgalTitan_Boss]";
+			id = (ID)"titaness_bullet_kin_boss";
 			item = EnemyDatabase.Instance.Entries[250].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletManWest]";
+			id = (ID)"western_bullet_kin";
 			item = EnemyDatabase.Instance.Entries[251].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletmanOfficeTie]";
+			id = (ID)"office_bullet_kin";
 			item = EnemyDatabase.Instance.Entries[252].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletmanOfficePantsuit]";
+			id = (ID)"office_bullette_kin";
 			item = EnemyDatabase.Instance.Entries[253].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[Bulletman_Mech]";
+			id = (ID)"bullet_mech";
 			item = EnemyDatabase.Instance.Entries[254].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[AngryBook_Necronomicon]";
+			id = (ID)"necronomicon";
 			item = EnemyDatabase.Instance.Entries[255].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
-			id = (ID)"[BulletManVest]";
+			id = (ID)"brollet";
 			item = EnemyDatabase.Instance.Entries[256].GetPrefab<AIActor>();
 			Registry.Enemies.Add(id, item);
 			
