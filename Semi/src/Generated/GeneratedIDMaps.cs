@@ -1,3 +1,4 @@
+#pragma warning disable CS0618
 using System;
 using Semi;
 
@@ -9334,3 +9335,4 @@ namespace Semi.Generated {
 		}
 	}
 }
+#pragma warning enable CS0618

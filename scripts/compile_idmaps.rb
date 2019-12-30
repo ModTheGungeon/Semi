@@ -125,6 +125,7 @@ def set_file(path, type)
 	$type = type
 end
 
+line "#pragma warning disable CS0618"
 sline "using System"
 sline "using Semi"
 sline
@@ -156,3 +157,4 @@ with_indent do
 	line "}"
 end
 line "}"
+line "#pragma warning enable CS0618"
