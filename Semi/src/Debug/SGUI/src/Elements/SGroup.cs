@@ -213,7 +213,6 @@ namespace SGUI {
             }
         }
 
-
         [Flags]
         public enum EDirection {
             None        = 0,

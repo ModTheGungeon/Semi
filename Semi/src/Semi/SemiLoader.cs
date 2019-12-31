@@ -183,7 +183,7 @@ namespace Semi {
 		/// <summary>
 		/// Debug console.
 		/// </summary>
-		internal static DebugConsole.Console Console;
+		public static DebugConsole.Console Console;
 
 		/// <summary>
 		/// MonoBehaviour for handling the debug console.

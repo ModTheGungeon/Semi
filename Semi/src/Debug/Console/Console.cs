@@ -10,139 +10,146 @@ namespace Semi.DebugConsole {
     public partial class Console {
         public static Logger Logger = new Logger("Console");
 
-		public SGroup Window;
+        public SGroup Window;
 
-		internal SGroup OutputBox {
-			get {
-				return (SGroup)Window[(int)WindowChild.OutputBox];
-			}
-		}
-		internal SGroup AutocompleteBox {
-			get {
-				return (SGroup)Window[(int)WindowChild.AutocompleteBox];
-			}
-		}
-		internal STextField InputBox {
-			get {
-				return (STextField)Window[(int)WindowChild.InputBox];
-			}
-		}
+        internal SGroup OutputBox {
+            get {
+                return (SGroup)Window[(int)WindowChild.OutputBox];
+            }
+        }
+        internal SGroup AutocompleteBox {
+            get {
+                return (SGroup)Window[(int)WindowChild.AutocompleteBox];
+            }
+        }
+        internal STextField InputBox {
+            get {
+                return (STextField)Window[(int)WindowChild.InputBox];
+            }
+        }
 
-		private enum WindowChild {
-			OutputBox,
-			AutocompleteBox,
-			InputBox
-		}
+        private enum WindowChild {
+            OutputBox,
+            AutocompleteBox,
+            InputBox
+        }
 
-		public Console() {
-			AddDefaultCommands();
+        public Console() {
+            AddDefaultCommands();
 
-			Window = new SGroup {
-				Background = new Color(0, 0f, 0f, 0.8f),
-				Visible = false,
+            Window = new SGroup {
+                Background = new Color(0, 0f, 0f, 0.8f),
+                Visible = false,
 
-				OnUpdateStyle = elem => {
-					elem.Fill(0);
-				},
+                OnUpdateStyle = elem => {
+                    elem.Fill(0);
+                },
 
-				Children = {
-					new SGroup { // OutputBox
+                Children = {
+                    new SGroup { // OutputBox
                         Background = new Color(0, 0, 0, 0),
-						AutoLayout = (self) => self.AutoLayoutVertical,
-						ScrollDirection = SGroup.EDirection.Vertical,
-						OnUpdateStyle = (elem) => {
-							elem.Fill(0);
-							elem.Size -= new Vector2(0, elem.Backend.LineHeight);
-						},
-						Children = {
-							new SLabel($"SemiLoader v{Semi.SemiLoader.VERSION}") {
-								Foreground = new Color(0/255f, 161/255f, 231/255f)
-							}
-						},
-					},
-					new SGroup { // AutocompleteBox
+                        AutoLayout = (self) => self.AutoLayoutVertical,
+                        ScrollDirection = SGroup.EDirection.Vertical,
+                        OnUpdateStyle = (elem) => {
+                            elem.Fill(0);
+                            elem.Size -= new Vector2(0, elem.Backend.LineHeight);
+                        },
+                        Children = {
+                            new SLabel($"SemiLoader v{Semi.SemiLoader.VERSION}") {
+                                Foreground = new Color(0/255f, 161/255f, 231/255f)
+                            }
+                        },
+                    },
+                    new SGroup { // AutocompleteBox
                         Background = new Color(0.2f, 0.2f, 0.2f, 0.9f),
-						AutoLayout = (self) => self.AutoLayoutVertical,
-						ScrollDirection = SGroup.EDirection.Vertical,
-						OnUpdateStyle = (elem) => {
-							elem.Size.x = elem.Parent.InnerSize.x;
-							elem.Size.y = elem.Parent.InnerSize.y / 10; // 10%
+                        AutoLayout = (self) => self.AutoLayoutVertical,
+                        ScrollDirection = SGroup.EDirection.Vertical,
+                        OnUpdateStyle = (elem) => {
+                            elem.Size.x = elem.Parent.InnerSize.x;
+                            elem.Size.y = elem.Parent.InnerSize.y / 10; // 10%
                             elem.Position.y = elem.Parent.InnerSize.y - elem.Parent[(int)WindowChild.InputBox].Size.y - elem.Size.y;
-						},
-						Children = {},
-					},
-					new STextField { // InputBox
+                        },
+                        Children = {},
+                    },
+                    new STextField { // InputBox
                         OverrideTab = true,
 
-						OnUpdateStyle = (elem) => {
-							elem.Size.x = elem.Parent.InnerSize.x;
-							elem.Position.x = 0;
-							elem.Position.y = elem.Parent.InnerSize.y - elem.Size.y;
-						},
+                        OnUpdateStyle = (elem) => {
+                            elem.Size.x = elem.Parent.InnerSize.x;
+                            elem.Position.x = 0;
+                            elem.Position.y = elem.Parent.InnerSize.y - elem.Size.y;
+                        },
 
-						OnKey = (self, is_down, key) => {
-							if (!is_down || key == KeyCode.Return || key == KeyCode.KeypadEnter) return;
+                        OnKey = (self, is_down, key) => {
+                            if (!is_down || key == KeyCode.Return || key == KeyCode.KeypadEnter) return;
 
-							switch(key) {
-							case KeyCode.Home:
-								self.MoveCursor(0);
-								break;
-							case KeyCode.Escape:
-							case KeyCode.F2:
-								Hide();
-								break;
-							case KeyCode.Tab:
-								break;
+                            switch(key) {
+                            case KeyCode.Home:
+                                self.MoveCursor(0);
+                                break;
+                            case KeyCode.Escape:
+                            case KeyCode.F2: case KeyCode.BackQuote:
+                                Hide();
+                                break;
+                            case KeyCode.Tab:
+                                break;
 								// TODO @console probably not necessary but might be nice?
 								DoAutoComplete();
-								break;
-							case KeyCode.UpArrow:
-								History.MoveUp();
-								self.MoveCursor(History.Entry.Length);
-								break;
-							case KeyCode.DownArrow:
-								History.MoveDown();
-								self.MoveCursor(History.Entry.Length);
-								break;
-							default:
-								History.LastEntry = self.Text;
-								History.CurrentIndex = History.LastIndex;
-								break;
-							}
+                                break;
+                            case KeyCode.UpArrow:
+                                History.MoveUp();
+                                self.MoveCursor(History.Entry.Length);
+                                break;
+                            case KeyCode.DownArrow:
+                                History.MoveDown();
+                                self.MoveCursor(History.Entry.Length);
+                                break;
+                            default:
+                                History.LastEntry = self.Text;
+                                History.CurrentIndex = History.LastIndex;
+                                break;
+                            }
 
-							self.Text = History.Entry;
-						},
+                            self.Text = History.Entry;
+                        },
 
-						OnSubmit = (elem, text) => {
-							if (text.Trim().Length == 0) return;
-							History.Push();
-							ExecuteCommandAndPrintResult(text);
-						},
-					}
-				}
-			};
+                        OnSubmit = (elem, text) => {
+                            if (text.Trim().Length == 0) return;
+                            History.Push();
+                            ExecuteCommandAndPrintResult(text);
+                        },
+                    }
+                }
+            };
 
-			_Executor = new Parser.Executor((name, args, history_index) => {
-				Command cmd = ResolveCommand(name);
-				if (history_index == null && History.LastIndex > 0) {
-					history_index = History.LastIndex - 1;
-				}
-				return cmd.Run(args, history_index);
-			});
+            _Executor = new Parser.Executor((name, args, history_index) => {
+                Command cmd = ResolveCommand(name);
+                if (history_index == null && History.LastIndex > 0) {
+                    history_index = History.LastIndex - 1;
+                }
+                return cmd.Run(args, history_index);
+            });
 
-			NormalHistory = new CommandHistory(_Executor, _Parser);
-		}
+            NormalHistory = new CommandHistory(_Executor, _Parser);
+        }
 
-		public void Show() {
-			Window.Visible = true;
-			Window[(int)WindowChild.InputBox].Focus();
-		}
+        public void Show() {
+            Window.Visible = true;
+            Window[(int)WindowChild.InputBox].Focus();
+            if (!GameManager.Instance.IsPaused) {
+                GameManager.Instance.PauseRaw();
+            }
+        }
 
-		public void Hide() {
-			Window.Visible = false;
-			DiscardAutocomplete(dont_reset_text: true);
-			History.LastEntry = Text = "";
-		}
+        public void Hide() {
+            Window.Visible = false;
+            DiscardAutocomplete(dont_reset_text: true);
+            History.LastEntry = Text = "";
+            if (GameManager.Instance.IsPaused) {
+                GameManager.Instance.Unpause();
+                GameManager.Instance.ForceUnpause();
+            }
+        }
 
         public const char COMMAND_PATH_SEPARATOR = '/';
         public Dictionary<string, Command> Commands = new Dictionary<string, Command>();
