@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using UnityEngine;
 
 namespace Semi {
 	public class Tk0dConfigParser {
@@ -149,7 +150,7 @@ namespace Semi {
 			var char_prev = CurChar;
 			char? c = Peek();
 			while (c != null && !n.Contains(c)) {
-				builder.Append(c);
+                builder.Append(c);
 				Advance();
 				c = Peek();
 			}
@@ -165,16 +166,16 @@ namespace Semi {
 			var line_prev = CurLine;
 			var char_prev = CurChar;
 			char? c = Peek();
-			while (c != null && c >= min && c <= max) {
+            while (c != null && c >= min && c <= max) {
 				builder.Append(c);
 				Advance();
 				c = Peek();
-			}
+            }
 
 			LastLine = line_prev;
 			LastChar = char_prev;
 
-			return builder.ToString();
+            return builder.ToString();
 		}
 
 		internal string ReadUntilWhitespace() {
@@ -233,7 +234,7 @@ namespace Semi {
 		}
 
 		internal IntVector2 ReadPair(char delim) {
-			var wstr = ReadRange('0', '9');
+            var wstr = ReadRange('0', '9');
 			if (wstr.Length == 0) Throw($"Expected number");
 			var sep = Read();
 			if (sep != delim) Throw($"Expected size delimeter");
@@ -579,6 +580,7 @@ namespace Semi {
 		/// <returns>The parsed collection representation.</returns>
 		/// <param name="data">Contents of the Semi Collection file.</param>
 		public static ParsedCollection ParseCollection(string data, string default_namespace) {
+            data = LinuxifyLineEndings(data);
 			var parser = new Tk0dConfigParser(Mode.Collection, data);
 			parser.Parse(default_namespace);
 			return parser.Collection;
@@ -590,9 +592,20 @@ namespace Semi {
 		/// <returns>The parsed animation representation.</returns>
 		/// <param name="data">Contents of the Semi Animation file.</param>
 		public static ParsedAnimation ParseAnimation(string data, string default_namespace) {
+            data = LinuxifyLineEndings(data);
 			var parser = new Tk0dConfigParser(Mode.Animation, data);
 			parser.Parse(default_namespace);
 			return parser.Animation;
 		}
+
+        /// <summary>
+        /// Takes an input string and replaces any Windows line endings with Linux line endings so that the parser doesn't encounter any errors.
+        /// </summary>
+        /// <returns>The input string except with Linux line endings.</returns>
+        /// <param name="input">Input string to change line endings of.</param>
+        public static string LinuxifyLineEndings(string input)
+        {
+            return input.Replace("\r\n", "\n");
+        }
 	}
 }

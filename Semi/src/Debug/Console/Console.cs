@@ -88,7 +88,7 @@ namespace Semi.DebugConsole {
 								self.MoveCursor(0);
 								break;
 							case KeyCode.Escape:
-							case KeyCode.F2:
+							case KeyCode.F2: case KeyCode.BackQuote:
 								Hide();
 								break;
 							case KeyCode.Tab:
@@ -136,13 +136,20 @@ namespace Semi.DebugConsole {
 		public void Show() {
 			Window.Visible = true;
 			Window[(int)WindowChild.InputBox].Focus();
-		}
+            if (!GameManager.Instance.IsPaused) {
+                GameManager.Instance.PauseRaw();
+            }
+        }
 
 		public void Hide() {
 			Window.Visible = false;
 			DiscardAutocomplete(dont_reset_text: true);
-			History.LastEntry = Text = "";
-		}
+            History.LastEntry = Text = "";
+            if (GameManager.Instance.IsPaused) {
+                GameManager.Instance.Unpause();
+                GameManager.Instance.ForceUnpause();
+            }
+        }
 
         public const char COMMAND_PATH_SEPARATOR = '/';
         public Dictionary<string, Command> Commands = new Dictionary<string, Command>();

@@ -7,6 +7,7 @@ using Logger = ModTheGungeon.Logger;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using System.Reflection;
+using Dungeonator;
 
 namespace Semi.DebugConsole {
     public partial class Console {
@@ -82,6 +83,17 @@ namespace Semi.DebugConsole {
                     i--;
                 }
             }
+        }
+
+        private string ListFlows()
+        {
+            List<string> keyList = new List<string>(FlowManager.knownFlows.Keys);
+            string output = "";
+            foreach (string key in keyList)
+            {
+                output += key + "\n";
+            }
+            return output;
         }
 
 		internal static tk2dSprite tkExperimentSprite;
@@ -162,6 +174,24 @@ namespace Semi.DebugConsole {
                     return pickup_obj.EncounterNameOrDisplayName;
                 });
 
+            AddGroup("map")
+                .WithSubCommand("reveal", (args) => {
+                    bool secretRooms = false;
+                    if (args.Count > 0 && args[0] == "secret") secretRooms = true;
+                    Minimap.Instance.RevealAllRooms(secretRooms);
+                    return "Done.";
+                })
+                .WithSubCommand("teleporters", (args) => {
+                    foreach (RoomHandler room in GameManager.Instance.Dungeon.data.rooms)
+                    {
+                        room.forceTeleportersActive = true;
+                        if (!Minimap.Instance.roomsContainingTeleporters.Contains(room)) {
+                            room.AddProceduralTeleporterToRoom();
+                        }
+                    }
+                    return "Done.";
+                });
+
             AddGroup("pool")
                 .WithSubGroup(
                     new Group("items")
@@ -215,32 +245,46 @@ namespace Semi.DebugConsole {
             AddCommand("summon", (args) => {
                 var player = GameManager.Instance.PrimaryPlayer;
                 if (player == null) throw new Exception("No player");
-                var cell = player.CurrentRoom.GetRandomAvailableCellDumb();
-                var entity = AIActor.Spawn(Gungeon.Enemies[args[0]], cell, player.CurrentRoom, true, AIActor.AwakenAnimationType.Default, true);
+                var name = args[0];
+                int num = 1;
+                if (args.Count >= 2) int.TryParse(args[1], out num);
+                for (int i = 0; i < num; i++)
+                {
+                    var cell = player.CurrentRoom.GetRandomAvailableCellDumb();
+                    var entity = AIActor.Spawn(Gungeon.Enemies[args[0]], cell, player.CurrentRoom, true, AIActor.AwakenAnimationType.Default, true);
 
-				if (Gungeon.Enemies.HasTag(args[0], Gungeon.EnemyTag.Friendly)) {
-                    entity.CompanionOwner = player;
-                    entity.CompanionSettings = new ActorCompanionSettings();
-                    entity.CanTargetPlayers = false;
-                    var companion = entity.GetComponent<CompanionController>();
-                    if (companion != null) {
-                        companion.Initialize(player);
-                        if (companion.specRigidbody) {
-                            PhysicsEngine.Instance.RegisterOverlappingGhostCollisionExceptions(companion.specRigidbody, null, false);
+                    if (Gungeon.Enemies.HasTag(args[0], Gungeon.EnemyTag.Friendly))
+                    {
+                        entity.CompanionOwner = player;
+                        entity.CompanionSettings = new ActorCompanionSettings();
+                        entity.CanTargetPlayers = false;
+                        var companion = entity.GetComponent<CompanionController>();
+                        if (companion != null)
+                        {
+                            companion.Initialize(player);
+                            if (companion.specRigidbody)
+                            {
+                                PhysicsEngine.Instance.RegisterOverlappingGhostCollisionExceptions(companion.specRigidbody, null, false);
+                            }
                         }
                     }
-                }
 
-                var name = args[0];
-                if (entity.encounterTrackable?.journalData?.PrimaryDisplayName != null) {
-                    name = StringTableManager.GetEnemiesString(entity.encounterTrackable?.journalData?.PrimaryDisplayName);
+                    if (entity.encounterTrackable?.journalData?.PrimaryDisplayName != null)
+                    {
+                        name = StringTableManager.GetEnemiesString(entity.encounterTrackable?.journalData?.PrimaryDisplayName);
+                    }
                 }
 
                 return name;
             });
 
             AddCommand("give", (args) => {
-                LootEngine.TryGivePrefabToPlayer(Gungeon.Items[args[0]].gameObject, GameManager.Instance.PrimaryPlayer, true);
+                int num = 1;
+                if (args.Count >= 2) int.TryParse(args[1], out num);
+                for (int i = 0; i < num; i++)
+                {
+                    LootEngine.TryGivePrefabToPlayer(Gungeon.Items[args[0]].gameObject, GameManager.Instance.PrimaryPlayer, true);
+                }
                 return args[0];
             });
 

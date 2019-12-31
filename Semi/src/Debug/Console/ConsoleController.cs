@@ -10,14 +10,14 @@ namespace Semi.DebugConsole {
 		public void Update() {
 			if (!SemiLoader.DEBUG_MODE) return;
 
-			if (Input.GetKey(KeyCode.F2)) {
+			if (Input.GetKey(KeyCode.F2) || Input.GetKey(KeyCode.BackQuote)) {
 				Console.Logger.Debug($"F2 press");
 				if (SemiLoader.Console.Window.Visible) {
 					Console.Logger.Debug($"VISIBLE - HIDING");
 					SemiLoader.Console.Hide();
 				} else {
 					Console.Logger.Debug($"INVISIBLE - SHOWING");
-					SemiLoader.Console.Show();
+                    SemiLoader.Console.Show();
 				}
 			}
 		}

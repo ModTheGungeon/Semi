@@ -77,5 +77,14 @@ namespace SGUI {
             SelectionIndex = select;
         }
 
-   }
+        public override void MouseStatusChanged(EMouseStatus e, Vector2 pos)
+        {
+            base.MouseStatusChanged(e, pos);
+
+            if (e == EMouseStatus.Down) {
+                Focus();
+            }
+        }
+
+    }
 }
