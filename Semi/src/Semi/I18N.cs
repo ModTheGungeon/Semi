@@ -29,7 +29,7 @@ namespace Semi {
 		/// Abstract localization source. Children of this class have to define how to load localization data.
 		/// </summary>
 		public abstract class LocalizationSource {
-			public string TargetLanguageID { get; internal set; }
+			public ID TargetLanguageID { get; internal set; }
 			public StringTable TargetStringTable { get; internal set; }
 			public FormatType Format { get; internal set; }
 
@@ -133,8 +133,8 @@ namespace Semi {
 			/// </summary>
 			public string Data;
 
-			public RuntimeLocalization(string default_namespace, string data, string target_lang, StringTable target_table, bool allow_overwrite = false, FormatType format = FormatType.Gungeon) {
-				TargetLanguageID = Gungeon.Languages.ValidateEntry(target_lang);
+			public RuntimeLocalization(string default_namespace, string data, ID target_lang, StringTable target_table, bool allow_overwrite = false, FormatType format = FormatType.Gungeon) {
+				TargetLanguageID = Registry.Languages.ValidateExisting(target_lang);
 				TargetStringTable = target_table;
 				Data = data;
 				OverwriteMode = allow_overwrite;
@@ -173,8 +173,8 @@ namespace Semi {
 			/// </summary>
 			public bool OverwriteMode = false;
 
-			internal ModLocalization(SemiLoader.ModInfo owner, string path, string target_lang, StringTable target_table, bool allow_overwrite = false, FormatType format = FormatType.Gungeon) {
-				TargetLanguageID = Gungeon.Languages.ValidateEntry(target_lang);
+			internal ModLocalization(SemiLoader.ModInfo owner, string path, ID target_lang, StringTable target_table, bool allow_overwrite = false, FormatType format = FormatType.Gungeon) {
+				TargetLanguageID = Registry.Languages.ValidateExisting(target_lang);
 				TargetStringTable = target_table;
 				Path = path;
 				Owner = owner;
@@ -216,20 +216,20 @@ namespace Semi {
 			/// </summary>
 			/// <returns>Global ID of this language.</returns>
 			/// <param name="lang">Builtin enum value of this language.</param>
-			public static string LanguageToID(StringTableManager.GungeonSupportedLanguages lang) {
+			public static ID LanguageToID(StringTableManager.GungeonSupportedLanguages lang) {
 				switch (lang) {
-					case StringTableManager.GungeonSupportedLanguages.ENGLISH: return "gungeon:english";
-					case StringTableManager.GungeonSupportedLanguages.RUBEL_TEST: return "gungeon:rubel_test";
-					case StringTableManager.GungeonSupportedLanguages.FRENCH: return "gungeon:french";
-					case StringTableManager.GungeonSupportedLanguages.SPANISH: return "gungeon:spanish";
-					case StringTableManager.GungeonSupportedLanguages.ITALIAN: return "gungeon:italian";
-					case StringTableManager.GungeonSupportedLanguages.GERMAN: return "gungeon:german";
-					case StringTableManager.GungeonSupportedLanguages.BRAZILIANPORTUGUESE: return "gungeon:portuguese";
-					case StringTableManager.GungeonSupportedLanguages.JAPANESE: return "gungeon:japanese";
-					case StringTableManager.GungeonSupportedLanguages.KOREAN: return "gungeon:korean";
-					case StringTableManager.GungeonSupportedLanguages.RUSSIAN: return "gungeon:russian";
-					case StringTableManager.GungeonSupportedLanguages.POLISH: return "gungeon:polish";
-					case StringTableManager.GungeonSupportedLanguages.CHINESE: return "gungeon:chinese";
+					case StringTableManager.GungeonSupportedLanguages.ENGLISH: return (ID)"gungeon:english";
+					case StringTableManager.GungeonSupportedLanguages.RUBEL_TEST: return (ID)"gungeon:rubel_test";
+					case StringTableManager.GungeonSupportedLanguages.FRENCH: return (ID)"gungeon:french";
+					case StringTableManager.GungeonSupportedLanguages.SPANISH: return (ID)"gungeon:spanish";
+					case StringTableManager.GungeonSupportedLanguages.ITALIAN: return (ID)"gungeon:italian";
+					case StringTableManager.GungeonSupportedLanguages.GERMAN: return (ID)"gungeon:german";
+					case StringTableManager.GungeonSupportedLanguages.BRAZILIANPORTUGUESE: return (ID)"gungeon:portuguese";
+					case StringTableManager.GungeonSupportedLanguages.JAPANESE: return (ID)"gungeon:japanese";
+					case StringTableManager.GungeonSupportedLanguages.KOREAN: return (ID)"gungeon:korean";
+					case StringTableManager.GungeonSupportedLanguages.RUSSIAN: return (ID)"gungeon:russian";
+					case StringTableManager.GungeonSupportedLanguages.POLISH: return (ID)"gungeon:polish";
+					case StringTableManager.GungeonSupportedLanguages.CHINESE: return (ID)"gungeon:chinese";
 					default: throw new InvalidOperationException($"Cannot use GungeonLanguage on custom languages");
 				}
 			}
@@ -390,31 +390,30 @@ namespace Semi {
 			return dict;
 		}
 
-		private static string _CurrentLanguageID;
+		private static ID _CurrentLanguageID;
 		/// <summary>
 		/// Global ID of the currently selected language.
 		/// </summary>
 		/// <value>The current language ID.</value>
-		public static string CurrentLanguageID {
+		public static ID CurrentLanguageID {
 			get {
 				if (_CurrentLanguageID != null) return _CurrentLanguageID;
 				return _CurrentLanguageID = GungeonLanguage.LanguageToID(GameManager.Options.CurrentLanguage);
 			}
 			internal set {
-				var lang = Gungeon.Languages[value];
+				var lang = Registry.Languages[value];
 				GameManager.Options.CurrentLanguage = (StringTableManager.GungeonSupportedLanguages)lang.MappedLanguage;
 				_CurrentLanguageID = value;
 			}
 		}
 
-		internal static void LoadDFLocalizationsForLanguage(string lang_id, bool prefabs = false) {
-			lang_id = Gungeon.Languages.ValidateEntry(lang_id);
+		internal static void LoadDFLocalizationsForLanguage(ID lang_id, bool prefabs = false) {
+			lang_id = Registry.Languages.ValidateExisting(lang_id);
 			Logger.Debug($"Scanning localizations for {lang_id}");
 
-			foreach (var pair in Gungeon.Localizations.Pairs) {
+			foreach (var pair in Registry.Localizations.Pairs) {
 				var loc = pair.Value;
-				var target_lang_id = IDPool<LocalizationSource>.Resolve(loc.TargetLanguageID);
-				if (target_lang_id == lang_id && loc.TargetStringTable == StringTable.UI) {
+				if (loc.TargetLanguageID == lang_id && loc.TargetStringTable == StringTable.UI) {
 					Logger.Debug($"Found DFGUI localization '{pair.Key}' ({loc.GetType().Name})");
 
 					if ((loc is PrefabLocalization) != prefabs) continue;
@@ -428,14 +427,13 @@ namespace Semi {
 			CurrentLanguageID = lang_id;
 		}
 
-		internal static void LoadLocalizationsForLanguage(string lang_id, bool prefabs = false) {
-			lang_id = Gungeon.Languages.ValidateEntry(lang_id);
+		internal static void LoadLocalizationsForLanguage(ID lang_id, bool prefabs = false) {
+			lang_id = Registry.Languages.ValidateExisting(lang_id);
 			Logger.Debug($"Scanning localizations for {lang_id}");
 
-			foreach (var pair in Gungeon.Localizations.Pairs) {
+			foreach (var pair in Registry.Localizations.Pairs) {
 				var loc = pair.Value;
-				var target_lang_id = IDPool<LocalizationSource>.Resolve(loc.TargetLanguageID);
-				if (target_lang_id == lang_id) {
+				if (loc.TargetLanguageID == lang_id) {
 					Logger.Debug($"Found localization '{pair.Key}' for table {loc.TargetStringTable} ({loc.GetType().Name})");
 
 					if (loc.Format == LocalizationSource.FormatType.DF && loc.TargetStringTable != StringTable.UI) {
@@ -465,8 +463,8 @@ namespace Semi {
 		/// Changes the current language to another one.
 		/// </summary>
 		/// <param name="id">Global ID of the language.</param>
-		public static void ChangeLanguage(string id) {
-			id = Gungeon.Languages.ValidateEntry(id);
+		public static void ChangeLanguage(ID id) {
+			id = Registry.Languages.ValidateExisting(id);
 			Logger.Debug($"Changing language to '{id}'");
 			CurrentLanguageID = id;
 			dfLanguageManager.ChangeGungeonLanguage();
@@ -474,7 +472,7 @@ namespace Semi {
 		}
 
 		internal static void ChangeLanguage(StringTableManager.GungeonSupportedLanguages lang) {
-			var id = Gungeon.Languages.ValidateEntry(GungeonLanguage.LanguageToID(lang));
+			var id = Registry.Languages.ValidateExisting(GungeonLanguage.LanguageToID(lang));
 			ChangeLanguage(id);
 		}
 

@@ -85,17 +85,6 @@ namespace Semi.DebugConsole {
             }
         }
 
-        private string ListFlows() {
-            List<string> keyList = new List<string>(FlowManager.knownFlows.Keys);
-            string output = "";
-            foreach (string key in keyList) {
-                output += key + "\n";
-            }
-            return output;
-        }
-
-        internal static tk2dSprite tkExperimentSprite;
-
         internal void AddDefaultCommands() {
             _LoggerSubscriber = (logger, loglevel, indent, str) => {
                 PrintLine(logger.String(loglevel, str, indent: indent), color: _LoggerColors[loglevel]);
@@ -195,7 +184,7 @@ namespace Semi.DebugConsole {
                     .WithSubCommand("idof", (args) => {
                         if (args.Count < 1) throw new Exception("Exactly 1 argument required (numeric ID).");
                         var id = int.Parse(args[0]);
-                        foreach (var pair in Gungeon.Items.Pairs) {
+						foreach (var pair in Registry.Items.Pairs) {
                             if (pair.Value.PickupObjectId == id) return pair.Key;
                         }
                         return "Entry not found.";
@@ -203,7 +192,7 @@ namespace Semi.DebugConsole {
                     .WithSubCommand("nameof", (args) => {
                         if (args.Count < 1) throw new Exception("Exactly 1 argument required (ID).");
                         var id = args[0];
-                        foreach (var pair in Gungeon.Items.Pairs) {
+                        foreach (var pair in Registry.Items.Pairs) {
                             if (pair.Key == id) return _GetPickupObjectName(pair.Value);
                         }
                         return "Entry not found.";
@@ -211,15 +200,15 @@ namespace Semi.DebugConsole {
                     .WithSubCommand("numericof", (args) => {
                         if (args.Count < 1) throw new Exception("Exactly 1 argument required (ID).");
                         var id = args[0];
-                        foreach (var pair in Gungeon.Items.Pairs) {
+                        foreach (var pair in Registry.Items.Pairs) {
                             if (pair.Key == id) return pair.Value.PickupObjectId.ToString();
                         }
                         return "Entry not found.";
                     })
                     .WithSubCommand("list", (args) => {
                         var s = new StringBuilder();
-                        var pairs = new List<KeyValuePair<string, PickupObject>>();
-                        foreach (var pair in Gungeon.Items.Pairs) {
+                        var pairs = new List<KeyValuePair<ID, PickupObject>>();
+                        foreach (var pair in Registry.Items.Pairs) {
                             pairs.Add(pair);
                         }
                         foreach (var pair in pairs) {
@@ -235,21 +224,24 @@ namespace Semi.DebugConsole {
                         return s.ToString();
                     })
                     .WithSubCommand("random", (args) => {
-                        return Gungeon.Items.RandomKey;
+                        return "Temporarily disabled";
+//                        return Registry.Items.RandomKey;
                     })
                 );
 
             AddCommand("summon", (args) => {
+                var id = (ID)args[0];
+
                 var player = GameManager.Instance.PrimaryPlayer;
                 if (player == null) throw new Exception("No player");
+
                 var name = args[0];
                 int num = 1;
                 if (args.Count >= 2) int.TryParse(args[1], out num);
                 for (int i = 0; i < num; i++) {
                     var cell = player.CurrentRoom.GetRandomAvailableCellDumb();
-                    var entity = AIActor.Spawn(Gungeon.Enemies[args[0]], cell, player.CurrentRoom, true, AIActor.AwakenAnimationType.Default, true);
-
-                    if (Gungeon.Enemies.HasTag(args[0], Gungeon.EnemyTag.Friendly)) {
+                    var entity = AIActor.Spawn(Registry.Enemies[(ID)args[0]], cell, player.CurrentRoom, true, AIActor.AwakenAnimationType.Default, true);
+    				if (!Registry.Enemies[id].CanTargetPlayers) {
                         entity.CompanionOwner = player;
                         entity.CompanionSettings = new ActorCompanionSettings();
                         entity.CanTargetPlayers = false;
@@ -274,7 +266,7 @@ namespace Semi.DebugConsole {
                 int num = 1;
                 if (args.Count >= 2) int.TryParse(args[1], out num);
                 for (int i = 0; i < num; i++) {
-                    LootEngine.TryGivePrefabToPlayer(Gungeon.Items[args[0]].gameObject, GameManager.Instance.PrimaryPlayer, true);
+                    LootEngine.TryGivePrefabToPlayer(Registry.Items[(ID)args[0]].gameObject, GameManager.Instance.PrimaryPlayer, true);
                 }
                 return args[0];
             });

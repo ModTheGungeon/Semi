@@ -25,6 +25,8 @@ namespace Semi {
                 ETGModule = ModuleDefinition.ReadModule(Assembly.GetAssembly(typeof(AssemblyRelinker)).Location, new ReaderParameters(ReadingMode.Immediate));
             }
 
+            if (dll_name.StartsWithInvariant("./") || dll_name.StartsWithInvariant(".\\")) dll_name = dll_name.Substring(2);
+
             string cachedName = mod_id + "_" + dll_name.Substring(0, dll_name.Length - 3) + "dat";
             string cachedPath = Path.Combine(
                 FileHierarchy.ModsCacheRelinkFolder,

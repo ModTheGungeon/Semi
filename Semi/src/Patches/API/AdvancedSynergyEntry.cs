@@ -30,11 +30,11 @@ namespace Semi.Patches {
 		[Obsolete("Use MandatoryItems")]
 		public new List<int> MandatoryItemIDs;
 
-		public string[] OptionalGuns;
-		public string[] MandatoryGuns;
-		public string[] OptionalItems;
-		public string[] MandatoryItems;
-		public string UniqueID;
+		public ID[] OptionalGuns;
+		public ID[] MandatoryGuns;
+		public ID[] OptionalItems;
+		public ID[] MandatoryItems;
+		public ID UniqueID;
 
 		public bool IsActive {
 			get {
@@ -45,16 +45,16 @@ namespace Semi.Patches {
 		public extern bool orig_ContainsPickup(int id);
 		public new bool ContainsPickup(int id) {
 			for (int i = 0; i < OptionalGuns.Length; i++) {
-				if (Gungeon.Items[OptionalGuns[i]].PickupObjectId == id) return true;
+				if (Registry.Items[OptionalGuns[i]].PickupObjectId == id) return true;
 			}
 			for (int i = 0; i < MandatoryGuns.Length; i++) {
-				if (Gungeon.Items[MandatoryGuns[i]].PickupObjectId == id) return true;
+				if (Registry.Items[MandatoryGuns[i]].PickupObjectId == id) return true;
 			}
 			for (int i = 0; i < OptionalItems.Length; i++) {
-				if (Gungeon.Items[OptionalItems[i]].PickupObjectId == id) return true;
+				if (Registry.Items[OptionalItems[i]].PickupObjectId == id) return true;
 			}
 			for (int i = 0; i < MandatoryItems.Length; i++) {
-				if (Gungeon.Items[MandatoryItems[i]].PickupObjectId == id) return true;
+				if (Registry.Items[MandatoryItems[i]].PickupObjectId == id) return true;
 			}
 			return false;
 		}
@@ -64,15 +64,21 @@ namespace Semi.Patches {
 			return orig_PlayerHasPickup(p, pickupID);
 		}
 
-		public bool ContainsPickup(string pickup_id) {
-			pickup_id = IDPool<PickupObject>.Resolve(pickup_id);
+		public bool ContainsPickup(ID pickup_id) {
 			return OptionalGuns.Contains(pickup_id) || MandatoryGuns.Contains(pickup_id) || OptionalItems.Contains(pickup_id) || MandatoryItems.Contains(pickup_id);
 		}
 
-		public bool PlayerHasPickup(PlayerController p, string pickup_id) {
-			//TODO @ids patch player to use named IDs as well, for now this is a workaround
-			if (!Gungeon.Items.ContainsID(pickup_id)) throw new ArgumentException(nameof(pickup_id));
-			var id = Gungeon.Items[pickup_id].PickupObjectId;
+		public bool PlayerHasPickup(PlayerController p, ID pickup_id) {
+            //TODO @ids patch player to use named IDs as well, for now this is a workaround
+            if (!Registry.Items.Contains(pickup_id)) {
+                Console.WriteLine($"pickup_id = {pickup_id} hash = {pickup_id.GetHashCode()}");
+                var x = (ID)"gungeon:anvillain";
+                Console.WriteLine($"x = {x} hash = {x.GetHashCode()}");
+                Console.WriteLine($"ent pickup_id = {Registry.Items.TryGet(pickup_id)}");
+                Console.WriteLine($"ent x = {Registry.Items.TryGet(x)}");
+                throw new ArgumentException(pickup_id.ToString(), nameof(pickup_id));
+            }
+			var id = Registry.Items[pickup_id].PickupObjectId;
 			return orig_PlayerHasPickup(p, id);
 		}
 
@@ -108,24 +114,24 @@ namespace Semi.Patches {
 			int num = 0;
 			int num2 = 0;
 			for (int i = 0; i < MandatoryGuns.Length; i++) {
-				if (PlayerHasPickup(p, MandatoryGuns[i]) || PlayerHasPickup(p2, MandatoryGuns[i]) || Gungeon.Items[MandatoryGuns[i]]?.PickupObjectId == additionalID) {
+				if (PlayerHasPickup(p, MandatoryGuns[i]) || PlayerHasPickup(p2, MandatoryGuns[i]) || Registry.Items[MandatoryGuns[i]]?.PickupObjectId == additionalID) {
 					num++;
 				}
 			}
 			for (int j = 0; j < MandatoryItems.Length; j++) {
-				if (PlayerHasPickup(p, MandatoryItems[j]) || PlayerHasPickup(p2, MandatoryItems[j]) || Gungeon.Items[MandatoryItems[j]]?.PickupObjectId == additionalID) {
+				if (PlayerHasPickup(p, MandatoryItems[j]) || PlayerHasPickup(p2, MandatoryItems[j]) || Registry.Items[MandatoryItems[j]]?.PickupObjectId == additionalID) {
 					num2++;
 				}
 			}
 			int num3 = 0;
 			int num4 = 0;
 			for (int k = 0; k < OptionalGuns.Length; k++) {
-				if (PlayerHasPickup(p, OptionalGuns[k]) || PlayerHasPickup(p2, OptionalGuns[k]) || Gungeon.Items[OptionalGuns[k]]?.PickupObjectId == additionalID) {
+				if (PlayerHasPickup(p, OptionalGuns[k]) || PlayerHasPickup(p2, OptionalGuns[k]) || Registry.Items[OptionalGuns[k]]?.PickupObjectId == additionalID) {
 					num3++;
 				}
 			}
 			for (int l = 0; l < OptionalItems.Length; l++) {
-				if (PlayerHasPickup(p, OptionalItems[l]) || PlayerHasPickup(p2, OptionalItems[l]) || Gungeon.Items[OptionalItems[l]]?.PickupObjectId == additionalID) {
+				if (PlayerHasPickup(p, OptionalItems[l]) || PlayerHasPickup(p2, OptionalItems[l]) || Registry.Items[OptionalItems[l]]?.PickupObjectId == additionalID) {
 					num4++;
 				}
 			}

@@ -1,43 +1,6 @@
 ﻿using System;
 namespace Semi {
-    public static class Gungeon {
-		/// <summary>
-		/// All the possible tag specifications for the Items IDPool.
-		/// </summary>
-        [Flags]
-        public enum ItemTag {
-            Unknown = 1,
-            Item = 2,
-            Consumable = 4,
-            Syn = 8,
-
-            Unused = 16,
-            Internal = 32
-        }
-
-		/// <summary>
-		/// All the possible tag specifications for the Enemies IDPool.
-		/// </summary>
-        [Flags]
-        public enum EnemyTag {
-            Unknown = 1,
-            Enemy = 2,
-            Friendly = 4,
-
-            Unused = 16,
-            Internal = 32
-        }
-
-		/// <summary>
-		/// All the possible tag specifications for the AudioEvents IDPool.
-		/// </summary>
-		[Flags]
-		public enum AudioEventTag {
-			WWise = 1,
-			Semi = 2
-		}
-
-		/// <summary>
+    public static class Registry {/// <summary>
 		/// Delegate used for synergy activation/synergy deactivation events.
 		/// </summary>
 		public delegate void SynergyStateChangeAction(PlayerController p);
@@ -47,19 +10,19 @@ namespace Semi {
 		/// This pool contains all Gungeon and mod pickups, including unused/excluded/unobtainable ones.
 		/// </summary>
 		/// <value>ID pool of the items.</value>
-        public static IDPool<PickupObject, ItemTag> Items { get; internal set; }
+        public static IDPool<PickupObject> Items { get; internal set; }
 		/// <summary>
 		/// ID pool containing all the enemies in the game. This includes companions, which operate in the same way as enemies.
 		/// This pool contains all Gungeon and mod enemies, including unused/excluded/unobtainable ones.
 		/// </summary>
 		/// <value>ID pool of the enemies.</value>
-        public static IDPool<AIActor, EnemyTag> Enemies { get; internal set; }
+        public static IDPool<AIActor> Enemies { get; internal set; }
 		/// <summary>
 		/// ID pool containing all the synergies in the game.
 		/// This pool contains all Gungeon and mod synergies, including unused/excluded/unobtainable ones.
 		/// </summary>
 		/// <value>ID pool of the synergies.</value>
-		public static IDPool<AdvancedSynergyEntry, SynergyEntry.SynergyActivation> Synergies { get; internal set; }
+		public static IDPool<AdvancedSynergyEntry> Synergies { get; internal set; }
 
 		/// <summary>
 		/// ID pool containing all sprite collections registered by mods.
@@ -106,7 +69,7 @@ namespace Semi {
 		/// This ID pool includes Gunegon (WWise) audio events.
 		/// </summary>
 		/// <value>ID pool of audio events.</value>
-		public static IDPool<AudioEvent, AudioEventTag> AudioEvents { get; internal set; }
+		public static IDPool<AudioEvent> AudioEvents { get; internal set; }
 
 		public static IDPool<UI.MenuOption> MenuOptionTypes { get; internal set; }
 
@@ -117,8 +80,7 @@ namespace Semi {
 		/// </summary>
 		/// <param name="id">ID of the synergy.</param>
 		/// <param name="action">Action to invoke.</param>
-		public static void OnSynergyActivated(string id, SynergyStateChangeAction action) {
-			id = IDPool<AdvancedSynergyEntry>.Resolve(id);
+		public static void OnSynergyActivated(ID id, SynergyStateChangeAction action) {
 			SynergyStateChangeAction existing_action = null;
 			if (!SemiLoader.SynergyActivatedActions.TryGetValue(id, out existing_action)) {
 				SemiLoader.SynergyActivatedActions[id] = action;
@@ -132,8 +94,7 @@ namespace Semi {
 		/// </summary>
 		/// <param name="id">ID of the synergy.</param>
 		/// <param name="action">Action to invoke.</param>
-		public static void OnSynergyDeactivated(string id, SynergyStateChangeAction action) {
-			id = IDPool<AdvancedSynergyEntry>.Resolve(id);
+		public static void OnSynergyDeactivated(ID id, SynergyStateChangeAction action) {
 			SynergyStateChangeAction existing_action = null;
 			if (!SemiLoader.SynergyDeactivatedActions.TryGetValue(id, out existing_action)) {
 				SemiLoader.SynergyDeactivatedActions[id] = action;
@@ -147,8 +108,7 @@ namespace Semi {
 		/// </summary>
 		/// <returns><c>true</c>, if synergy is active, <c>false</c> otherwise.</returns>
 		/// <param name="id">ID of the synergy.</param>
-		public static bool IsSynergyActive(string id) {
-			id = IDPool<AdvancedSynergyEntry>.Resolve(id);
+		public static bool IsSynergyActive(ID id) {
 			return SemiLoader.ActiveSynergyIDs.Contains(id);
 		}
     }

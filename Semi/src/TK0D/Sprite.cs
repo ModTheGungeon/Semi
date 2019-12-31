@@ -40,8 +40,8 @@ namespace Semi {
 		}
 
 		/// <value>The string ID of the currently displayed sprite definition.</value>
-		public string CurrentSpriteID {
-			get { return Collection.SpriteDefinitions[Wrap.spriteId].Name; }
+		public ID CurrentSpriteID {
+			get { return (ID)Collection.SpriteDefinitions[Wrap.spriteId].Name; }
 			set {
 				var idx = Collection.GetIndex(value);
 				if (idx < 0) throw new InvalidOperationException($"Collection has no '{value}' definition");
@@ -224,7 +224,7 @@ namespace Semi {
 			Wrap.InitDictionary();
 		}
 
-		internal int GetSpriteIdByName(string name) => Wrap.GetSpriteIdByName(name);
+		internal int GetSpriteIdByName(StringView name) => Wrap.GetSpriteIdByName(name.ToString());
 
 		/// <summary>
 		/// Adds a single sprite definition to this collection.
@@ -271,9 +271,8 @@ namespace Semi {
 		internal int Register(SpriteDefinition sprite_def) {
 			if (WorkingDefinitionList == null) throw new Exception("Cannot register new definitions while not working on definition list");
 
-			var id = SpritePool.ValidateNewEntry(sprite_def.Name);
-			if (id.StartsWithInvariant("gungeon:")) {
-				id = IDPool<bool>.Split(id).Name;
+			var id = (ID)sprite_def.Name;
+			if (id.DefaultNamespace) {
 				sprite_def.Name = id;
 
 				// for gungeon compat - collection entries with gungeon: namespace must be saved with their name
@@ -309,22 +308,19 @@ namespace Semi {
 		/// </summary>
 		/// <returns>The index of the sprite definition or a value less than 0 if not found.</returns>
 		/// <param name="id">The ID of the sprite definition.</param>
-		public int GetIndex(string id) {
+		public int GetIndex(ID id) {
 			// we can't do ValidateEntry here because that'd check
 			// for gungeon: IDs too, and those aren't actually there
 			// and are just faked a'la old ETGMod Resources.Load
-			IDPool<int>.VerifyID(id);
-			id = IDPool<int>.Resolve(id);
-			var id_split = IDPool<int>.Split(id);
-			if (id_split.Namespace == "gungeon") {
+			if (id.DefaultNamespace) {
 				// this is a special case
 				// we want to avoid having to change all the old names for sprite defs
 				// so we just make it look like they're in the gungeon: namespace
 				// but they aren't *actually*
-				return GetSpriteIdByName(id_split.Name);
+				return GetSpriteIdByName(id.Name);
 			} else {
 				var pool = SpritePool;
-				if (pool == null || !pool.ContainsID(id)) return -1;
+				if (pool == null || !pool.Contains(id)) return -1;
 				var idx = pool.Get(id);
 				if (idx >= GetDefinitionsLength() || idx < 0) {
 					throw new Exception($"Invalid spriteDefinitions index mapped in SpritePool: {idx} for '{id}'");
@@ -338,7 +334,7 @@ namespace Semi {
 		/// </summary>
 		/// <returns>The sprite definition with this ID or <c>null</c> if it doesn't exist.</returns>
 		/// <param name="id">The ID of the definition.</param>
-		public SpriteDefinition? GetDefinition(string id) {
+		public SpriteDefinition? GetDefinition(ID id) {
 			var idx = GetIndex(id);
 			if (idx < 0) return null;
 			return new SpriteDefinition(GetDefinitionByIndex(idx));
@@ -472,7 +468,7 @@ namespace Semi {
 				var def = new SpriteDefinition(coll.spriteDefinitions[i]);
 				var id = def.ID;
 
-				if (SpritePool.ContainsID(id)) {
+				if (SpritePool.Contains(id)) {
 					var this_def = GetDefinition(id).Value; // can't be null
 					var new_material_id = this_def.Wrap.materialId + material_idx_diff;
 					Logger.Debug($"Replacing in-place: def ID '{id}', source ID '{this_def.ID}', prev material ID '{this_def.Wrap.materialId}', new material ID '{new_material_id}'");
@@ -644,7 +640,7 @@ namespace Semi {
 			var unit_w = parsed.UnitW < 1 ? 1 : parsed.UnitW;
 			var unit_h = parsed.UnitH < 1 ? 1 : parsed.UnitH;
 
-			var id = $"{coll_namespace}:{parsed.ID}";
+            var id = parsed.ID.WithContextNamespace(coll_namespace);
 
 			Logger.Debug($"Loading {id}");
 			var coll = Construct(SemiLoader.SpriteCollectionStorageObject, parsed.Name, id, mat);
@@ -655,7 +651,7 @@ namespace Semi {
 					var w = def.Value.W < 1 ? parsed.SizeW : def.Value.W;
 					var h = def.Value.H < 1 ? parsed.SizeH : def.Value.H;
 
-					var def_id = IDPool<bool>.Resolve(def.Value.ID, coll_namespace);
+                    var def_id = def.Value.ID.WithContextNamespace(coll_namespace);
 
 					var tk0d_def = SpriteDefinition.Construct(
 						mat,
@@ -704,7 +700,7 @@ namespace Semi {
 				coll.CommitDefinitionList();
 			}
 
-			Gungeon.SpriteCollections.Add(id, coll);
+			Registry.SpriteCollections.Add(id, coll);
 
 			return coll;
 		}
@@ -774,13 +770,13 @@ namespace Semi {
 		}
 
 		/// <value>The sprite definition's ID.</value>
-		public string ID {
+		public ID ID {
 			get {
-				if (Wrap.name.Contains(":")) return Wrap.name;
-				else return $"gungeon:{Wrap.name}";
+				if (Wrap.name.Contains(":")) return (ID)Wrap.name;
+				else return (ID)$"gungeon:{Wrap.name}";
 			}
 			set {
-				Wrap.name = value.Replace("gungeon:", "");
+                Wrap.name = value.DefaultNamespace ? value.Name.ToString() : value.ToString();
 			}
 		}
 
@@ -1104,7 +1100,7 @@ namespace Semi {
 		/// <returns>The new sprite animation frame.</returns>
 		/// <param name="coll">Sprite collection that this frame takes the sprite from.</param>
 		/// <param name="definition">ID of the definition within the collection.</param>
-		public static SpriteAnimationFrame Construct(SpriteCollection coll, string definition) {
+		public static SpriteAnimationFrame Construct(SpriteCollection coll, ID definition) {
 			var id = coll.GetIndex(definition);
 			if (id < 0) throw new Exception($"Sprite definition {definition} doesn't exist - did you forget a namespace?");
 			return Construct(coll, id);
@@ -1279,13 +1275,13 @@ namespace Semi {
 		public static SpriteAnimation Load(Tk0dConfigParser.ParsedAnimation parsed, string anim_namespace) {
 			// TODO make use of the name
 			var anim = Construct(SemiLoader.AnimationTemplateStorageObject);
-			var id = $"{anim_namespace}:{parsed.ID}";
+            var id = parsed.ID.WithContextNamespace(anim_namespace);
 
 			var fps = parsed.DefaultFPS;
 
 			var coll_id = parsed.Collection;
-			if (!Gungeon.SpriteCollections.ContainsID(coll_id)) throw new Exception($"Semi collection '{coll_id}' doesn't exist. Did you forget to load it before loading the animation?");
-			var coll = Gungeon.SpriteCollections[coll_id];
+			if (!Registry.SpriteCollections.Contains(coll_id)) throw new Exception($"Semi collection '{coll_id}' doesn't exist. Did you forget to load it before loading the animation?");
+			var coll = Registry.SpriteCollections[coll_id];
 
 			try {
 				anim.BeginModifyingClips();
@@ -1301,9 +1297,9 @@ namespace Semi {
 						var prefix = clip.Value.Prefix ?? "gungeon";
 						for (int i = 0; i < clip.Value.Frames.Count; i++) {
 							var frame = clip.Value.Frames[i];
-							string def = frame.Definition;
-							if (!def.Contains(":")) {
-								def = $"{prefix}:{frame.Definition}";
+							var def = frame.Definition;
+							if (def.DefaultNamespace) {
+                                def = frame.Definition.WithNamespace(prefix);
 							}
 
 							var tk0d_def_id = coll.GetIndex(def);
@@ -1327,7 +1323,7 @@ namespace Semi {
 				anim.CommitClips();
 			}
 
-			Gungeon.AnimationTemplates.Add(id, anim);
+			Registry.AnimationTemplates.Add(id, anim);
 			return anim;
 		}
 	}

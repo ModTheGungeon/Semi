@@ -1,3 +1,5 @@
+# IDMaps have to be precompiled with scripts/compile_idmaps.rb
+#
 # Format:
 # TYPE[,SUBTYPE] ID NAME
 #

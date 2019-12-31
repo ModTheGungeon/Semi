@@ -142,5 +142,32 @@ namespace Semi {
 
             return new SplitPair { FirstElement = source.Substring(0, i), EverythingElse = source.Substring(i + 0) };
         }
+
+        public static bool IsIdentifierStartSymbol(char c) {
+            return c == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+        }
+
+        public static bool IsIdentifierContSymbol(char c) {
+            return (c >= '0' && c <= '9') || c == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+        }
+
+        /// <summary>
+        /// Determines whether a string is an identifier ([a-zA-Z_][a-zA-Z0-9_]*)
+        /// </summary>
+        /// <returns><c>true</c>, if the string is an identifier, <c>false</c> otherwise.</returns>
+        /// <param name="s">String to check.</param>
+        public static bool IsIdentifier(this string s) {
+            if (s.Length == 0) return false;
+
+            if (!IsIdentifierStartSymbol(s[0])) return false;
+
+            for (var i = 1; i < s.Length; i++) {
+                var c = s[i];
+
+                if (!IsIdentifierContSymbol(c)) return false;
+            }
+
+            return true;
+        }
     }
 }

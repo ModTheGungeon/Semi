@@ -36,7 +36,7 @@ namespace Semi.Patches {
 						var item = (MidGamePassiveItemData)(object)playerData.passiveItems[i];
 
 						EncounterTrackable.SuppressNextNotification = true;
-						LootEngine.GivePrefabToPlayer(Gungeon.Items[item.ItemID].gameObject, p1);
+						LootEngine.GivePrefabToPlayer(Registry.Items[item.ItemID].gameObject, p1);
 					}
 				}
 				if (playerData.activeItems != null) {
@@ -44,7 +44,7 @@ namespace Semi.Patches {
 						var item = (MidGameActiveItemData)(object)playerData.activeItems[j];
 
 						EncounterTrackable.SuppressNextNotification = true;
-						LootEngine.GivePrefabToPlayer(Gungeon.Items[item.ItemID].gameObject, p1);
+						LootEngine.GivePrefabToPlayer(Registry.Items[item.ItemID].gameObject, p1);
 					}
 				}
 				if (playerData.guns != null) {
@@ -52,7 +52,7 @@ namespace Semi.Patches {
 						var gun = (MidGameGunData)(object)playerData.guns[k];
 						
 						EncounterTrackable.SuppressNextNotification = true;
-						LootEngine.GivePrefabToPlayer(Gungeon.Items[gun.ItemID].gameObject, p1);
+						LootEngine.GivePrefabToPlayer(Registry.Items[gun.ItemID].gameObject, p1);
 					}
 					for (int l = 0; l < playerData.guns.Count; l++) {
 						var savegun = (MidGameGunData)(object)playerData.guns[l];
@@ -143,7 +143,7 @@ namespace Semi.Patches {
 	/// </summary>
 	[MonoModPatch("global::MidGamePassiveItemData")]
 	public class MidGamePassiveItemData {
-		public string ItemID = null;
+		public ID ItemID;
 		public List<object> SerializedData;
 
 		public extern void orig_ctor(PassiveItem p);
@@ -170,7 +170,7 @@ namespace Semi.Patches {
 	/// </summary>
 	[MonoModPatch("global::MidGameActiveItemData")]
 	public class MidGameActiveItemData {
-		public string ItemID = null;
+		public ID ItemID;
 		public bool IsOnCooldown;
 		public float DamageCooldown;
 		public int RoomCooldown;
@@ -207,7 +207,7 @@ namespace Semi.Patches {
 	/// </summary>
 	[MonoModPatch("global::MidGameGunData")]
 	public class MidGameGunData {
-		public string ItemID = null;
+		public ID ItemID;
 		public int CurrentAmmo = -1;
 		public List<object> SerializedData;
 		public List<int> DuctTapedGunIDs;

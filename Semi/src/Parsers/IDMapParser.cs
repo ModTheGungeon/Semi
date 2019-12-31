@@ -2,7 +2,7 @@
 using System.IO;
 
 namespace Semi {
-    public static class IDMapParser<T, TTag> {
+    public static class IDMapParser<T> {
         public class IDMapFormatException : Exception {
             public IDMapFormatException(string msg) : base($"Mismatched ID map format: {msg}") { }
         }
@@ -14,7 +14,7 @@ namespace Semi {
 		/// <summary>
 		/// Defines what to do with the item once it's been acquired, before registering it to the <c>IDPool</c>.
 		/// </summary>
-		public delegate void DoAfterAcquiredItem(string strid, T item);
+		public delegate void DoAfterAcquiredItem(ID strid, T item);
 
 		/// <summary>
 		/// Parses a file in Semi IDMap format.
@@ -25,8 +25,8 @@ namespace Semi {
 		/// <param name="callback"><see cref="AcquireItem"/></param>
 		/// <param name="percent_space_escape">If set to <c>true</c>, triple percent signs will be replaced with single spaces in source IDs.</param>
 		/// <param name="do_after"><see cref="DoAfterAcquiredItem" /></param>
-		public static IDPool<T, TTag> Parse(StreamReader file, string nspace, AcquireItem callback, bool percent_space_escape = true, DoAfterAcquiredItem do_after = null) {
-            var pool = new IDPool<T, TTag>();
+		public static IDPool<T> Parse(StreamReader file, string nspace, AcquireItem callback, bool percent_space_escape = true, DoAfterAcquiredItem do_after = null) {
+            var pool = new IDPool<T>();
 
             while (!file.EndOfStream) {
                 var line = file.ReadLine().Trim();
@@ -44,20 +44,14 @@ namespace Semi {
                 if (percent_space_escape) strnid = strnid.Replace("%%%", " ");
 
                 var item = callback.Invoke(strnid);
-				var full_strid = $"{nspace}:{strid}";
+                var id = ((ID)strid).WithNamespace(nspace);
 
-                if (strtags.Length > 0) {
-                    var tag = (TTag)(object)0;
-                    for (int i = 0; i < strtags.Length; i++) {
-                        tag = (TTag)(object)((int)(object)tag | (int)Enum.Parse(typeof(TTag), strtags[i], true));
-                    }
-					pool.Add(full_strid, item, tag);
-                } else {
-                    pool.Add(full_strid, item);
-                }
+                pool.Add(id, item);
+
+                // ignore deprecated strtags
 
 				if (do_after != null) {
-					do_after.Invoke(full_strid, item);
+					do_after.Invoke(id, item);
 				}
             }
 
