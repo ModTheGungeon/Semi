@@ -27,6 +27,7 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="src\FakePrefab.cs" />
+    <Compile Include="src\Support.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="src\" />

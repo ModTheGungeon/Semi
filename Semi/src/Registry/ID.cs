@@ -6,11 +6,18 @@ namespace Semi {
     /// Representation of a Semi ID, including namespace-defaulting (`key` ->
     /// `gungeon:key`) and context ID (`@:key`) expansion.
     /// </summary>
-    public struct ID {
+    public struct ID : IEquatable<ID>, IEquatable<string> {
         public class InvalidIDException : Exception {
             public InvalidIDException(string id, string msg) : base($"ID '{id}' is invalid - {msg}") {
 
             }
+        }
+
+        internal ID(StringView nspace, StringView name, bool contextual, bool default_namespace) {
+            Namespace = nspace;
+            Name = name;
+            Contextual = contextual;
+            DefaultNamespace = default_namespace;
         }
 
         private static string GUNGEON_NAMESPACE = "gungeon";
@@ -27,7 +34,7 @@ namespace Semi {
         /// else. If you wish to autofill namespaces based on context, use the
         /// contextual ID system.
         /// </summary>
-        public bool DefaultNamespace;
+        public readonly bool DefaultNamespace;
         /// <summary>
         /// Whether this ID is a contextual style ID (`@:key`). In all cases,
         /// if this field is `true`, then the `Namespace` field is equal to `@`
@@ -36,7 +43,7 @@ namespace Semi {
         /// <see cref="WithContextNamespace"/> before being passed to storages
         /// such as <see cref="IDPool{T}"/> or any other hash-based data structure.
         /// </summary>
-        public bool Contextual;
+        public readonly bool Contextual;
         /// <summary>
         /// Namespace part of this ID. Implemented as a <see cref="StringView"/>
         /// to avoid unnecessary heap allocations. Please note that in the case
@@ -46,12 +53,12 @@ namespace Semi {
         /// <see cref="Contextual"/> to understand how to properly work with
         /// contextual IDs.
         /// </summary>
-        public StringView Namespace;
+        public readonly StringView Namespace;
         /// <summary>
         /// Name (key) part of this ID. Implemented as a <see cref="StringView"/>
         /// to avoid unnecessary heap allocations.
         /// </summary>
-        public StringView Name;
+        public readonly StringView Name;
 
         /// <summary>
         /// Serves as a hash function for a <see cref="T:Semi.ID"/> object.
@@ -98,11 +105,12 @@ namespace Semi {
         /// <returns>The new ID.</returns>
         /// <param name="nspace">The target namespace.</param>
         public ID WithNamespace(string nspace) {
-            return new ID {
-                Namespace = new StringView(nspace, 0),
-                Name = Name,
-                Contextual = nspace == "@"
-            };
+            return new ID(
+                nspace: new StringView(nspace, 0),
+                name: Name,
+                contextual: nspace == "@",
+                default_namespace: false
+            );
         }
 
         /// <summary>
@@ -136,7 +144,7 @@ namespace Semi {
             var colon_idx = id.IndexOf(':');
             if (colon_idx == -1) {
                 if (!IsLaxIdentifier(new StringView(id, 0))) throw new InvalidIDException(id, "keys must be alphanumeric identifiers");
-                return new ID { DefaultNamespace = true, Namespace = GUNGEON_NAMESPACE_VIEW, Name = new StringView(id, loc ? 1 : 0) };
+                return new ID (nspace: GUNGEON_NAMESPACE_VIEW, name: new StringView(id, loc ? 1 : 0), contextual: false, default_namespace: true);
             } else {
                 StringView nspace;
                 var contextual = false;
@@ -152,7 +160,7 @@ namespace Semi {
                 if (nspace != CONTEXT_NAMESPACE_VIEW && !IsLaxIdentifier(name)) throw new InvalidIDException(id, "namespaces must be alphanumeric identifiers");
                 if (!IsLaxIdentifier(name)) throw new InvalidIDException(id, "names must be alphanumeric identifiers");
 
-                return new ID { Contextual = contextual, Namespace = nspace, Name = name };
+                return new ID(nspace: nspace, name: name, contextual: contextual, default_namespace: false);
             }
         }
 
@@ -172,6 +180,14 @@ namespace Semi {
             if (obj is ID) return EqualsID((ID)obj);
             if (obj is string) return EqualsID((ID)(string)obj);
             return false;
+        }
+
+        public bool Equals(ID other) {
+            return EqualsID(other);
+        }
+
+        public bool Equals(string other) {
+            return EqualsID((ID)other);
         }
 
         internal static bool IsLaxIdentifierSymbol(char c) {

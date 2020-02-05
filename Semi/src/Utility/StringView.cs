@@ -17,9 +17,10 @@ namespace Semi {
             return hash;
         }
 
-        public static uint Compute(string s) {
+        public static uint Compute(string s, int i = 0, int len = -1) {
             var hash = FNV_OFFSET_BASIS;
-            for (var i = 0; i < s.Length; i++) {
+            if (len < -1) len = s.Length;
+            for (; i < len; i++) {
                 var octet = (byte)s[i];
                 hash = hash * FNV_PRIME;
                 hash = hash ^ octet;
@@ -32,11 +33,11 @@ namespace Semi {
     /// Provides a view into a section of a string, avoiding heap allocations
     /// that would happen if operations such as `string.Substring` were used.
     /// </summary>
-    public struct StringView {
-        private string _SourceString;
-        public int SourceStringPosition;
-        private int? _ForcedLength;
-        private uint? _CachedHash;
+    public struct StringView : IEquatable<StringView>, IEquatable<string> {
+        private readonly string _SourceString;
+        public readonly int _SourceStringPosition;
+        private readonly int? _ForcedLength;
+        private readonly uint _Hash;
 
         /// <value>The length of this view.</value>
         public int Length {
@@ -54,11 +55,11 @@ namespace Semi {
         public StringView(string s, int pos, int? len = null) {
             _SourceString = s;
             var source_len = s.Length;
-            SourceStringPosition = pos;
+            _SourceStringPosition = pos;
             if (pos >= source_len) {
                 throw new ArgumentException("String view is out of bounds", nameof(pos));
             }
-            _CachedHash = null;
+            _Hash = FNVHash.Compute(_SourceString, pos, len ?? source_len);
             _ForcedLength = pos == 0 ? null : (int?)(s.Length - pos); 
             if (len == null) return;
             var real_len = pos + len;
@@ -74,8 +75,7 @@ namespace Semi {
         /// </summary>
         /// <returns>The hash code.</returns>
         public uint GetHashCodeUint() {
-            if (_CachedHash == null) _CachedHash = FNVHash.Compute(this);
-            return _CachedHash.Value;
+            return _Hash;
         }
 
         /// <summary>
@@ -93,7 +93,7 @@ namespace Semi {
                 if (_ForcedLength.HasValue && index >= _ForcedLength.Value) {
                     throw new IndexOutOfRangeException($"Length is {_ForcedLength.Value}, attempted to index {index}");
                 }
-                index += SourceStringPosition;
+                index += _SourceStringPosition;
 
                 return _SourceString[index];
             }
@@ -111,7 +111,7 @@ namespace Semi {
         public bool EndsWith(string value, bool case_sensitive = true) {
             if (Length < value.Length) return false;
             for (var i = value.Length - 1; i >= 0; i++) {
-                var real_idx = i + SourceStringPosition;
+                var real_idx = i + _SourceStringPosition;
                 var matches_caseinsensitive = (case_sensitive && char.ToLower(value[i]) == char.ToLower(this[i]));
                 if (value[i] != this[i] && !matches_caseinsensitive) return false;
             }
@@ -124,7 +124,7 @@ namespace Semi {
         /// </summary>
         /// <returns>A <see cref="T:System.String"/> that represents the current <see cref="T:Semi.StringView"/>.</returns>
         public override string ToString() {
-            return _SourceString.Substring(SourceStringPosition, Length);
+            return _SourceString.Substring(_SourceStringPosition, Length);
         }
 
         /// <summary>
@@ -139,15 +139,15 @@ namespace Semi {
             if (len != null && len > Length) {
                 throw new ArgumentOutOfRangeException(nameof(len), $"Length parameter ({len}) is greater than the length of this string view ({Length})");
             }
-            if (len == null) return _SourceString.Substring(SourceStringPosition + pos, Length - pos);
-            else return _SourceString.Substring(SourceStringPosition + pos, len.Value);
+            if (len == null) return _SourceString.Substring(_SourceStringPosition + pos, Length - pos);
+            else return _SourceString.Substring(_SourceStringPosition + pos, len.Value);
            
         }
 
         public bool EqualsString(string s) {
             if (Length != s.Length) return false;
-            if (_SourceString == s && SourceStringPosition == 0) return true;
-            if (_SourceString == s && SourceStringPosition != 0) return false;
+            if (_SourceString == s && _SourceStringPosition == 0) return true;
+            if (_SourceString == s && _SourceStringPosition != 0) return false;
 
             for (var i = 0; i < Length; i++) {
                 if (this[i] != s[i]) return false;
@@ -182,13 +182,21 @@ namespace Semi {
             if (len != null && len > Length) {
                 throw new ArgumentOutOfRangeException(nameof(len), $"Length parameter ({len}) is greater than the length of this string view ({Length})");
             }
-            return new StringView(_SourceString, SourceStringPosition + pos, len);
+            return new StringView(_SourceString, _SourceStringPosition + pos, len);
         }
 
         public override bool Equals(object obj) {
             if (obj is string) return EqualsString(obj as string);
             if (obj is StringView) return EqualsStringView((StringView)obj);
             return false;
+        }
+
+        public bool Equals(StringView obj) {
+            return EqualsStringView(obj);
+        }
+
+        public bool Equals(string obj) {
+            return EqualsString(obj);
         }
 
         public static explicit operator string(StringView s) {

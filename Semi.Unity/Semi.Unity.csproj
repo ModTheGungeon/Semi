@@ -68,6 +68,7 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="src\Patches\Object.cs" />
+    <Compile Include="src\Patches\Debug.cs" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>

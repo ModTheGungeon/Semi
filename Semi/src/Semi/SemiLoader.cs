@@ -180,10 +180,10 @@ namespace Semi {
 		/// </summary>
         internal static Logger Logger = new Logger("Semi");
 
-		/// <summary>
-		/// Debug console.
-		/// </summary>
-		internal static DebugConsole.Console Console;
+        /// <summary>
+        /// Debug console.
+        /// </summary>
+        internal static DebugConsole.Console Console;
 
 		/// <summary>
 		/// MonoBehaviour for handling the debug console.
